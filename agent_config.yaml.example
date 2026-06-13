@@ -1,0 +1,23 @@
+coordinator:
+  agent_id: "uuid-from-band-dashboard"
+  api_key: "key-from-band-dashboard"
+
+event_intelligence:
+  agent_id: "uuid-from-band-dashboard"
+  api_key: "key-from-band-dashboard"
+
+supplier_impact:
+  agent_id: "uuid-from-band-dashboard"
+  api_key: "key-from-band-dashboard"
+
+financial_exposure:
+  agent_id: "uuid-from-band-dashboard"
+  api_key: "key-from-band-dashboard"
+
+regulatory_trade:
+  agent_id: "uuid-from-band-dashboard"
+  api_key: "key-from-band-dashboard"
+
+alt_sourcing:
+  agent_id: "uuid-from-band-dashboard"
+  api_key: "key-from-band-dashboard"
