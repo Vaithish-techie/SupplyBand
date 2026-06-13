@@ -1,0 +1,8 @@
+band-sdk[langgraph,anthropic]
+langchain-anthropic
+langchain-openai
+langgraph
+python-dotenv
+fastapi
+uvicorn
+httpx
