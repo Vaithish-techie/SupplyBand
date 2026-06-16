@@ -18,6 +18,7 @@ No prose outside the JSON. No markdown code fences.
 ```
 
 ## coordinator (Phase 1 — kickoff)
+**Model:** Claude Sonnet (AI/ML API) — needs strongest reasoning
 ```json
 {
   "agent": "coordinator",
@@ -31,6 +32,7 @@ No prose outside the JSON. No markdown code fences.
 ```
 
 ## coordinator (Phase 2 — executive brief, after all 5 report)
+**Model:** Claude Sonnet (AI/ML API) — needs strongest reasoning
 ```json
 {
   "agent": "coordinator",
@@ -48,6 +50,7 @@ No prose outside the JSON. No markdown code fences.
 
 ## event_intelligence
 Wakes on: coordinator, phase=kickoff
+**Model:** Claude Sonnet (AI/ML API) — classification needs nuance
 ```json
 "findings": {
   "event_type": "natural_disaster | port_strike | tariff | sanctions",
@@ -61,6 +64,7 @@ Wakes on: coordinator, phase=kickoff
 
 ## supplier_impact
 Wakes on: event_intelligence, status=complete
+**Model:** Llama 3.1 70B (Featherless) — structured lookup task
 ```json
 "findings": {
   "affected_tier1": 3,
@@ -74,6 +78,7 @@ Wakes on: event_intelligence, status=complete
 
 ## financial_exposure
 Wakes on: supplier_impact, status=complete
+**Model:** Llama 3.1 70B (Featherless) — calculation task
 ```json
 "findings": {
   "week1_risk_usd": 2000000,
@@ -86,6 +91,7 @@ Wakes on: supplier_impact, status=complete
 
 ## regulatory_trade
 Wakes on: supplier_impact, status=complete (runs parallel to financial_exposure)
+**Model:** Claude Sonnet (AI/ML API) — needs nuance for legal language
 ```json
 "findings": {
   "force_majeure_applicable": true,
@@ -98,6 +104,7 @@ Wakes on: supplier_impact, status=complete (runs parallel to financial_exposure)
 
 ## alt_sourcing
 Wakes on: financial_exposure AND regulatory_trade, both status=complete
+**Model:** Llama 3.1 70B (Featherless) — ranking/matching task
 ```json
 "findings": {
   "alternatives": [

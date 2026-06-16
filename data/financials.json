@@ -1,0 +1,23 @@
+{
+  "products": [
+    {
+      "name": "Product A",
+      "margin_pct": 25.0,
+      "weekly_revenue_usd": 10000000,
+      "components_required": ["A100 chips", "chip packaging"]
+    },
+    {
+      "name": "Product B",
+      "margin_pct": 18.0,
+      "weekly_revenue_usd": 15000000,
+      "components_required": ["NAND flash", "DRAM"]
+    },
+    {
+      "name": "Product C",
+      "margin_pct": 12.0,
+      "weekly_revenue_usd": 5000000,
+      "components_required": ["legacy nodes chips", "power management ICs"]
+    }
+  ],
+  "logistics_weekly_cost_usd": 2000000
+}

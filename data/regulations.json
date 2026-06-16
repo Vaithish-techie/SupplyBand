@@ -1,0 +1,22 @@
+{
+  "countries": {
+    "Taiwan": {
+      "force_majeure_clause": "applicable for natural disasters",
+      "insurer_notification_deadline_hours": 72,
+      "export_controls": ["EAR99"],
+      "tariffs": "none"
+    },
+    "USA": {
+      "force_majeure_clause": "applicable for labor disputes/strikes",
+      "insurer_notification_deadline_hours": 48,
+      "export_controls": ["EAR99", "ITAR"],
+      "tariffs": "minor"
+    },
+    "China": {
+      "force_majeure_clause": "not applicable for unilateral sanctions",
+      "insurer_notification_deadline_hours": 96,
+      "export_controls": ["EAR99", "Entity List"],
+      "tariffs": "major"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "suppliers": [
+    {
+      "id": "SUP-001",
+      "name": "TSMC",
+      "tier": 1,
+      "location": { "city": "Hsinchu", "country": "Taiwan" },
+      "components": ["A100 chips", "H100 chips"],
+      "is_sole_source": true,
+      "inventory_buffer_days": 12
+    },
+    {
+      "id": "SUP-002",
+      "name": "Samsung Austin",
+      "tier": 1,
+      "location": { "city": "Austin", "country": "USA" },
+      "components": ["NAND flash", "DRAM"],
+      "is_sole_source": false,
+      "inventory_buffer_days": 30
+    },
+    {
+      "id": "SUP-003",
+      "name": "ASE Group",
+      "tier": 2,
+      "location": { "city": "Kaohsiung", "country": "Taiwan" },
+      "components": ["chip packaging", "testing"],
+      "is_sole_source": false,
+      "inventory_buffer_days": 21
+    },
+    {
+      "id": "SUP-004",
+      "name": "LA Logistics Corp",
+      "tier": 1,
+      "location": { "city": "Los Angeles", "country": "USA" },
+      "components": ["shipping container transport", "logistics hub"],
+      "is_sole_source": true,
+      "inventory_buffer_days": 5
+    },
+    {
+      "id": "SUP-005",
+      "name": "SMIC",
+      "tier": 2,
+      "location": { "city": "Shanghai", "country": "China" },
+      "components": ["legacy nodes chips", "power management ICs"],
+      "is_sole_source": false,
+      "inventory_buffer_days": 25
+    }
+  ]
+}

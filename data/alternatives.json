@@ -1,0 +1,71 @@
+{
+  "alternatives": [
+    {
+      "component": "A100 chips",
+      "suppliers": [
+        {
+          "name": "Samsung Austin",
+          "cost_delta_pct": 12.0,
+          "lead_time_days": 8,
+          "risk_level": "LOW",
+          "regulatory_flags": []
+        },
+        {
+          "name": "Intel Foundry",
+          "cost_delta_pct": 20.0,
+          "lead_time_days": 15,
+          "risk_level": "MEDIUM",
+          "regulatory_flags": []
+        }
+      ]
+    },
+    {
+      "component": "H100 chips",
+      "suppliers": [
+        {
+          "name": "Samsung Austin",
+          "cost_delta_pct": 15.0,
+          "lead_time_days": 10,
+          "risk_level": "LOW",
+          "regulatory_flags": []
+        }
+      ]
+    },
+    {
+      "component": "chip packaging",
+      "suppliers": [
+        {
+          "name": "Amkor Technology",
+          "cost_delta_pct": 5.0,
+          "lead_time_days": 7,
+          "risk_level": "LOW",
+          "regulatory_flags": []
+        }
+      ]
+    },
+    {
+      "component": "NAND flash",
+      "suppliers": [
+        {
+          "name": "Micron",
+          "cost_delta_pct": 8.0,
+          "lead_time_days": 5,
+          "risk_level": "LOW",
+          "regulatory_flags": []
+        }
+      ]
+    },
+    {
+      "component": "legacy nodes chips",
+      "suppliers": [
+        {
+          "name": "GlobalFoundries",
+          "cost_delta_pct": 10.0,
+          "lead_time_days": 12,
+          "risk_level": "LOW",
+          "regulatory_flags": []
+        }
+      ]
+    }
+  ]
+}
