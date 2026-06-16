@@ -39,7 +39,45 @@ FINANCIALS_PATH = DATA_DIR / "financials.json"
 
 def load_financials() -> list[dict]:
     with open(FINANCIALS_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)["components"]
+        fin_data = json.load(f)
+    
+    # Load suppliers.json to get buffer days for each component
+    suppliers_path = FINANCIALS_PATH.parent / "suppliers.json"
+    try:
+        with open(suppliers_path, "r", encoding="utf-8") as f:
+            sup_data = json.load(f)
+    except Exception:
+        sup_data = {"suppliers": []}
+    
+    # Map component name -> inventory buffer days
+    comp_buffers = {}
+    for supplier in sup_data.get("suppliers", []):
+        buf = supplier.get("inventory_buffer_days", 14)
+        for comp in supplier.get("components", []):
+            comp_buffers[comp] = min(comp_buffers.get(comp, 999), buf)
+
+    # Construct list of components dynamically based on products_using and buffers
+    products = fin_data.get("products", [])
+    all_components = set()
+    for p in products:
+        for c in p.get("components_required", []):
+            all_components.add(c)
+    
+    components_list = []
+    for comp_name in all_components:
+        products_using = [p["name"] for p in products if comp_name in p.get("components_required", [])]
+        daily_rev = sum((p.get("weekly_revenue_usd", 0) / 7.0) for p in products if comp_name in p.get("components_required", []))
+        buf_days = comp_buffers.get(comp_name, 14)
+        
+        components_list.append({
+            "component_name": comp_name,
+            "revenue_contribution_usd_per_day": daily_rev,
+            "inventory_buffer_days": buf_days,
+            "daily_cost_of_shortage_usd": daily_rev,
+            "products_using": products_using
+        })
+    
+    return components_list
 
 
 def calculate_financial_exposure(affected_components: list[str], financials: list[dict]) -> dict:
@@ -159,6 +197,9 @@ Your behaviour:
 }
 
 CRITICAL RULES:
+- You MUST call the `band_send_message` tool to communicate. Do NOT output any plain text or markdown directly from your thinking graph; it will be discarded and won't reach the chat room. Always wrap your response in a `band_send_message` tool call.
+- Set the `content` argument of `band_send_message` to the raw JSON string matching the exact schema above (no markdown code blocks).
+- Set the `mentions` argument to tag the supplier_impact agent (e.g. sender of the supplier_impact post).
 - Only respond after you see "agent": "supplier_impact" in the room.
 - Never invent numbers. All numbers come from your calculate_exposure tool.
 - Output valid JSON only. No text before or after the JSON.

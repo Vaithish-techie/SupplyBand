@@ -40,7 +40,20 @@ ALTERNATIVES_PATH = DATA_DIR / "alternatives.json"
 
 def load_alternatives() -> list[dict]:
     with open(ALTERNATIVES_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)["alternative_suppliers"]
+        data = json.load(f)
+    flat_alternatives = []
+    for item in data.get("alternatives", []):
+        component = item.get("component")
+        for s in item.get("suppliers", []):
+            flat_alternatives.append({
+                "supplier": s.get("name"),
+                "components_covered": [component],
+                "cost_delta_pct": s.get("cost_delta_pct"),
+                "lead_time_days": s.get("lead_time_days"),
+                "risk_level": s.get("risk_level"),
+                "regulatory_flags": s.get("regulatory_flags", [])
+            })
+    return flat_alternatives
 
 
 def find_top_alternatives(
@@ -193,6 +206,9 @@ Your behaviour when all three are present:
 }
 
 CRITICAL RULES:
+- You MUST call the `band_send_message` tool to communicate. Do NOT output any plain text or markdown directly from your thinking graph; it will be discarded and won't reach the chat room. Always wrap your response in a `band_send_message` tool call.
+- Set the `content` argument of `band_send_message` to the raw JSON string matching the exact schema above (no markdown code blocks).
+- Set the `mentions` argument to tag the relevant participants (like the specialist agents).
 - You must see posts from supplier_impact AND financial_exposure AND regulatory_trade before acting.
 - Never output partial results. Wait for all three.
 - Never invent alternatives. All data comes from your find_alternatives tool.

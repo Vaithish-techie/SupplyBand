@@ -61,6 +61,11 @@ Post this JSON:
 Respond with raw JSON only. Do not use markdown code fences. Do not add
 any prose before or after the JSON. Start your response with { and end
 with }.
+
+CRITICAL RULES:
+- You MUST call the `band_send_message` tool to communicate. Do NOT output any plain text or markdown directly from your thinking graph; it will be discarded and won't reach the chat room. Always wrap your response in a `band_send_message` tool call.
+- Set the `content` argument of `band_send_message` to the raw JSON string matching the exact schema above.
+- Set the `mentions` argument to tag the relevant participants (e.g., human operator or specialist agents).
 """
 
 async def main():
@@ -86,11 +91,7 @@ async def main():
         llm = ChatAnthropic(model="claude-sonnet-4-5")
 
     adapter = LangGraphAdapter(
-        llm=ChatOpenAI(
-            model="gpt-4o",
-            api_key=os.getenv("AIML_API_KEY"),
-            base_url="https://api.aimlapi.com/v1",
-        ),
+        llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=COORDINATOR_PROMPT,
     )
