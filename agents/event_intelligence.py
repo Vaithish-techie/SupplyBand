@@ -74,6 +74,8 @@ def check_trigger_and_check_duplicate(msg, history, agent_name, trigger_agent, t
         else:
             sender = agent_name
         try:
+            if "{" in content:
+                content = content[content.find("{"):content.rfind("}")+1]
             data = json.loads(content)
         except Exception:
             data = {}
@@ -81,7 +83,12 @@ def check_trigger_and_check_duplicate(msg, history, agent_name, trigger_agent, t
 
     # Append the current message
     try:
-        current_data = json.loads(msg.content)
+        content = msg.content
+        if content.startswith("[") and "]: " in content:
+            content = content.split("]: ", 1)[1]
+        if "{" in content:
+            content = content[content.find("{"):content.rfind("}")+1]
+        current_data = json.loads(content)
     except Exception:
         current_data = {}
     all_msgs.append((msg.sender_name or msg.sender_type, current_data))
@@ -276,7 +283,7 @@ async def main():
         
     adapter = CustomEventIntelligenceAdapter(
         llm=ChatOpenAI(
-            model="anthropic/claude-3-5-sonnet",
+            model="meta-llama/llama-3.3-70b-versatile",
             api_key=api_key,
             base_url="https://api.aimlapi.com/v1"
         ),

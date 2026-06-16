@@ -18,20 +18,27 @@ fi
 
 echo "Starting Coordinator first (it must be online before others post)..."
 python agents/coordinator.py &
-COORD_PID=$!
 sleep 3
 
-echo "Starting all 5 specialist agents..."
+echo "Starting Event Intelligence..."
 python agents/event_intelligence.py &
+sleep 2
+
+echo "Starting Supplier Impact..."
 python agents/supplier_impact.py &
+sleep 2
+
+echo "Starting Financial Exposure and Regulatory & Trade (in parallel)..."
 python agents/financial_exposure.py &
 python agents/regulatory_trade.py &
-python agents/alt_sourcing.py &
+sleep 2
 
+echo "Starting Alternative Sourcing last..."
+python agents/alt_sourcing.py &
 sleep 2
 
 echo "Starting FastAPI backend on port 8000..."
-uvicorn backend:app --reload --port 8000 &
+python -m uvicorn backend:app --reload --port 8000 &
 
 echo ""
 echo "=========================================="

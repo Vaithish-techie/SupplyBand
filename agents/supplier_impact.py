@@ -141,13 +141,20 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
             else:
                 sender = "supplier_impact"
             try:
+                if "{" in content:
+                    content = content[content.find("{"):content.rfind("}")+1]
                 data = json.loads(content)
             except Exception:
                 data = {}
             all_msgs.append((sender, data))
 
         try:
-            current_data = json.loads(msg.content)
+            content = msg.content
+            if content.startswith("[") and "]: " in content:
+                content = content.split("]: ", 1)[1]
+            if "{" in content:
+                content = content[content.find("{"):content.rfind("}")+1]
+            current_data = json.loads(content)
         except Exception:
             current_data = {}
         all_msgs.append((msg.sender_name or msg.sender_type, current_data))

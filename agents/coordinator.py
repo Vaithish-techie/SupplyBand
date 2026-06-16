@@ -68,6 +68,95 @@ CRITICAL RULES:
 - Set the `mentions` argument to tag the relevant participants (e.g., human operator or specialist agents).
 """
 
+import json
+from datetime import datetime, timezone
+
+class CustomCoordinatorAdapter(LangGraphAdapter):
+    async def on_message(
+        self, msg, tools, history, participants_msg, contacts_msg, *, is_session_bootstrap: bool, room_id: str
+    ) -> None:
+        try:
+            content = msg.content
+            if content.startswith("[") and "]: " in content:
+                content = content.split("]: ", 1)[1]
+            if "{" in content:
+                content = content[content.find("{"):content.rfind("}")+1]
+            data = json.loads(content)
+        except Exception:
+            data = {}
+
+        # PHASE 1: Human operator kickoff
+        if data.get("agent") == "human_operator":
+            logger.info("Received human operator message, sending Phase 1 kickoff...")
+            case_id = data.get("case_id", f"CASE-{int(datetime.now(timezone.utc).timestamp())}")
+            event_text = data.get("event_text", "")
+            
+            kickoff_msg = {
+                "agent": "coordinator",
+                "case_id": case_id,
+                "phase": "kickoff",
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "event_text": event_text,
+                "instruction": "All specialist agents: analyze this event and post your findings",
+                "agents_required": ["event_intelligence", "supplier_impact", "financial_exposure", "regulatory_trade", "alt_sourcing"]
+            }
+            
+            # Find specialist agents to mention
+            mentions = []
+            for p in tools.participants:
+                handle = p.get("handle", "")
+                if p.get("type") == "Agent" and "coordinator" not in handle.lower():
+                    mentions.append(handle)
+            
+            await tools.send_message(
+                content=json.dumps(kickoff_msg, indent=2),
+                mentions=mentions
+            )
+            return
+
+        # PHASE 2: Wait for all 5 specialists and then synthesize
+        # Check if all specialists are done
+        all_msgs = []
+        for m in history:
+            content = m.content
+            if content.startswith("[") and "]: " in content:
+                parts = content.split("]: ", 1)
+                content = parts[1]
+            try:
+                msg_data = json.loads(content)
+                all_msgs.append(msg_data)
+            except:
+                pass
+        
+        all_msgs.append(data)
+        
+        # Check if we have 5 complete
+        case_id = data.get("case_id")
+        if not case_id:
+            return
+            
+        specialists = {"event_intelligence", "supplier_impact", "financial_exposure", "regulatory_trade", "alt_sourcing"}
+        completed = set()
+        for m in all_msgs:
+            if m.get("case_id") == case_id and m.get("agent") in specialists and m.get("status") in ("complete", "insufficient_data"):
+                completed.add(m.get("agent"))
+        
+        if len(completed) == 5:
+            # Check if we already posted the brief
+            for m in all_msgs:
+                if m.get("agent") == "coordinator" and m.get("phase") == "executive_brief" and m.get("case_id") == case_id:
+                    return # Already posted
+                    
+            logger.info("All 5 specialists complete. Calling LLM for Executive Brief...")
+            try:
+                # LLM call
+                await super().on_message(
+                    msg=msg, tools=tools, history=history, participants_msg=participants_msg, 
+                    contacts_msg=contacts_msg, is_session_bootstrap=is_session_bootstrap, room_id=room_id
+                )
+            except Exception as e:
+                logger.error(f"LLM call failed: {e}")
+
 async def main():
     # Load env variables from local and parent dir
     load_dotenv()
@@ -78,10 +167,10 @@ async def main():
     # Initialize the LLM based on available keys
     aiml_api_key = os.getenv("AIML_API_KEY")
     if aiml_api_key:
-        logger.info("Initializing LLM via AIML API (gpt-4o)...")
+        logger.info("Initializing LLM via AIML API (llama-3.3-70b-versatile)...")
         from langchain_openai import ChatOpenAI
         llm = ChatOpenAI(
-            model="gpt-4o",
+            model="meta-llama/llama-3.3-70b-versatile",
             openai_api_key=aiml_api_key,
             openai_api_base="https://api.aimlapi.com/v1",
         )
@@ -90,7 +179,7 @@ async def main():
         from langchain_anthropic import ChatAnthropic
         llm = ChatAnthropic(model="claude-sonnet-4-5")
 
-    adapter = LangGraphAdapter(
+    adapter = CustomCoordinatorAdapter(
         llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=COORDINATOR_PROMPT,

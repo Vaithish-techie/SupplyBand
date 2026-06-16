@@ -22,6 +22,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from band import Agent
 from band.adapters import LangGraphAdapter
 from band.config import load_agent_config
+from langchain_core.tools import tool
 
 load_dotenv()
 
@@ -224,42 +225,39 @@ CRITICAL RULES:
 # Tool wrapper
 # ---------------------------------------------------------------------------
 
-def build_tool_functions(alternatives: list[dict]):
-    """Return callable tools for the LangGraph adapter."""
+@tool
+def find_alternatives(affected_components: list, blocked_regulatory_flags: list = None) -> str:
+    """
+    Find and rank alternative suppliers for the given affected components,
+    excluding any alternatives that have blocked regulatory flags.
+    Returns a JSON string with top 3 alternatives and recommendation.
+    """
+    if blocked_regulatory_flags is None:
+        blocked_regulatory_flags = []
 
-    def find_alternatives(affected_components: list, blocked_regulatory_flags: list = None) -> str:
-        """
-        Find and rank alternative suppliers for the given affected components,
-        excluding any alternatives that have blocked regulatory flags.
-        Returns a JSON string with top 3 alternatives and recommendation.
-        """
-        if blocked_regulatory_flags is None:
-            blocked_regulatory_flags = []
+    alternatives = load_alternatives()
+    top3 = find_top_alternatives(
+        affected_components=affected_components,
+        blocked_regulatory_flags=blocked_regulatory_flags,
+        alternatives=alternatives,
+        top_n=3,
+    )
 
-        top3 = find_top_alternatives(
-            affected_components=affected_components,
-            blocked_regulatory_flags=blocked_regulatory_flags,
-            alternatives=alternatives,
-            top_n=3,
-        )
-
-        if not top3:
-            return json.dumps({
-                "alternatives": [],
-                "recommended": None,
-                "recommendation_reason": "No compliant alternatives found for affected components.",
-            })
-
-        recommended = top3[0]["supplier"]
-        reason = build_recommendation_reason(top3[0], top3)
-
+    if not top3:
         return json.dumps({
-            "alternatives": top3,
-            "recommended": recommended,
-            "recommendation_reason": reason,
+            "alternatives": [],
+            "recommended": None,
+            "recommendation_reason": "No compliant alternatives found for affected components.",
         })
 
-    return {"find_alternatives": find_alternatives}
+    recommended = top3[0]["supplier"]
+    reason = build_recommendation_reason(top3[0], top3)
+
+    return json.dumps({
+        "alternatives": top3,
+        "recommended": recommended,
+        "recommendation_reason": reason,
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -293,6 +291,7 @@ async def main():
         llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=ALT_SOURCING_PROMPT,
+        additional_tools=[find_alternatives],
     )
 
     agent_id, api_key = load_agent_config("alt_sourcing")

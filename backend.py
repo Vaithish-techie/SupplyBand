@@ -1,26 +1,35 @@
 """
-FastAPI backend — Person 1 owns this.
-Gives the frontend a simple HTTP interface to trigger events,
-poll the Band room, and log human approval decisions.
+FastAPI backend — Supply Chain Disruption Intelligence Center
+Provides the frontend with a simple HTTP interface to trigger events,
+poll the Band room, check case status, and log human approval decisions.
 
-Run with: uvicorn backend:app --reload --port 8000
+Run with: python -m uvicorn backend:app --reload --port 8000
 """
 
 import os
+import re
 import httpx
 import json
 import yaml
+import asyncio
+import logging
 from datetime import datetime, timezone
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="Supply Chain Intelligence API")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [backend] %(message)s")
+logger = logging.getLogger(__name__)
 
-# Allow the frontend (running on a different port) to call this API
+app = FastAPI(
+    title="Supply Chain Intelligence API",
+    description="Backend bridge between the frontend UI and the Band multi-agent room.",
+    version="1.0.0",
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,55 +37,175 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-BAND_REST_URL = os.getenv("BAND_REST_URL", "https://app.band.ai")
-BAND_ROOM_ID = os.getenv("BAND_ROOM_ID")  # the shared room all 6 agents live in
-BAND_API_KEY = os.getenv("BAND_COORDINATOR_API_KEY")  # used to post as a human/system user
+# ---------------------------------------------------------------------------
+# Configuration — loaded from agent_config.yaml (same auth pattern as agents)
+# ---------------------------------------------------------------------------
 
-# Helper function to resolve room configuration
-def get_room_config():
+BAND_REST_URL = "https://app.band.ai"
+
+def load_config() -> tuple[str, str | None]:
+    """
+    Load coordinator API key from agent_config.yaml (same source agents use).
+    BAND_COORDINATOR_API_KEY env var overrides the yaml if set.
+    Returns (api_key, room_id_override_or_None)
+    """
     api_key = os.getenv("BAND_COORDINATOR_API_KEY")
-    room_id = os.getenv("BAND_ROOM_ID")
-    
+    room_id = os.getenv("BAND_ROOM_ID")  # optional override
+
     if not api_key:
         try:
             base_dir = os.path.dirname(os.path.abspath(__file__))
             config_path = os.path.join(base_dir, "agent_config.yaml")
-            if os.path.exists(config_path):
-                with open(config_path, "r") as f:
-                    config = yaml.safe_load(f)
-                api_key = config.get("coordinator", {}).get("api_key")
+            with open(config_path) as f:
+                config = yaml.safe_load(f)
+            api_key = config.get("event_intelligence", {}).get("api_key")
         except Exception as e:
-            print(f"Error loading agent_config.yaml: {e}")
+            logger.warning(f"Could not load agent_config.yaml: {e}")
 
-    # Fallback default if not defined
     if not api_key:
-        api_key = "dummy-key"
-        
+        raise RuntimeError(
+            "No Band API key found. Set BAND_COORDINATOR_API_KEY env var "
+            "or populate agent_config.yaml coordinator.api_key."
+        )
     return api_key, room_id
 
-BAND_API_KEY, BAND_ROOM_ID = get_room_config()
 
-async def resolve_room_id(client, api_key):
-    global BAND_ROOM_ID
-    if BAND_ROOM_ID:
-        return BAND_ROOM_ID
+BAND_API_KEY, _ROOM_ID_OVERRIDE = load_config()
+_cached_room_id: str | None = _ROOM_ID_OVERRIDE
+
+# In-memory case store (fine for hackathon demo)
+ACTIVE_CASES: dict[str, dict] = {}
+
+# Names of all 6 expected agent posts for a complete investigation
+EXPECTED_AGENTS = {
+    "coordinator_kickoff",  # coordinator phase=kickoff
+    "event_intelligence",
+    "supplier_impact",
+    "financial_exposure",
+    "regulatory_trade",
+    "alt_sourcing",
+    "coordinator_brief",    # coordinator phase=executive_brief
+}
+
+SPECIALIST_AGENTS = {
+    "event_intelligence",
+    "supplier_impact",
+    "financial_exposure",
+    "regulatory_trade",
+    "alt_sourcing",
+}
+
+# ---------------------------------------------------------------------------
+# Band API helpers
+# ---------------------------------------------------------------------------
+
+def _band_headers() -> dict:
+    return {"x-api-key": BAND_API_KEY, "content-type": "application/json"}
+
+
+async def _get_room_id(client: httpx.AsyncClient) -> str:
+    """Resolve the shared Band room ID — cached after first successful fetch."""
+    global _cached_room_id
+    if _cached_room_id:
+        return _cached_room_id
+
     try:
-        url = f"{BAND_REST_URL}/api/v1/agent/chats"
-        headers = {"x-api-key": api_key}
-        resp = await client.get(url, headers=headers)
-        if resp.status_code == 200:
-            data = resp.json()
-            chats = data.get("chats", data.get("data", data if isinstance(data, list) else []))
-            if chats:
-                BAND_ROOM_ID = chats[0].get("id")
-                return BAND_ROOM_ID
+        r = await client.get(
+            f"{BAND_REST_URL}/api/v1/agent/chats",
+            headers={"x-api-key": BAND_API_KEY},
+            timeout=10,
+        )
+        r.raise_for_status()
+        data = r.json()
+        chats = data.get("chats", data.get("data", data if isinstance(data, list) else []))
+        if not chats:
+            raise HTTPException(status_code=503, detail="No Band rooms found for this API key.")
+        _cached_room_id = chats[0]["id"]
+        logger.info(f"Resolved Band room_id: {_cached_room_id}")
+        return _cached_room_id
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=503, detail="Band API timed out resolving room ID.")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=503, detail=f"Band API error: {e.response.status_code} — {e.response.text[:200]}")
+
+
+async def _fetch_participants(client: httpx.AsyncClient, room_id: str) -> list[dict]:
+    """Fetch all participants (users + agents) in the Band room."""
+    try:
+        r = await client.get(
+            f"{BAND_REST_URL}/api/v1/agent/chats/{room_id}/participants",
+            headers={"x-api-key": BAND_API_KEY},
+            timeout=10,
+        )
+        r.raise_for_status()
+        return r.json().get("data", [])
     except Exception as e:
-        print(f"Failed to resolve room id: {e}")
-    return "unknown"
+        logger.warning(f"Could not fetch participants: {e}")
+        return []
 
-# In-memory store for case tracking (fine for a hackathon demo)
-ACTIVE_CASES = {}
 
+async def _fetch_messages(client: httpx.AsyncClient, room_id: str, page_size: int = 100) -> list[dict]:
+    """
+    Fetch the full chat history from the Band room via the /context endpoint.
+
+    The /messages endpoint is an agent-facing *queue* — messages are consumed
+    and removed once an agent processes them. The /context endpoint is the
+    persistent history and is the correct source for both /room-messages and
+    /case-status reads.
+    """
+    try:
+        r = await client.get(
+            f"{BAND_REST_URL}/api/v1/agent/chats/{room_id}/context",
+            headers={"x-api-key": BAND_API_KEY},
+            params={"page": 1, "page_size": page_size},
+            timeout=10,
+        )
+        r.raise_for_status()
+        data = r.json()
+        return data.get("data", data if isinstance(data, list) else [])
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=503, detail="Band API timed out fetching message history.")
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=503, detail=f"Band context fetch failed: {e.response.status_code} — {e.response.text[:200]}")
+
+
+_BAND_MENTION_RE = re.compile(r"@\[\[[^\]]+\]\]\s*")
+
+def _parse_agent_message(raw_msg: dict) -> dict | None:
+    """
+    Safely parse the JSON content of a Band context message.
+
+    Band agents (and the coordinator relay) sometimes prepend or append
+    @[[uuid]] mention markup to the raw JSON string. Strip these before
+    attempting the JSON parse so agent envelopes are always found.
+    """
+    content = raw_msg.get("content", "")
+    # First try raw parse (no markup)
+    try:
+        return json.loads(content)
+    except Exception:
+        pass
+    # Strip Band @[[uuid]] mention markup and retry
+    stripped = _BAND_MENTION_RE.sub("", content).strip()
+    try:
+        return json.loads(stripped)
+    except Exception:
+        return None
+
+
+def _filter_by_case(messages: list[dict], case_id: str) -> list[dict]:
+    """Return only messages whose parsed JSON has the given case_id."""
+    result = []
+    for m in messages:
+        data = _parse_agent_message(m)
+        if data and data.get("case_id") == case_id:
+            result.append(m)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Request/Response models
+# ---------------------------------------------------------------------------
 
 class TriggerEventRequest(BaseModel):
     event_text: str
@@ -85,47 +214,67 @@ class TriggerEventRequest(BaseModel):
 
 class ApproveActionRequest(BaseModel):
     case_id: str
-    decision: str  # "approve" | "escalate"
+    decision: str   # "approve" | "escalate"
     notes: str | None = None
+
+
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/health")
+async def health():
+    """Liveness check — also verifies Band API key resolves a room."""
+    try:
+        async with httpx.AsyncClient() as client:
+            room_id = await _get_room_id(client)
+        return {
+            "status": "ok",
+            "band_room_id": room_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    except HTTPException as e:
+        return {"status": "degraded", "detail": e.detail}
 
 
 @app.post("/trigger-event")
 async def trigger_event(req: TriggerEventRequest):
     """
-    Posts the raw disruption event into the Band room.
-    The Coordinator agent picks this up and kicks off the pipeline.
+    Post a raw disruption event into the Band room as the human operator.
+    The Coordinator agent picks this up and kicks off the investigation pipeline.
+
+    Returns the case_id so the frontend can start polling /room-messages and /case-status.
     """
-    case_id = req.case_id or f"CASE-{int(datetime.now().timestamp())}"
-    api_key = BAND_API_KEY
+    case_id = req.case_id or f"CASE-{int(datetime.now(timezone.utc).timestamp())}"
 
     async with httpx.AsyncClient() as client:
-        room_id = await resolve_room_id(client, api_key)
-        if not room_id or room_id == "unknown":
-            raise HTTPException(status_code=500, detail="Unable to resolve BAND_ROOM_ID")
+        room_id = await _get_room_id(client)
+        participants = await _fetch_participants(client, room_id)
 
-        # Fetch list of participants to find someone to mention (other than the coordinator)
-        mention_participant = None
-        try:
-            p_resp = await client.get(
-                f"{BAND_REST_URL}/api/v1/agent/chats/{room_id}/participants",
-                headers={"x-api-key": api_key},
-                timeout=10
+        # Find the coordinator agent to @mention — it must NOT be our own key (cannot_mention_self)
+        # We mention the coordinator agent by its Band agent ID (not the key owner)
+        # The coordinator key IS the posting identity, so we mention any other agent to wake them.
+        # Strategy: mention event_intelligence, which the coordinator will also see and kick off.
+        mention = None
+        for p in participants:
+            handle = p.get("handle", "")
+            pid = p.get("id", "")
+            if "coordinator" in handle.lower() and p.get("type") == "Agent":
+                mention = {"id": pid, "handle": handle}
+                break
+
+        if not mention:
+            # Fallback: mention the first agent that isn't event_intelligence (since backend uses event_intelligence key)
+            for p in participants:
+                if p.get("type") == "Agent" and "event_intelligence" not in p.get("handle", "").lower():
+                    mention = {"id": p["id"], "handle": p["handle"]}
+                    break
+
+        if not mention:
+            raise HTTPException(
+                status_code=503,
+                detail="Could not find a participant to mention in the Band room."
             )
-            if p_resp.status_code == 200:
-                participants = p_resp.json().get("data", [])
-                for p in participants:
-                    if "coordinator" not in p.get("handle", "").lower():
-                        mention_participant = {"id": p.get("id"), "handle": p.get("handle")}
-                        break
-        except Exception as e:
-            print(f"Failed to fetch participants: {e}")
-
-        # Fallback default peer to mention if participants endpoint failed or only coordinator is there
-        if not mention_participant:
-            mention_participant = {
-                "id": "2cd4de36-fbe1-470d-964b-63082dfb0a8d",
-                "handle": "rshricharan29/event-intelligence"
-            }
 
         inner_payload = {
             "agent": "human_operator",
@@ -134,87 +283,165 @@ async def trigger_event(req: TriggerEventRequest):
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-        url = f"{BAND_REST_URL}/api/v1/agent/chats/{room_id}/messages"
-        payload = {
-            "message": {
-                "content": json.dumps(inner_payload),
-                "mentions": [mention_participant]
-            }
-        }
-
         try:
-            resp = await client.post(
-                url,
-                json=payload,
-                headers={"x-api-key": api_key, "content-type": "application/json"},
+            r = await client.post(
+                f"{BAND_REST_URL}/api/v1/agent/chats/{room_id}/messages",
+                json={"message": {"content": json.dumps(inner_payload), "mentions": [mention]}},
+                headers=_band_headers(),
                 timeout=10,
             )
-            resp.raise_for_status()
-        except httpx.HTTPError as e:
-            raise HTTPException(status_code=502, detail=f"Band post failed: {e}")
+            r.raise_for_status()
+        except httpx.TimeoutException:
+            raise HTTPException(status_code=503, detail="Band API timed out posting the event.")
+        except httpx.HTTPStatusError as e:
+            raise HTTPException(
+                status_code=502,
+                detail=f"Band rejected the post: {e.response.status_code} — {e.response.text[:300]}"
+            )
 
-    ACTIVE_CASES[case_id] = {"status": "investigating", "created_at": datetime.now(timezone.utc).isoformat()}
-    return {"case_id": case_id, "status": "investigation_started"}
+    ACTIVE_CASES[case_id] = {
+        "status": "investigating",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "event_text": req.event_text,
+    }
+    logger.info(f"Triggered investigation for {case_id}")
+    return {
+        "case_id": case_id,
+        "status": "investigation_started",
+        "room_id": room_id,
+        "mentioned_agent": mention["handle"],
+    }
 
 
 @app.get("/room-messages")
-async def get_room_messages(case_id: str | None = None):
+async def get_room_messages(case_id: str | None = Query(default=None)):
     """
-    Fetches all messages in the Band room, optionally filtered by case_id.
-    Frontend polls this every ~2 seconds to render the live feed.
+    Fetch messages from the Band room. If case_id is given, filters to only
+    messages belonging to that investigation. Frontend polls this every ~2s
+    to render the live agent feed.
+
+    Each message's 'parsed' field contains the decoded agent JSON if valid.
     """
-    api_key = BAND_API_KEY
     async with httpx.AsyncClient() as client:
-        room_id = await resolve_room_id(client, api_key)
-        if not room_id or room_id == "unknown":
-            raise HTTPException(status_code=500, detail="Unable to resolve BAND_ROOM_ID")
+        room_id = await _get_room_id(client)
+        messages = await _fetch_messages(client, room_id)
 
-        try:
-            resp = await client.get(
-                f"{BAND_REST_URL}/api/v1/agent/chats/{room_id}/messages",
-                headers={"x-api-key": api_key},
-                params={"page": 1, "page_size": 100},
-                timeout=10,
-            )
-            resp.raise_for_status()
-            data = resp.json()
-        except httpx.HTTPError as e:
-            raise HTTPException(status_code=502, detail=f"Band fetch failed: {e}")
-
-    messages = data.get("data", data.get("messages", data if isinstance(data, list) else []))
+    enriched = []
+    for m in messages:
+        parsed = _parse_agent_message(m)
+        enriched.append({**m, "parsed": parsed})
 
     if case_id:
-        filtered_messages = []
-        for m in messages:
-            content = m.get("content", "")
-            try:
-                content_json = json.loads(content)
-                if content_json.get("case_id") == case_id:
-                    filtered_messages.append(m)
-            except Exception:
-                if m.get("case_id") == case_id:
-                    filtered_messages.append(m)
-        messages = filtered_messages
+        enriched = [m for m in enriched if m.get("parsed") and m["parsed"].get("case_id") == case_id]
 
-    return {"case_id": case_id, "messages": messages}
+    return {
+        "case_id": case_id,
+        "room_id": _cached_room_id,
+        "message_count": len(enriched),
+        "messages": enriched,
+    }
+
+
+@app.get("/case-status")
+async def case_status(case_id: str = Query(..., description="The case_id to check")):
+    """
+    Returns whether an investigation is complete (all 6 agents have posted)
+    or still in progress, by scanning which agents have posted for this case_id.
+
+    Response includes:
+    - agents_posted: list of agent names that have posted
+    - agents_pending: list of agents that haven't posted yet
+    - investigation_complete: bool — all 5 specialists AND coordinator brief done
+    - verdict: the coordinator's final verdict if available
+    - severity: the coordinator's overall severity if available
+    """
+    async with httpx.AsyncClient() as client:
+        room_id = await _get_room_id(client)
+        messages = await _fetch_messages(client, room_id)
+
+    agents_posted: dict[str, dict] = {}   # agent_key -> parsed message
+
+    for raw in messages:
+        data = _parse_agent_message(raw)
+        if not data or data.get("case_id") != case_id:
+            continue
+
+        agent = data.get("agent")
+        phase = data.get("phase")
+
+        if agent == "coordinator":
+            if phase == "kickoff":
+                agents_posted["coordinator_kickoff"] = data
+            elif phase == "executive_brief":
+                agents_posted["coordinator_brief"] = data
+        elif agent in SPECIALIST_AGENTS:
+            agents_posted[agent] = data
+
+    specialists_done = all(a in agents_posted for a in SPECIALIST_AGENTS)
+    brief_done = "coordinator_brief" in agents_posted
+    investigation_complete = specialists_done and brief_done
+
+    # Extract verdict and severity from executive brief if available
+    verdict = None
+    severity = None
+    if brief_done:
+        brief = agents_posted["coordinator_brief"]
+        verdict = brief.get("verdict")
+        severity = brief.get("severity")
+
+    pending = sorted(
+        (EXPECTED_AGENTS - set(agents_posted.keys())) - {"coordinator_kickoff"}
+    )
+
+    # Build per-agent summary
+    agent_summaries = {}
+    for key, data in agents_posted.items():
+        agent_summaries[key] = {
+            "status": data.get("status"),
+            "confidence": data.get("confidence"),
+            "flags": data.get("flags", []),
+            "timestamp": data.get("timestamp"),
+        }
+
+    return {
+        "case_id": case_id,
+        "investigation_complete": investigation_complete,
+        "specialists_done": specialists_done,
+        "brief_done": brief_done,
+        "verdict": verdict,
+        "severity": severity,
+        "agents_posted": sorted(agents_posted.keys()),
+        "agents_pending": pending,
+        "agent_details": agent_summaries,
+        "checked_at": datetime.now(timezone.utc).isoformat(),
+    }
 
 
 @app.post("/approve-action")
 async def approve_action(req: ApproveActionRequest):
     """
-    Human investigator approves or escalates the Coordinator's
-    final recommendation. Logs the decision for the audit trail.
+    Record a human investigator's approval or escalation decision for a case.
+    Logs the decision in ACTIVE_CASES for audit trail.
+
+    Works for any case_id — if the case isn't in ACTIVE_CASES (e.g. triggered
+    manually via Band UI), it creates the record automatically.
     """
     if req.case_id not in ACTIVE_CASES:
-        raise HTTPException(status_code=404, detail="Unknown case_id")
+        # Allow approvals for cases triggered directly via Band UI
+        ACTIVE_CASES[req.case_id] = {
+            "status": "unknown",
+            "created_at": None,
+            "note": "Case created by approve-action (triggered outside backend)",
+        }
 
     ACTIVE_CASES[req.case_id]["status"] = req.decision
     ACTIVE_CASES[req.case_id]["decided_at"] = datetime.now(timezone.utc).isoformat()
     ACTIVE_CASES[req.case_id]["notes"] = req.notes
 
-    return {"case_id": req.case_id, "status": req.decision, "logged": True}
-
-
-@app.get("/health")
-async def health():
-    return {"status": "ok"}
+    logger.info(f"Case {req.case_id} decision: {req.decision}")
+    return {
+        "case_id": req.case_id,
+        "decision": req.decision,
+        "logged": True,
+        "decided_at": ACTIVE_CASES[req.case_id]["decided_at"],
+    }

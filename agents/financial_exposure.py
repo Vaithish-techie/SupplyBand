@@ -21,6 +21,7 @@ from langgraph.checkpoint.memory import InMemorySaver
 from band import Agent
 from band.adapters import LangGraphAdapter
 from band.config import load_agent_config
+from langchain_core.tools import tool
 
 load_dotenv()
 
@@ -212,18 +213,15 @@ CRITICAL RULES:
 # Tool wrapper the LLM can call (LangGraph tool node pattern)
 # ---------------------------------------------------------------------------
 
-def build_tool_functions(financials: list[dict]):
-    """Return a dict of callable tool functions for the adapter."""
-
-    def calculate_exposure(affected_components: list) -> str:
-        """
-        Calculate financial exposure for a list of affected component names.
-        Returns a JSON string with week1, week3, week6 risk figures.
-        """
-        result = calculate_financial_exposure(affected_components, financials)
-        return json.dumps(result)
-
-    return {"calculate_exposure": calculate_exposure}
+@tool
+def calculate_exposure(affected_components: list[str]) -> str:
+    """
+    Calculate financial exposure for a list of affected component names.
+    Returns a JSON string with week1, week3, week6 risk figures.
+    """
+    financials = load_financials()
+    result = calculate_financial_exposure(affected_components, financials)
+    return json.dumps(result)
 
 
 # ---------------------------------------------------------------------------
@@ -257,6 +255,7 @@ async def main():
         llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=FINANCIAL_EXPOSURE_PROMPT,
+        additional_tools=[calculate_exposure],
     )
 
     agent_id, api_key = load_agent_config("financial_exposure")
