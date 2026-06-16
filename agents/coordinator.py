@@ -2,12 +2,13 @@
 import asyncio
 import logging
 import json
+import os
 from dotenv import load_dotenv
-from langchain_anthropic import ChatAnthropic
+from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
-from thenvoi import Agent
-from thenvoi.adapters import LangGraphAdapter
-from thenvoi.config import load_agent_config
+from band import Agent
+from band.adapters import LangGraphAdapter
+from band.config import load_agent_config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ Post this JSON:
   "verdict": "ESCALATE_TO_HUMAN|AUTO_RESOLVE",
   "top_3_actions": [
     "Action 1 with deadline",
-    "Action 2 with deadline", 
+    "Action 2 with deadline",
     "Action 3 with deadline"
   ],
   "financial_exposure": "summarized from financial agent",
@@ -57,14 +58,39 @@ Post this JSON:
   "compliance_deadline": "most urgent deadline from regulatory agent"
 }
 
-Always respond with valid JSON only. No prose, no markdown.
+Respond with raw JSON only. Do not use markdown code fences. Do not add
+any prose before or after the JSON. Start your response with { and end
+with }.
 """
 
 async def main():
+    # Load env variables from local and parent dir
     load_dotenv()
+    parent_env = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "..", ".env")
+    if os.path.exists(parent_env):
+        load_dotenv(parent_env)
+
+    # Initialize the LLM based on available keys
+    aiml_api_key = os.getenv("AIML_API_KEY")
+    if aiml_api_key:
+        logger.info("Initializing LLM via AIML API (gpt-4o)...")
+        from langchain_openai import ChatOpenAI
+        llm = ChatOpenAI(
+            model="gpt-4o",
+            openai_api_key=aiml_api_key,
+            openai_api_base="https://api.aimlapi.com/v1",
+        )
+    else:
+        logger.info("Initializing LLM via direct Anthropic (claude-sonnet-4-5)...")
+        from langchain_anthropic import ChatAnthropic
+        llm = ChatAnthropic(model="claude-sonnet-4-5")
 
     adapter = LangGraphAdapter(
-        llm=ChatAnthropic(model="claude-sonnet-4-5"),
+        llm=ChatOpenAI(
+            model="gpt-4o",
+            api_key=os.getenv("AIML_API_KEY"),
+            base_url="https://api.aimlapi.com/v1",
+        ),
         checkpointer=InMemorySaver(),
         custom_section=COORDINATOR_PROMPT,
     )
