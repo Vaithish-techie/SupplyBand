@@ -9,9 +9,9 @@ if command -v conda &> /dev/null; then
     echo "Activating conda environment..."
     source "$(conda info --base)/etc/profile.d/conda.sh"
     conda activate aml-agents
-elif [ -d ".venv" ]; then
-    echo "Activating virtual environment (.venv)..."
-    source .venv/Scripts/activate || source .venv/bin/activate
+elif [ -d "venv" ]; then
+    echo "Activating virtual environment (venv)..."
+    source venv/Scripts/activate || source venv/bin/activate
 else
     echo "Using system python environment..."
 fi
