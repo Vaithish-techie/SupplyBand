@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 import os
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
-from thenvoi import Agent
-from thenvoi.adapters import LangGraphAdapter
-from thenvoi.config import load_agent_config
+from band import Agent
+from band.adapters import LangGraphAdapter
+from band.config import load_agent_config
 from datetime import datetime, timezone
 
 logging.basicConfig(level=logging.INFO)
@@ -41,7 +41,7 @@ Respond ONLY with valid JSON inside the 'content' parameter of 'band_send_messag
 Output format for the content:
 {{
   "agent": "supplier_impact",
-  "case_id": "<same case_id as input>",
+  "case_id": "<use same case_id as input>",
   "timestamp": "<current ISO8601 timestamp>",
   "status": "complete",
   "findings": {{

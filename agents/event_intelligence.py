@@ -6,9 +6,9 @@ from dotenv import load_dotenv
 import os
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
-from thenvoi import Agent
-from thenvoi.adapters import LangGraphAdapter
-from thenvoi.config import load_agent_config
+from band import Agent
+from band.adapters import LangGraphAdapter
+from band.config import load_agent_config
 from datetime import datetime, timezone
 
 logging.basicConfig(level=logging.INFO)

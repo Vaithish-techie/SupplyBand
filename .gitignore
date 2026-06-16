@@ -1,3 +1,5 @@
 .env
 agent_config.yaml
 venv/
+TEST_RESULTS.md
+__pycache__
