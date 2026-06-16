@@ -4,9 +4,17 @@
 
 set -e
 
-echo "Activating conda environment..."
-source "$(conda info --base)/etc/profile.d/conda.sh"
-conda activate aml-agents
+echo "Checking Python environment..."
+if command -v conda &> /dev/null; then
+    echo "Activating conda environment..."
+    source "$(conda info --base)/etc/profile.d/conda.sh"
+    conda activate aml-agents
+elif [ -d ".venv" ]; then
+    echo "Activating virtual environment (.venv)..."
+    source .venv/Scripts/activate || source .venv/bin/activate
+else
+    echo "Using system python environment..."
+fi
 
 echo "Starting Coordinator first (it must be online before others post)..."
 python agents/coordinator.py &

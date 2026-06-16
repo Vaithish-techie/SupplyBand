@@ -64,7 +64,26 @@ with }.
 """
 
 async def main():
+    # Load env variables from local and parent dir
     load_dotenv()
+    parent_env = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "..", ".env")
+    if os.path.exists(parent_env):
+        load_dotenv(parent_env)
+
+    # Initialize the LLM based on available keys
+    aiml_api_key = os.getenv("AIML_API_KEY")
+    if aiml_api_key:
+        logger.info("Initializing LLM via AIML API (gpt-4o)...")
+        from langchain_openai import ChatOpenAI
+        llm = ChatOpenAI(
+            model="gpt-4o",
+            openai_api_key=aiml_api_key,
+            openai_api_base="https://api.aimlapi.com/v1",
+        )
+    else:
+        logger.info("Initializing LLM via direct Anthropic (claude-sonnet-4-5)...")
+        from langchain_anthropic import ChatAnthropic
+        llm = ChatAnthropic(model="claude-sonnet-4-5")
 
     adapter = LangGraphAdapter(
         llm=ChatOpenAI(
