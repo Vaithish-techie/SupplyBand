@@ -1,0 +1,19 @@
+{
+  "scenarios": [
+    {
+      "id": "SCENARIO-1",
+      "name": "Taiwan Earthquake",
+      "text": "Magnitude 7.4 earthquake strikes Hsinchu, Taiwan. TSMC reports fab damage. Production suspended indefinitely."
+    },
+    {
+      "id": "SCENARIO-2",
+      "name": "Port Strike",
+      "text": "Dockworkers strike at Port of Los Angeles. All container operations halted. No resolution timeline given."
+    },
+    {
+      "id": "SCENARIO-3",
+      "name": "Sanctions",
+      "text": "US Treasury imposes new sanctions on Chinese semiconductor manufacturers effective immediately."
+    }
+  ]
+}
