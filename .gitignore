@@ -1,5 +1,25 @@
 .env
 agent_config.yaml
 venv/
+.venv/
 TEST_RESULTS.md
-__pycache__
+__pycache__/
+
+# Node.js dependencies and production builds
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.vite/
+frontend/*.local
+
+# IDE and system files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+Thumbs.db
+.DS_Store
