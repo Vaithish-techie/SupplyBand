@@ -11,8 +11,4 @@ NEVER EVER MODIFY THE LIBRARY CODE INSIDE venv FOLDER.
 Always generate test files for the agents, execute them and evaluate the agent performance.
 Store results in TEST_RESULTS.md file.
 
-Your tasks are only to work on the PERSON 2 agents.
-Do not modify any files outside the scope of PERSON 2.
-Tasks assigned to you are present in PERSON2_TASKS.md file.
-
 If you have any question, prompt the user directly.

@@ -1,4 +1,5 @@
 .env
+.agents/
 agent_config.yaml
 venv/
 TEST_RESULTS.md
