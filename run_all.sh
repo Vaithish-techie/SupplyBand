@@ -4,6 +4,12 @@
 
 set -e
 
+echo "Cleaning up any existing agent processes..."
+pkill -f "python agents/" || true
+pkill -f "backend:app" || true
+echo "Waiting 3 seconds to ensure sockets close cleanly..."
+sleep 3
+
 echo "Checking Python environment..."
 if command -v conda &> /dev/null; then
     echo "Activating conda environment..."

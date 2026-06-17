@@ -1,5 +1,6 @@
 # agents/_template.py — copy this for each of the 5 specialist agents
 
+from utils import get_llm_for_agent
 import asyncio
 import logging
 from dotenv import load_dotenv

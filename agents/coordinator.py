@@ -1,4 +1,5 @@
 # agents/coordinator.py
+from utils import get_llm_for_agent
 import asyncio
 import logging
 import json
@@ -9,6 +10,9 @@ from langgraph.checkpoint.memory import InMemorySaver
 from band import Agent
 from band.adapters import LangGraphAdapter
 from band.config import load_agent_config
+import httpx
+import time
+from langchain_core.messages import SystemMessage, HumanMessage
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -101,61 +105,109 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
                 "agents_required": ["event_intelligence", "supplier_impact", "financial_exposure", "regulatory_trade", "alt_sourcing"]
             }
             
-            # Find specialist agents to mention
+            # Find specialist agents to mention using participants_msg
             mentions = []
-            for p in tools.participants:
-                handle = p.get("handle", "")
-                if p.get("type") == "Agent" and "coordinator" not in handle.lower():
-                    mentions.append(handle)
+            try:
+                p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
+                participants_list = json.loads(p_str)
+                for p in participants_list:
+                    handle = p.get("handle", "")
+                    if p.get("type") == "Agent" and "coordinator" not in handle.lower():
+                        mentions.append(handle)
+            except Exception as e:
+                logger.error(f"Failed to parse participants_msg: {e}")
             
+            # If no mentions found, use human operator as fallback to avoid empty mentions error
+            if not mentions:
+                mentions = ["@human_operator"]
+                
             await tools.send_message(
                 content=json.dumps(kickoff_msg, indent=2),
                 mentions=mentions
             )
+            
+            # Spawn a non-blocking timeout task to poll completion and wake the coordinator
+            import asyncio
+            async def monitor_completion(case_id_param, m_list):
+                start_time = time.time()
+                timeout = 90
+                room_data = None
+                
+                while time.time() - start_time < timeout:
+                    await asyncio.sleep(5)
+                    try:
+                        async with httpx.AsyncClient() as client:
+                            resp = await client.get(f"http://localhost:8000/case-status?case_id={case_id_param}")
+                            if resp.status_code == 200:
+                                room_data = resp.json()
+                                if room_data.get("specialists_done"):
+                                    logger.info("All 5 specialists complete. Calling LLM for Executive Brief...")
+                                    break
+                    except Exception as e:
+                        logger.warning(f"Error polling case status: {e}")
+                        
+                is_timeout = not room_data.get("specialists_done", False) if room_data else True
+                
+                if is_timeout:
+                    logger.warning(f"90s timeout reached for {case_id_param}. Proceeding with missing specialists.")
+                    missing_agents = room_data.get("agents_pending", []) if room_data else []
+                    missing_agents = [a for a in missing_agents if a != "coordinator_brief"]
+                else:
+                    missing_agents = []
+                    
+                # We fetch ALL room messages to feed to LLM
+                messages = []
+                try:
+                    async with httpx.AsyncClient() as client:
+                        resp = await client.get(f"http://localhost:8000/room-messages?case_id={case_id_param}")
+                        if resp.status_code == 200:
+                            messages = resp.json().get("messages", [])
+                except Exception as e:
+                    logger.error(f"Failed to fetch room messages: {e}")
+
+                findings_text = ""
+                for m in messages:
+                    if m.get("parsed") and m["parsed"].get("agent") in ["event_intelligence", "supplier_impact", "financial_exposure", "regulatory_trade", "alt_sourcing", "coordinator"]:
+                        findings_text += f"\n--- Message from {m['parsed']['agent']} ---\n{json.dumps(m['parsed'], indent=2)}\n"
+
+                prompt_text = COORDINATOR_PROMPT + "\n\n=== CHAT HISTORY ===\n" + findings_text
+                
+                if is_timeout:
+                    prompt_text += f"\n\nNOTE: The following specialist agents FAILED to respond within the 90s timeout: {missing_agents}. Provide your Executive Brief based ONLY on the available data. Set confidence to LOW or MEDIUM and verdict leaning towards ESCALATE_TO_HUMAN due to missing data."
+
+                llm = get_llm_for_agent("coordinator").bind(response_format={"type": "json_object"})
+                try:
+                    result = await llm.ainvoke([
+                        SystemMessage(content=prompt_text),
+                        HumanMessage(content="All specialists have finished or timed out. Please generate the final Executive Brief JSON. Output ONLY raw JSON. No markdown.")
+                    ])
+                    content = result.content
+                    if "```json" in content:
+                        content = content.split("```json")[1].split("```")[0]
+                    if hasattr(tools, 'send_message'):
+                        await tools.send_message(content=content, mentions=m_list)
+                except Exception as e:
+                    logger.error(f"Terminal LLM failure during brief generation: {e}")
+                    response = {
+                        "agent": "coordinator",
+                        "case_id": case_id_param,
+                        "phase": "executive_brief",
+                        "situation_summary": f"Failed to generate Executive Brief due to LLM error. Timeout status: {is_timeout}.",
+                        "severity": "CRITICAL",
+                        "verdict": "ESCALATE_TO_HUMAN",
+                        "top_3_actions": ["Investigate LLM pipeline failure immediately."],
+                        "financial_exposure": "Unknown",
+                        "recommended_supplier": "Unknown",
+                        "compliance_deadline": "Unknown"
+                    }
+                    if hasattr(tools, 'send_message'):
+                        await tools.send_message(content=json.dumps(response), mentions=m_list)
+            
+            asyncio.create_task(monitor_completion(case_id, mentions))
             return
 
-        # PHASE 2: Wait for all 5 specialists and then synthesize
-        # Check if all specialists are done
-        all_msgs = []
-        for m in history:
-            content = m.content
-            if content.startswith("[") and "]: " in content:
-                parts = content.split("]: ", 1)
-                content = parts[1]
-            try:
-                msg_data = json.loads(content)
-                all_msgs.append(msg_data)
-            except:
-                pass
-        
-        all_msgs.append(data)
-        
-        # Check if we have 5 complete
-        case_id = data.get("case_id")
-        if not case_id:
-            return
-            
-        specialists = {"event_intelligence", "supplier_impact", "financial_exposure", "regulatory_trade", "alt_sourcing"}
-        completed = set()
-        for m in all_msgs:
-            if m.get("case_id") == case_id and m.get("agent") in specialists and m.get("status") in ("complete", "insufficient_data"):
-                completed.add(m.get("agent"))
-        
-        if len(completed) == 5:
-            # Check if we already posted the brief
-            for m in all_msgs:
-                if m.get("agent") == "coordinator" and m.get("phase") == "executive_brief" and m.get("case_id") == case_id:
-                    return # Already posted
-                    
-            logger.info("All 5 specialists complete. Calling LLM for Executive Brief...")
-            try:
-                # LLM call
-                await super().on_message(
-                    msg=msg, tools=tools, history=history, participants_msg=participants_msg, 
-                    contacts_msg=contacts_msg, is_session_bootstrap=is_session_bootstrap, room_id=room_id
-                )
-            except Exception as e:
-                logger.error(f"LLM call failed: {e}")
+        # Phase 2 is now handled entirely by the background task monitor_completion
+        return
 
 async def main():
     # Load env variables from local and parent dir
@@ -164,20 +216,7 @@ async def main():
     if os.path.exists(parent_env):
         load_dotenv(parent_env)
 
-    # Initialize the LLM based on available keys
-    aiml_api_key = os.getenv("AIML_API_KEY")
-    if aiml_api_key:
-        logger.info("Initializing LLM via AIML API (llama-3.3-70b-versatile)...")
-        from langchain_openai import ChatOpenAI
-        llm = ChatOpenAI(
-            model="meta-llama/llama-3.3-70b-versatile",
-            openai_api_key=aiml_api_key,
-            openai_api_base="https://api.aimlapi.com/v1",
-        )
-    else:
-        logger.info("Initializing LLM via direct Anthropic (claude-sonnet-4-5)...")
-        from langchain_anthropic import ChatAnthropic
-        llm = ChatAnthropic(model="claude-sonnet-4-5")
+    llm = get_llm_for_agent("coordinator")
 
     adapter = CustomCoordinatorAdapter(
         llm=llm,

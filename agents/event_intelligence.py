@@ -1,4 +1,5 @@
 # agents/event_intelligence.py
+from utils import get_llm_for_agent
 import asyncio
 import json
 import logging
@@ -10,6 +11,7 @@ from band import Agent
 from band.adapters import LangGraphAdapter
 from band.config import load_agent_config
 from datetime import datetime, timezone
+from langchain_core.messages import SystemMessage, HumanMessage
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -187,33 +189,14 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
         # Get raw event text
         event_text = trigger_msg_data.get("event_text")
         
-        # Determine mode
-        api_key = os.getenv("AIML_API_KEY")
-        use_mock = not api_key or api_key.startswith("your_") or api_key == "key-from-band-dashboard"
+        coordinator_handle = "@coordinator"
+        try:
+            p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
+            participants_list = json.loads(p_str)
+            coordinator_handle = find_participant_handle(participants_list, "coordinator")
+        except Exception as e:
+            logger.error(f"Failed to parse participants_msg: {e}")
         
-        coordinator_handle = find_participant_handle(tools.participants, "coordinator")
-        
-        if use_mock:
-            logger.info("Running in Mock Fallback Mode")
-            findings, confidence, flags = generate_mock_event_findings(event_text)
-            
-            response_envelope = {
-                "agent": "event_intelligence",
-                "case_id": case_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "status": "complete",
-                "findings": findings,
-                "confidence": confidence,
-                "flags": flags
-            }
-            
-            await tools.send_message(
-                content=json.dumps(response_envelope, indent=2),
-                mentions=[coordinator_handle]
-            )
-            logger.info("Mock event intelligence posted successfully.")
-            return
-            
         logger.info("Running in LLM Mode")
         try:
             # Check for vague/empty input
@@ -262,7 +245,7 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
                 "agent": "event_intelligence",
                 "case_id": case_id,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "status": "insufficient_data",
+                "status": "error",
                 "findings": {},
                 "confidence": "LOW",
                 "flags": [f"LLM analysis failed: {str(e)}"]
@@ -275,18 +258,10 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
 async def main():
     load_dotenv()
     
-    # Check if key is dummy or empty, and use a dummy ChatOpenAI model if so,
-    # because LangGraphAdapter builds LLM immediately and would crash if api_key is missing.
-    api_key = os.getenv("AIML_API_KEY")
-    if not api_key or api_key.startswith("your_") or api_key == "key-from-band-dashboard":
-        api_key = "dummy-key"
-        
+    llm = get_llm_for_agent("event_intelligence")
+    
     adapter = CustomEventIntelligenceAdapter(
-        llm=ChatOpenAI(
-            model="meta-llama/llama-3.3-70b-versatile",
-            api_key=api_key,
-            base_url="https://api.aimlapi.com/v1"
-        ),
+        llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=EVENT_INTELLIGENCE_PROMPT,
     )

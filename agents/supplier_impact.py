@@ -1,4 +1,5 @@
 # agents/supplier_impact.py
+from utils import get_llm_for_agent
 import asyncio
 import json
 import logging
@@ -180,12 +181,38 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
 
             # Check if there is a completed event intelligence post for this case
             event_intel = None
+            upstream_failed = False
             for sender, data in all_msgs:
-                if data.get("agent") == "event_intelligence" and data.get("case_id") == case_id and data.get("status") == "complete":
-                    event_intel = data
-                    break
+                if data.get("agent") == "event_intelligence" and data.get("case_id") == case_id:
+                    if data.get("status") == "complete":
+                        event_intel = data
+                        break
+                    elif data.get("status") in ("insufficient_data", "escalate"):
+                        upstream_failed = True
+                        break
 
-            event_intel_handle = find_participant_handle(tools.participants, "event_intelligence")
+            if upstream_failed:
+                logger.warning(f"Upstream agent event_intelligence failed for case {case_id}. Posting insufficient_data immediately.")
+                response_envelope = {
+                    "agent": "supplier_impact",
+                    "case_id": case_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "status": "insufficient_data",
+                    "findings": {},
+                    "confidence": "LOW",
+                    "flags": ["Upstream agent event_intelligence failed. Cascading failure."]
+                }
+                if hasattr(tools, 'send_message'):
+                    tools.send_message(json.dumps(response_envelope))
+                continue
+
+            try:
+                p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
+                participants_list = json.loads(p_str)
+                event_intel_handle = find_participant_handle(participants_list, "event_intelligence")
+            except Exception as e:
+                logger.error(f"Failed to parse participants_msg: {e}")
+                event_intel_handle = "@event_intelligence"
 
             # If event_intel is found, process it!
             if event_intel:
@@ -218,6 +245,9 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                         return
                 except Exception as ex:
                     logger.error(f"Error parsing kickoff timestamp: {ex}")
+
+        import asyncio, random
+        await asyncio.sleep(0.1 + random.random() * 0.4)
 
     async def process_supplier_impact(self, case_id, findings, tools, msg, history, participants_msg, contacts_msg, is_session_bootstrap, room_id, event_intel_handle):
         # Check if suppliers.json is missing
@@ -310,7 +340,7 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                 "agent": "supplier_impact",
                 "case_id": case_id,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "status": "insufficient_data",
+                "status": "error",
                 "findings": {},
                 "confidence": "LOW",
                 "flags": [f"LLM analysis failed: {str(e)}"]
@@ -334,17 +364,10 @@ async def main():
         suppliers_json=json.dumps(suppliers, indent=2)
     )
     
-    # Check if key is dummy or empty, and use a dummy ChatOpenAI model if so.
-    api_key = os.getenv("FEATHERLESS_API_KEY")
-    if not api_key or api_key.startswith("your_") or api_key == "key-from-band-dashboard":
-        api_key = "dummy-key"
-        
+    llm = get_llm_for_agent("supplier_impact")
+
     adapter = CustomSupplierImpactAdapter(
-        llm=ChatOpenAI(
-            model="meta-llama/Meta-Llama-3.1-70B-Instruct",
-            api_key=api_key,
-            base_url="https://api.featherless.ai/v1"
-        ),
+        llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=prompt,
     )

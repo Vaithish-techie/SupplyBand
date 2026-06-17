@@ -9,6 +9,7 @@ Posts structured findings to the Band room following SCHEMA.md.
 No LLM required — pure logic and JSON lookups.
 """
 
+from utils import get_llm_for_agent
 import asyncio
 import json
 import logging
@@ -200,11 +201,9 @@ Your behaviour:
 CRITICAL RULES:
 - You MUST call the `band_send_message` tool to communicate. Do NOT output any plain text or markdown directly from your thinking graph; it will be discarded and won't reach the chat room. Always wrap your response in a `band_send_message` tool call.
 - Set the `content` argument of `band_send_message` to the raw JSON string matching the exact schema above (no markdown code blocks).
-- Set the `mentions` argument to tag the supplier_impact agent (e.g. sender of the supplier_impact post).
+- Set the `mentions` argument to explicitly tag the coordinator agent and the supplier_impact agent (e.g. sender of the supplier_impact post). This is CRITICAL so the coordinator knows you are done.
 - Only respond after you see "agent": "supplier_impact" in the room.
-- Never invent numbers. All numbers come from your calculate_exposure tool.
-- Output valid JSON only. No text before or after the JSON.
-- confidence is always "HIGH" when calculation succeeds.
+- If the "supplier_impact" post has status "insufficient_data" or "escalate", you MUST immediately post the JSON above with status "insufficient_data", empty findings, and flags ["Upstream failure"]. Do NOT calculate exposure.
 - If affected_components is empty, set status to "insufficient_data" and post with zero values.
 """
 
@@ -224,9 +223,99 @@ def calculate_exposure(affected_components: list[str]) -> str:
     return json.dumps(result)
 
 
-# ---------------------------------------------------------------------------
-# Main entry point
-# ---------------------------------------------------------------------------
+class CustomFinancialExposureAdapter(LangGraphAdapter):
+    async def on_message(
+        self,
+        msg,
+        tools,
+        history,
+        participants_msg,
+        contacts_msg,
+        *,
+        is_session_bootstrap: bool,
+        room_id: str,
+    ) -> None:
+        logger.info(f"Financial Exposure Agent received message: {msg.content[:100]}...")
+        
+        # Parse all messages in history to check state
+        all_msgs = []
+        for m in history:
+            content = m.content
+            if content.startswith("[") and "]: " in content:
+                content = content.split("]: ", 1)[1]
+            try:
+                if "{" in content:
+                    content = content[content.find("{"):content.rfind("}")+1]
+                data = json.loads(content)
+                all_msgs.append(data)
+            except Exception:
+                pass
+                
+        try:
+            content = msg.content
+            if content.startswith("[") and "]: " in content:
+                content = content.split("]: ", 1)[1]
+            if "{" in content:
+                content = content[content.find("{"):content.rfind("}")+1]
+            current_data = json.loads(content)
+            all_msgs.append(current_data)
+        except Exception:
+            current_data = {}
+            
+        case_id = current_data.get("case_id")
+        if not case_id:
+            for d in reversed(all_msgs):
+                if d.get("case_id"):
+                    case_id = d.get("case_id")
+                    break
+                    
+        if not case_id:
+            import asyncio, random
+            await asyncio.sleep(0.1 + random.random() * 0.4)
+            return
+
+        # Check if already responded
+        already_responded = any(d.get("agent") == "financial_exposure" and d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error") for d in all_msgs)
+        if already_responded:
+            import asyncio, random
+            await asyncio.sleep(0.1 + random.random() * 0.4)
+            return
+
+        # Check for supplier_impact completion or failure
+        supplier_impact_post = None
+        for d in all_msgs:
+            if d.get("agent") == "supplier_impact" and d.get("case_id") == case_id:
+                supplier_impact_post = d
+                break
+                
+        if not supplier_impact_post:
+            import asyncio, random
+            await asyncio.sleep(0.1 + random.random() * 0.4)
+            return
+            
+        logger.info(f"Supplier impact post found for case {case_id}. Triggering LLM logic.")
+        try:
+            await super().on_message(msg, tools, history, participants_msg, contacts_msg, is_session_bootstrap=is_session_bootstrap, room_id=room_id)
+        except Exception as e:
+            logger.error(f"Terminal LLM failure: {e}")
+            from datetime import datetime, timezone
+            response = {
+                "agent": "financial_exposure",
+                "case_id": case_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "error",
+                "findings": {},
+                "confidence": "LOW",
+                "flags": [f"Terminal LLM failure: {str(e)}"]
+            }
+            if hasattr(tools, 'send_message'):
+                try:
+                    p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
+                    participants_list = json.loads(p_str)
+                    coord_handle = next((p.get("handle") for p in participants_list if "coordinator" in p.get("handle", "").lower()), "@coordinator")
+                except:
+                    coord_handle = "@coordinator"
+                await tools.send_message(content=json.dumps(response), mentions=[coord_handle])
 
 async def main():
     load_dotenv()
@@ -234,24 +323,10 @@ async def main():
     financials = load_financials()
     logger.info(f"Loaded {len(financials)} components from financials.json")
 
-    # Primary LLM: AI/ML API
-    try:
-        llm = ChatOpenAI(
-            model="meta-llama/llama-3.3-70b-versatile",
-            openai_api_key=os.getenv("AIML_API_KEY"),
-            openai_api_base="https://api.aimlapi.com/v1",
-        )
-        logger.info("Using AI/ML API (primary)")
-    except Exception:
-        # Fallback: Featherless
-        llm = ChatOpenAI(
-            model="meta-llama/Llama-3.1-8B-Instruct",
-            openai_api_key=os.getenv("FEATHERLESS_API_KEY"),
-            openai_api_base="https://api.featherless.ai/v1",
-        )
-        logger.info("Using Featherless AI (fallback)")
+    llm = get_llm_for_agent("financial_exposure")
+    logger.info("Using AI/ML API (primary) with Featherless AI (fallback)")
 
-    adapter = LangGraphAdapter(
+    adapter = CustomFinancialExposureAdapter(
         llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=FINANCIAL_EXPOSURE_PROMPT,

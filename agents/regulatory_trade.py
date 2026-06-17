@@ -1,4 +1,5 @@
 # agents/regulatory_trade.py
+from utils import get_llm_for_agent
 import asyncio
 import logging
 import json
@@ -29,7 +30,7 @@ Scenario 1: Pipeline Trigger (Message from supplier_impact)
   3. Cross-reference the findings with the regulations database to determine force majeure, insurer notification deadlines, export controls, tariff implications, and compliance actions.
   4. Call the `band_send_message` tool to post your findings.
      - Set the `content` argument to a raw, valid JSON string matching the exact schema below (no markdown code blocks, no other text).
-     - Set the `mentions` argument to tag the coordinator agent or human operator (e.g., `["@vaithish7/coordinator"]` or `["@belugaok3"]`).
+     - Set the `mentions` argument to explicitly tag the coordinator agent (e.g., `["@vaithish7/coordinator"]`). This is CRITICAL so the coordinator knows you are done.
 
 Expected findings JSON schema:
 {
@@ -57,7 +58,8 @@ Scenario 2: Direct Chat / Mention
 
 CRITICAL RULES:
 - You MUST call the `band_send_message` tool to communicate. Do NOT output any plain text or markdown directly from your thinking graph; it will be discarded and won't reach the chat room. Always wrap your response in a `band_send_message` tool call.
-- Do NOT respond to messages from other agents unless the message is from `supplier_impact` with status `complete`. (Responding to human users who tag you is allowed and required).
+- Do NOT respond to messages from other agents unless the message is from `supplier_impact`. 
+- If `supplier_impact` has status "insufficient_data" or "escalate", you MUST immediately post exactly the JSON above with status "insufficient_data", empty findings, and flags ["Upstream failure"].
 """
 
 @tool
@@ -77,6 +79,100 @@ def get_regulatory_data() -> str:
     except Exception as e:
         return f"Error reading regulations: {e}"
 
+class CustomRegulatoryTradeAdapter(LangGraphAdapter):
+    async def on_message(
+        self,
+        msg,
+        tools,
+        history,
+        participants_msg,
+        contacts_msg,
+        *,
+        is_session_bootstrap: bool,
+        room_id: str,
+    ) -> None:
+        logger.info(f"Regulatory Trade Agent received message: {msg.content[:100]}...")
+        
+        # Parse all messages in history to check state
+        all_msgs = []
+        for m in history:
+            content = m.content
+            if content.startswith("[") and "]: " in content:
+                content = content.split("]: ", 1)[1]
+            try:
+                if "{" in content:
+                    content = content[content.find("{"):content.rfind("}")+1]
+                data = json.loads(content)
+                all_msgs.append(data)
+            except Exception:
+                pass
+                
+        try:
+            content = msg.content
+            if content.startswith("[") and "]: " in content:
+                content = content.split("]: ", 1)[1]
+            if "{" in content:
+                content = content[content.find("{"):content.rfind("}")+1]
+            current_data = json.loads(content)
+            all_msgs.append(current_data)
+        except Exception:
+            current_data = {}
+            
+        case_id = current_data.get("case_id")
+        if not case_id:
+            for d in reversed(all_msgs):
+                if d.get("case_id"):
+                    case_id = d.get("case_id")
+                    break
+                    
+        if not case_id:
+            import asyncio, random
+            await asyncio.sleep(0.1 + random.random() * 0.4)
+            return
+
+        # Check if already responded
+        already_responded = any(d.get("agent") == "regulatory_trade" and d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error") for d in all_msgs)
+        if already_responded:
+            import asyncio, random
+            await asyncio.sleep(0.1 + random.random() * 0.4)
+            return
+
+        # Check for supplier_impact completion or failure
+        supplier_impact_post = None
+        for d in all_msgs:
+            if d.get("agent") == "supplier_impact" and d.get("case_id") == case_id:
+                supplier_impact_post = d
+                break
+                
+        if not supplier_impact_post:
+            import asyncio, random
+            await asyncio.sleep(0.1 + random.random() * 0.4)
+            return
+            
+        logger.info(f"Supplier impact post found for case {case_id}. Triggering LLM logic.")
+        try:
+            await super().on_message(msg, tools, history, participants_msg, contacts_msg, is_session_bootstrap=is_session_bootstrap, room_id=room_id)
+        except Exception as e:
+            logger.error(f"Terminal LLM failure: {e}")
+            from datetime import datetime, timezone
+            response = {
+                "agent": "regulatory_trade",
+                "case_id": case_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "error",
+                "findings": {},
+                "confidence": "LOW",
+                "flags": [f"Terminal LLM failure: {str(e)}"]
+            }
+            if hasattr(tools, 'send_message'):
+                try:
+                    p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
+                    participants_list = json.loads(p_str)
+                    coord_handle = next((p.get("handle") for p in participants_list if "coordinator" in p.get("handle", "").lower()), "@coordinator")
+                except:
+                    coord_handle = "@coordinator"
+                await tools.send_message(content=json.dumps(response), mentions=[coord_handle])
+
 async def main():
     # Load env variables from local and parent dir
     load_dotenv()
@@ -84,20 +180,10 @@ async def main():
     if os.path.exists(parent_env):
         load_dotenv(parent_env)
 
-    # Initialize the LLM based on available keys
-    aiml_api_key = os.getenv("AIML_API_KEY")
-    if aiml_api_key:
-        logger.info("Initializing LLM via AIML API (gpt-4o)...")
-        from langchain_openai import ChatOpenAI
-        llm = ChatOpenAI(
-            model="gpt-4o",
-            openai_api_key=aiml_api_key,
-            openai_api_base="https://api.aimlapi.com/v1",
-        )
-    else:
-        logger.info("Initializing LLM via direct Anthropic (claude-sonnet-4-5)...")
-        from langchain_anthropic import ChatAnthropic
-        llm = ChatAnthropic(model="claude-sonnet-4-5")
+    # Initialize the LLM with fallbacks
+    from langchain_openai import ChatOpenAI
+    llm = get_llm_for_agent("regulatory_trade")
+    logger.info("Initializing LLM via AIML API (primary) and Featherless (fallback)...")
 
     # Add wrapper for logging LLM inputs and outputs (both sync and async)
     original_ainvoke = llm.ainvoke
@@ -117,7 +203,7 @@ async def main():
     object.__setattr__(llm, "invoke", wrapped_invoke)
 
     # Create the adapter with selected LLM and the get_regulatory_data tool
-    adapter = LangGraphAdapter(
+    adapter = CustomRegulatoryTradeAdapter(
         llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=AGENT_PROMPT,

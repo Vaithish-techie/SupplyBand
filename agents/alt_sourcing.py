@@ -11,6 +11,7 @@ Posts structured findings to the Band room following SCHEMA.md.
 No LLM required for the ranking logic — pure Python sorting and JSON lookups.
 """
 
+from utils import get_llm_for_agent
 import asyncio
 import json
 import logging
@@ -209,11 +210,11 @@ Your behaviour when all three are present:
 CRITICAL RULES:
 - You MUST call the `band_send_message` tool to communicate. Do NOT output any plain text or markdown directly from your thinking graph; it will be discarded and won't reach the chat room. Always wrap your response in a `band_send_message` tool call.
 - Set the `content` argument of `band_send_message` to the raw JSON string matching the exact schema above (no markdown code blocks).
-- Set the `mentions` argument to tag the relevant participants (like the specialist agents).
+- Set the `mentions` argument to explicitly tag the coordinator agent (and any other relevant specialist agents). This is CRITICAL so the coordinator knows you are done.
 - You must see posts from supplier_impact AND financial_exposure AND regulatory_trade before acting.
+- If ANY of those 3 posts have status "insufficient_data" or "escalate", you MUST immediately post exactly the JSON above with status "insufficient_data", empty findings, and flags ["Upstream failure"]. Do NOT find alternatives.
 - Never output partial results. Wait for all three.
 - Never invent alternatives. All data comes from your find_alternatives tool.
-- Output valid JSON only. No text before or after.
 - Rank alternatives by lead_time_days ascending, then cost_delta_pct ascending.
 - The "recommended" field is always the first (lowest lead time) alternative.
 - confidence is "HIGH" when 3+ alternatives found, "MEDIUM" when 1-2 found, "LOW" when 0.
@@ -264,30 +265,118 @@ def find_alternatives(affected_components: list, blocked_regulatory_flags: list 
 # Main entry point
 # ---------------------------------------------------------------------------
 
+class CustomAltSourcingAdapter(LangGraphAdapter):
+    async def on_message(
+        self,
+        msg,
+        tools,
+        history,
+        participants_msg,
+        contacts_msg,
+        *,
+        is_session_bootstrap: bool,
+        room_id: str,
+    ) -> None:
+        logger.info(f"Alt Sourcing Agent received message: {msg.content[:100]}...")
+        
+        all_msgs = []
+        for m in history:
+            content = m.content
+            if content.startswith("[") and "]: " in content:
+                content = content.split("]: ", 1)[1]
+            try:
+                if "{" in content:
+                    content = content[content.find("{"):content.rfind("}")+1]
+                data = json.loads(content)
+                all_msgs.append(data)
+            except Exception:
+                pass
+                
+        try:
+            content = msg.content
+            if content.startswith("[") and "]: " in content:
+                content = content.split("]: ", 1)[1]
+            if "{" in content:
+                content = content[content.find("{"):content.rfind("}")+1]
+            current_data = json.loads(content)
+            all_msgs.append(current_data)
+        except Exception:
+            current_data = {}
+            
+        case_id = current_data.get("case_id")
+        if not case_id:
+            for d in reversed(all_msgs):
+                if d.get("case_id"):
+                    case_id = d.get("case_id")
+                    break
+                    
+        if not case_id:
+            import asyncio, random
+            await asyncio.sleep(0.1 + random.random() * 0.4)
+            return
+
+        # Check if already responded
+        already_responded = any(d.get("agent") == "alt_sourcing" and d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error") for d in all_msgs)
+        if already_responded:
+            import asyncio, random
+            await asyncio.sleep(0.1 + random.random() * 0.4)
+            return
+
+        # Check for all three upstream completions or failure
+        required = {"supplier_impact", "financial_exposure", "regulatory_trade"}
+        found = set()
+        for d in all_msgs:
+            if d.get("agent") in required and d.get("case_id") == case_id:
+                found.add(d.get("agent"))
+                
+        if found != required:
+            import asyncio, random
+            await asyncio.sleep(0.1 + random.random() * 0.4)
+            return
+            
+        logger.info(f"All prerequisites found for case {case_id}. Triggering LLM logic.")
+        try:
+            await super().on_message(msg, tools, history, participants_msg, contacts_msg, is_session_bootstrap=is_session_bootstrap, room_id=room_id)
+        except Exception as e:
+            logger.error(f"Terminal LLM failure: {e}")
+            from datetime import datetime, timezone
+            response = {
+                "agent": "alt_sourcing",
+                "case_id": case_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "error",
+                "findings": {},
+                "confidence": "LOW",
+                "flags": [f"Terminal LLM failure: {str(e)}"]
+            }
+            if hasattr(tools, 'send_message'):
+                try:
+                    p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
+                    participants_list = json.loads(p_str)
+                    coord_handle = next((p.get("handle") for p in participants_list if "coordinator" in p.get("handle", "").lower()), "@coordinator")
+                except:
+                    coord_handle = "@coordinator"
+                await tools.send_message(content=json.dumps(response), mentions=[coord_handle])
+
 async def main():
     load_dotenv()
+
+    # Apply global httpx patch to capture /processed
+    import httpx
+    original_post = httpx.AsyncClient.post
+    async def debug_post(client_self, url, *args, **kwargs):
+        if "processed" in str(url):
+            logger.warning(f"DEBUG /processed payload to {url}: kwargs={kwargs}")
+        return await original_post(client_self, url, *args, **kwargs)
+    httpx.AsyncClient.post = debug_post
 
     alternatives = load_alternatives()
     logger.info(f"Loaded {len(alternatives)} alternative suppliers from alternatives.json")
 
-    # Primary LLM: AI/ML API
-    try:
-        llm = ChatOpenAI(
-            model="meta-llama/llama-3.3-70b-versatile",
-            openai_api_key=os.getenv("AIML_API_KEY"),
-            openai_api_base="https://api.aimlapi.com/v1",
-        )
-        logger.info("Using AI/ML API (primary)")
-    except Exception:
-        # Fallback: Featherless
-        llm = ChatOpenAI(
-            model="meta-llama/Llama-3.1-8B-Instruct",
-            openai_api_key=os.getenv("FEATHERLESS_API_KEY"),
-            openai_api_base="https://api.featherless.ai/v1",
-        )
-        logger.info("Using Featherless AI (fallback)")
+    llm = get_llm_for_agent("alt_sourcing")
+    logger.info("Using AI/ML API (primary) with Featherless AI (fallback)")
 
-    adapter = LangGraphAdapter(
+    adapter = CustomAltSourcingAdapter(
         llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=ALT_SOURCING_PROMPT,
