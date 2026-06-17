@@ -225,6 +225,226 @@ def calculate_exposure(affected_components: list[str]) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Custom Adapter & Mock Fallback
+# ---------------------------------------------------------------------------
+
+def find_participant_handle(participants, name):
+    name_lower = name.lower().replace("_", "-")
+    for p in participants:
+        p_name = (p.get("name") or "").lower()
+        p_handle = (p.get("handle") or "").lower()
+        if name_lower in p_name or name_lower in p_handle:
+            return p.get("handle")
+        
+        # Fallbacks for specific agent handles
+        if "regulatory" in name_lower and "regulatory" in p_handle:
+            return p.get("handle")
+        if "event" in name_lower and "event" in p_handle:
+            return p.get("handle")
+        if "supplier" in name_lower and "supplier" in p_handle:
+            return p.get("handle")
+        if "financial" in name_lower and "financial" in p_handle:
+            return p.get("handle")
+        if "sourcing" in name_lower and "sourcing" in p_handle:
+            return p.get("handle")
+        if "coordinator" in name_lower and "coordinator" in p_handle:
+            return p.get("handle")
+            
+    return f"@{name}"
+
+
+def generate_mock_financial_exposure(affected_components: list[str]) -> tuple[dict, str, list[str]]:
+    financials = load_financials()
+    result = calculate_financial_exposure(affected_components, financials)
+    return result, "HIGH", []
+
+
+class CustomFinancialExposureAdapter(LangGraphAdapter):
+    async def on_message(
+        self,
+        msg,
+        tools,
+        history,
+        participants_msg,
+        contacts_msg,
+        *,
+        is_session_bootstrap: bool,
+        room_id: str,
+    ) -> None:
+        logger.info(f"Financial Exposure Agent received message: {msg.content[:100]}...")
+
+        # 1. Parse all messages in history + current
+        all_msgs = []
+        for m in history:
+            content = m.content
+            if content.startswith("[") and "]: " in content:
+                parts = content.split("]: ", 1)
+                sender = parts[0][1:]
+                content = parts[1]
+            else:
+                sender = "financial_exposure"
+            try:
+                if "{" in content:
+                    content = content[content.find("{"):content.rfind("}")+1]
+                data = json.loads(content)
+            except Exception:
+                data = {}
+            all_msgs.append((sender, data))
+
+        try:
+            content = msg.content
+            if content.startswith("[") and "]: " in content:
+                content = content.split("]: ", 1)[1]
+            if "{" in content:
+                content = content[content.find("{"):content.rfind("}")+1]
+            current_data = json.loads(content)
+        except Exception:
+            current_data = {}
+        all_msgs.append((msg.sender_name or msg.sender_type, current_data))
+
+        # 2. Check for coordinator kickoff messages
+        kickoffs = [data for sender, data in all_msgs if data.get("agent") == "coordinator" and data.get("phase") == "kickoff"]
+        
+        for kickoff in kickoffs:
+            case_id = kickoff.get("case_id")
+            if not case_id:
+                continue
+
+            # Check if we already responded to this case
+            already_responded = False
+            for sender, data in all_msgs:
+                if data.get("agent") == "financial_exposure" and data.get("case_id") == case_id and data.get("status") in ("complete", "escalate", "insufficient_data"):
+                    already_responded = True
+                    break
+
+            if already_responded:
+                continue
+
+            # Check if there is a completed supplier impact post for this case
+            supplier_impact_data = None
+            supplier_impact_failed = None
+            for sender, data in all_msgs:
+                if data.get("agent") == "supplier_impact" and data.get("case_id") == case_id:
+                    if data.get("status") == "complete":
+                        supplier_impact_data = data
+                    elif data.get("status") in ("insufficient_data", "escalate"):
+                        supplier_impact_failed = data
+                    break
+
+            supplier_impact_handle = find_participant_handle(tools.participants, "supplier_impact")
+
+            if supplier_impact_failed:
+                logger.warning(f"Upstream agent supplier_impact failed for case {case_id} with status: {supplier_impact_failed.get('status')}. Propagating failure.")
+                response_envelope = {
+                    "agent": "financial_exposure",
+                    "case_id": case_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "status": "insufficient_data",
+                    "findings": {},
+                    "confidence": "LOW",
+                    "flags": [f"Upstream agent supplier_impact failed with status: {supplier_impact_failed.get('status')}"]
+                }
+                await tools.send_message(
+                    content=json.dumps(response_envelope, indent=2),
+                    mentions=[supplier_impact_handle]
+                )
+                return
+
+            if supplier_impact_data:
+                logger.info(f"Trigger supplier_impact complete found for case {case_id}. Processing.")
+                await self.process_financial_exposure(case_id, supplier_impact_data.get("findings"), tools, msg, history, participants_msg, contacts_msg, is_session_bootstrap, room_id, supplier_impact_handle)
+                return
+
+            # Check 60s timeout from coordinator kickoff
+            kickoff_timestamp = kickoff.get("timestamp")
+            if kickoff_timestamp:
+                try:
+                    kickoff_time = datetime.fromisoformat(kickoff_timestamp.replace("Z", "+00:00"))
+                    current_time = datetime.now(timezone.utc)
+                    elapsed = (current_time - kickoff_time).total_seconds()
+                    if elapsed > 60:
+                        logger.warning(f"Upstream agent supplier_impact missing after {elapsed}s (>60s) for case {case_id}. Posting insufficient_data.")
+                        response_envelope = {
+                            "agent": "financial_exposure",
+                            "case_id": case_id,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                            "status": "insufficient_data",
+                            "findings": {},
+                            "confidence": "LOW",
+                            "flags": [f"Upstream agent supplier_impact post missing after 60s (elapsed={int(elapsed)}s)"]
+                        }
+                        await tools.send_message(
+                            content=json.dumps(response_envelope, indent=2),
+                            mentions=[supplier_impact_handle]
+                        )
+                        return
+                except Exception as ex:
+                    logger.error(f"Error parsing kickoff timestamp: {ex}")
+
+    async def process_financial_exposure(self, case_id, supplier_findings, tools, msg, history, participants_msg, contacts_msg, is_session_bootstrap, room_id, supplier_impact_handle):
+        # Determine mode
+        api_key = os.getenv("AIML_API_KEY")
+        use_mock = not api_key or api_key.startswith("your_") or api_key == "key-from-band-dashboard"
+
+        affected_components = supplier_findings.get("affected_components", []) if supplier_findings else []
+
+        if use_mock:
+            logger.info("Running in Mock Fallback Mode")
+            findings, confidence, flags = generate_mock_financial_exposure(affected_components)
+            response_envelope = {
+                "agent": "financial_exposure",
+                "case_id": case_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "complete",
+                "findings": findings,
+                "confidence": confidence,
+                "flags": flags
+            }
+            await tools.send_message(
+                content=json.dumps(response_envelope, indent=2),
+                mentions=[supplier_impact_handle]
+            )
+            logger.info("Mock financial exposure posted successfully.")
+            return
+
+        logger.info("Running in LLM Mode")
+        try:
+            retries = 1
+            while retries >= 0:
+                try:
+                    await super().on_message(
+                        msg=msg,
+                        tools=tools,
+                        history=history,
+                        participants_msg=participants_msg,
+                        contacts_msg=contacts_msg,
+                        is_session_bootstrap=is_session_bootstrap,
+                        room_id=room_id
+                    )
+                    break
+                except Exception as ex:
+                    logger.warning(f"LLM call failed (retries left={retries}): {ex}")
+                    retries -= 1
+                    if retries < 0:
+                        raise ex
+        except Exception as e:
+            logger.error(f"Error executing LLM call, posting insufficient_data: {e}")
+            response_envelope = {
+                "agent": "financial_exposure",
+                "case_id": case_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "insufficient_data",
+                "findings": {},
+                "confidence": "LOW",
+                "flags": [f"LLM analysis failed: {str(e)}"]
+            }
+            await tools.send_message(
+                content=json.dumps(response_envelope, indent=2),
+                mentions=[supplier_impact_handle]
+            )
+
+
+# ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
 
@@ -237,7 +457,7 @@ async def main():
     # Primary LLM: AI/ML API
     try:
         llm = ChatOpenAI(
-            model="meta-llama/llama-3.3-70b-versatile",
+            model="gpt-4o-mini",
             openai_api_key=os.getenv("AIML_API_KEY"),
             openai_api_base="https://api.aimlapi.com/v1",
         )
@@ -251,7 +471,8 @@ async def main():
         )
         logger.info("Using Featherless AI (fallback)")
 
-    adapter = LangGraphAdapter(
+    # Use check_trigger custom adapter
+    adapter = CustomFinancialExposureAdapter(
         llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=FINANCIAL_EXPOSURE_PROMPT,

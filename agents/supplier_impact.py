@@ -66,11 +66,27 @@ Always flag sole-source suppliers that are offline.
 """
 
 def find_participant_handle(participants, name):
+    name_lower = name.lower().replace("_", "-")
     for p in participants:
-        p_name = p.get("name") or ""
-        p_handle = p.get("handle") or ""
-        if p_name == name or name in p_name or name in p_handle:
-            return p_handle
+        p_name = (p.get("name") or "").lower()
+        p_handle = (p.get("handle") or "").lower()
+        if name_lower in p_name or name_lower in p_handle:
+            return p.get("handle")
+        
+        # Fallbacks for specific agent handles
+        if "regulatory" in name_lower and "regulatory" in p_handle:
+            return p.get("handle")
+        if "event" in name_lower and "event" in p_handle:
+            return p.get("handle")
+        if "supplier" in name_lower and "supplier" in p_handle:
+            return p.get("handle")
+        if "financial" in name_lower and "financial" in p_handle:
+            return p.get("handle")
+        if "sourcing" in name_lower and "sourcing" in p_handle:
+            return p.get("handle")
+        if "coordinator" in name_lower and "coordinator" in p_handle:
+            return p.get("handle")
+            
     return f"@{name}"
 
 def generate_mock_supplier_impact(event_findings):
@@ -178,14 +194,35 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
             if already_responded:
                 continue
 
-            # Check if there is a completed event intelligence post for this case
+            # Check for event intelligence post
             event_intel = None
+            event_intel_failed = None
             for sender, data in all_msgs:
-                if data.get("agent") == "event_intelligence" and data.get("case_id") == case_id and data.get("status") == "complete":
-                    event_intel = data
+                if data.get("agent") == "event_intelligence" and data.get("case_id") == case_id:
+                    if data.get("status") == "complete":
+                        event_intel = data
+                    elif data.get("status") in ("insufficient_data", "escalate"):
+                        event_intel_failed = data
                     break
 
             event_intel_handle = find_participant_handle(tools.participants, "event_intelligence")
+
+            if event_intel_failed:
+                logger.warning(f"Upstream agent event_intelligence failed for case {case_id} with status: {event_intel_failed.get('status')}. Propagating failure.")
+                response_envelope = {
+                    "agent": "supplier_impact",
+                    "case_id": case_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "status": "insufficient_data",
+                    "findings": {},
+                    "confidence": "LOW",
+                    "flags": [f"Upstream agent event_intelligence failed with status: {event_intel_failed.get('status')}"]
+                }
+                await tools.send_message(
+                    content=json.dumps(response_envelope, indent=2),
+                    mentions=[event_intel_handle]
+                )
+                return
 
             # If event_intel is found, process it!
             if event_intel:
@@ -341,7 +378,7 @@ async def main():
         
     adapter = CustomSupplierImpactAdapter(
         llm=ChatOpenAI(
-            model="meta-llama/Meta-Llama-3.1-70B-Instruct",
+            model="meta-llama/Llama-3.1-8B-Instruct",
             api_key=api_key,
             base_url="https://api.featherless.ai/v1"
         ),

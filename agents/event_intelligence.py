@@ -55,11 +55,27 @@ Confidence rules:
 """
 
 def find_participant_handle(participants, name):
+    name_lower = name.lower().replace("_", "-")
     for p in participants:
-        p_name = p.get("name") or ""
-        p_handle = p.get("handle") or ""
-        if p_name == name or name in p_name or name in p_handle:
-            return p_handle
+        p_name = (p.get("name") or "").lower()
+        p_handle = (p.get("handle") or "").lower()
+        if name_lower in p_name or name_lower in p_handle:
+            return p.get("handle")
+        
+        # Fallbacks for specific agent handles
+        if "regulatory" in name_lower and "regulatory" in p_handle:
+            return p.get("handle")
+        if "event" in name_lower and "event" in p_handle:
+            return p.get("handle")
+        if "supplier" in name_lower and "supplier" in p_handle:
+            return p.get("handle")
+        if "financial" in name_lower and "financial" in p_handle:
+            return p.get("handle")
+        if "sourcing" in name_lower and "sourcing" in p_handle:
+            return p.get("handle")
+        if "coordinator" in name_lower and "coordinator" in p_handle:
+            return p.get("handle")
+            
     return f"@{name}"
 
 def check_trigger_and_check_duplicate(msg, history, agent_name, trigger_agent, trigger_condition_func):
@@ -283,7 +299,7 @@ async def main():
         
     adapter = CustomEventIntelligenceAdapter(
         llm=ChatOpenAI(
-            model="meta-llama/llama-3.3-70b-versatile",
+            model="gpt-4o-mini",
             api_key=api_key,
             base_url="https://api.aimlapi.com/v1"
         ),

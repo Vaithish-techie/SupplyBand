@@ -86,10 +86,29 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
             data = {}
 
         # PHASE 1: Human operator kickoff
-        if data.get("agent") == "human_operator":
+        is_backend_kickoff = data.get("agent") == "human_operator"
+        is_direct_user_kickoff = msg.sender_type == "User" and not data.get("agent") and len(msg.content.strip()) > 10
+
+        if is_backend_kickoff or is_direct_user_kickoff:
             logger.info("Received human operator message, sending Phase 1 kickoff...")
-            case_id = data.get("case_id", f"CASE-{int(datetime.now(timezone.utc).timestamp())}")
-            event_text = data.get("event_text", "")
+            
+            if is_backend_kickoff:
+                case_id = data.get("case_id", f"CASE-{int(datetime.now(timezone.utc).timestamp())}")
+                event_text = data.get("event_text", "")
+            else:
+                import re
+                highest_num = 0
+                for m in history:
+                    content = m.content
+                    matches = re.findall(r"CASE-(\d+)", content)
+                    for num_str in matches:
+                        highest_num = max(highest_num, int(num_str))
+                matches = re.findall(r"CASE-(\d+)", msg.content)
+                for num_str in matches:
+                    highest_num = max(highest_num, int(num_str))
+                
+                case_id = f"CASE-{highest_num + 1:03d}"
+                event_text = re.sub(r"@\[\[[^\]]+\]\]\s*", "", msg.content).strip()
             
             kickoff_msg = {
                 "agent": "coordinator",
@@ -167,10 +186,10 @@ async def main():
     # Initialize the LLM based on available keys
     aiml_api_key = os.getenv("AIML_API_KEY")
     if aiml_api_key:
-        logger.info("Initializing LLM via AIML API (llama-3.3-70b-versatile)...")
+        logger.info("Initializing LLM via AIML API (gpt-4o-mini)...")
         from langchain_openai import ChatOpenAI
         llm = ChatOpenAI(
-            model="meta-llama/llama-3.3-70b-versatile",
+            model="gpt-4o-mini",
             openai_api_key=aiml_api_key,
             openai_api_base="https://api.aimlapi.com/v1",
         )

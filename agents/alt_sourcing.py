@@ -15,6 +15,7 @@ import asyncio
 import json
 import logging
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
@@ -261,6 +262,285 @@ def find_alternatives(affected_components: list, blocked_regulatory_flags: list 
 
 
 # ---------------------------------------------------------------------------
+# Custom Adapter & Mock Fallback
+# ---------------------------------------------------------------------------
+
+def find_participant_handle(participants, name):
+    name_lower = name.lower().replace("_", "-")
+    for p in participants:
+        p_name = (p.get("name") or "").lower()
+        p_handle = (p.get("handle") or "").lower()
+        if name_lower in p_name or name_lower in p_handle:
+            return p.get("handle")
+        
+        # Fallbacks for specific agent handles
+        if "regulatory" in name_lower and "regulatory" in p_handle:
+            return p.get("handle")
+        if "event" in name_lower and "event" in p_handle:
+            return p.get("handle")
+        if "supplier" in name_lower and "supplier" in p_handle:
+            return p.get("handle")
+        if "financial" in name_lower and "financial" in p_handle:
+            return p.get("handle")
+        if "sourcing" in name_lower and "sourcing" in p_handle:
+            return p.get("handle")
+        if "coordinator" in name_lower and "coordinator" in p_handle:
+            return p.get("handle")
+            
+    return f"@{name}"
+
+
+def generate_mock_alt_sourcing(affected_components: list[str], blocked_regulatory_flags: list[str]) -> tuple[dict, str, list[str]]:
+    alternatives = load_alternatives()
+    top3 = find_top_alternatives(
+        affected_components=affected_components,
+        blocked_regulatory_flags=blocked_regulatory_flags,
+        alternatives=alternatives,
+        top_n=3,
+    )
+    if not top3:
+        return {
+            "alternatives": [],
+            "recommended": None,
+            "recommendation_reason": "No compliant alternatives found for affected components.",
+        }, "LOW", ["NO_COMPLIANT_ALTERNATIVES_FOUND"]
+    
+    recommended = top3[0]["supplier"]
+    reason = build_recommendation_reason(top3[0], top3)
+    
+    findings = {
+        "alternatives": top3,
+        "recommended": recommended,
+        "recommendation_reason": reason,
+    }
+    confidence = "HIGH" if len(top3) >= 3 else ("MEDIUM" if len(top3) > 0 else "LOW")
+    flags = []
+    return findings, confidence, flags
+
+
+class CustomAltSourcingAdapter(LangGraphAdapter):
+    async def on_message(
+        self,
+        msg,
+        tools,
+        history,
+        participants_msg,
+        contacts_msg,
+        *,
+        is_session_bootstrap: bool,
+        room_id: str,
+    ) -> None:
+        logger.info(f"Alternative Sourcing Agent received message: {msg.content[:100]}...")
+
+        # 1. Parse all messages in history + current
+        all_msgs = []
+        for m in history:
+            content = m.content
+            if content.startswith("[") and "]: " in content:
+                parts = content.split("]: ", 1)
+                sender = parts[0][1:]
+                content = parts[1]
+            else:
+                sender = "alt_sourcing"
+            try:
+                if "{" in content:
+                    content = content[content.find("{"):content.rfind("}")+1]
+                data = json.loads(content)
+            except Exception:
+                data = {}
+            all_msgs.append((sender, data))
+
+        try:
+            content = msg.content
+            if content.startswith("[") and "]: " in content:
+                content = content.split("]: ", 1)[1]
+            if "{" in content:
+                content = content[content.find("{"):content.rfind("}")+1]
+            current_data = json.loads(content)
+        except Exception:
+            current_data = {}
+        all_msgs.append((msg.sender_name or msg.sender_type, current_data))
+
+        # 2. Check for coordinator kickoff messages
+        kickoffs = [data for sender, data in all_msgs if data.get("agent") == "coordinator" and data.get("phase") == "kickoff"]
+        
+        for kickoff in kickoffs:
+            case_id = kickoff.get("case_id")
+            if not case_id:
+                continue
+
+            # Check if we already responded to this case
+            already_responded = False
+            for sender, data in all_msgs:
+                if data.get("agent") == "alt_sourcing" and data.get("case_id") == case_id and data.get("status") in ("complete", "escalate", "insufficient_data"):
+                    already_responded = True
+                    break
+
+            if already_responded:
+                continue
+
+            # Check if we have posts from supplier_impact, financial_exposure, and regulatory_trade
+            supplier_impact_data = None
+            financial_exposure_data = None
+            regulatory_trade_data = None
+            
+            upstream_failed = False
+            failed_agent = None
+            failed_status = None
+            
+            for sender, data in all_msgs:
+                if data.get("case_id") != case_id:
+                    continue
+                
+                agent = data.get("agent")
+                status = data.get("status")
+                
+                if agent == "supplier_impact":
+                    if status == "complete":
+                        supplier_impact_data = data
+                    elif status in ("insufficient_data", "escalate"):
+                        upstream_failed = True
+                        failed_agent = agent
+                        failed_status = status
+                elif agent == "financial_exposure":
+                    if status == "complete":
+                        financial_exposure_data = data
+                    elif status in ("insufficient_data", "escalate"):
+                        upstream_failed = True
+                        failed_agent = agent
+                        failed_status = status
+                elif agent == "regulatory_trade":
+                    if status == "complete":
+                        regulatory_trade_data = data
+                    elif status in ("insufficient_data", "escalate"):
+                        upstream_failed = True
+                        failed_agent = agent
+                        failed_status = status
+
+            supplier_impact_handle = find_participant_handle(tools.participants, "supplier_impact")
+
+            # Propagate failure immediately
+            if upstream_failed:
+                logger.warning(f"Upstream agent {failed_agent} failed for case {case_id} with status: {failed_status}. Propagating failure.")
+                response_envelope = {
+                    "agent": "alt_sourcing",
+                    "case_id": case_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "status": "insufficient_data",
+                    "findings": {},
+                    "confidence": "LOW",
+                    "flags": [f"Upstream agent {failed_agent} failed with status: {failed_status}"]
+                }
+                await tools.send_message(
+                    content=json.dumps(response_envelope, indent=2),
+                    mentions=[supplier_impact_handle]
+                )
+                return
+
+            # If all three are complete, process
+            if supplier_impact_data and financial_exposure_data and regulatory_trade_data:
+                logger.info(f"All 3 upstream agents complete for case {case_id}. Processing Alt Sourcing.")
+                
+                # Extract findings
+                affected_components = supplier_impact_data.get("findings", {}).get("affected_components", [])
+                blocked_regulatory_flags = regulatory_trade_data.get("findings", {}).get("export_controls", [])
+                
+                await self.process_alt_sourcing(case_id, affected_components, blocked_regulatory_flags, tools, msg, history, participants_msg, contacts_msg, is_session_bootstrap, room_id, supplier_impact_handle)
+                return
+
+            # Check 60s timeout from coordinator kickoff
+            kickoff_timestamp = kickoff.get("timestamp")
+            if kickoff_timestamp:
+                try:
+                    kickoff_time = datetime.fromisoformat(kickoff_timestamp.replace("Z", "+00:00"))
+                    current_time = datetime.now(timezone.utc)
+                    elapsed = (current_time - kickoff_time).total_seconds()
+                    if elapsed > 60:
+                        missing = []
+                        if not supplier_impact_data: missing.append("supplier_impact")
+                        if not financial_exposure_data: missing.append("financial_exposure")
+                        if not regulatory_trade_data: missing.append("regulatory_trade")
+                        
+                        logger.warning(f"Upstream agents {missing} missing after {elapsed}s (>60s) for case {case_id}. Posting insufficient_data.")
+                        response_envelope = {
+                            "agent": "alt_sourcing",
+                            "case_id": case_id,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                            "status": "insufficient_data",
+                            "findings": {},
+                            "confidence": "LOW",
+                            "flags": [f"Upstream agents {missing} post missing after 60s (elapsed={int(elapsed)}s)"]
+                        }
+                        await tools.send_message(
+                            content=json.dumps(response_envelope, indent=2),
+                            mentions=[supplier_impact_handle]
+                        )
+                        return
+                except Exception as ex:
+                    logger.error(f"Error parsing kickoff timestamp: {ex}")
+
+    async def process_alt_sourcing(self, case_id, affected_components, blocked_regulatory_flags, tools, msg, history, participants_msg, contacts_msg, is_session_bootstrap, room_id, supplier_impact_handle):
+        # Determine mode
+        api_key = os.getenv("AIML_API_KEY")
+        use_mock = not api_key or api_key.startswith("your_") or api_key == "key-from-band-dashboard"
+
+        if use_mock:
+            logger.info("Running in Mock Fallback Mode")
+            findings, confidence, flags = generate_mock_alt_sourcing(affected_components, blocked_regulatory_flags)
+            response_envelope = {
+                "agent": "alt_sourcing",
+                "case_id": case_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "complete" if findings.get("alternatives") else "insufficient_data",
+                "findings": findings,
+                "confidence": confidence,
+                "flags": flags
+            }
+            await tools.send_message(
+                content=json.dumps(response_envelope, indent=2),
+                mentions=[supplier_impact_handle]
+            )
+            logger.info("Mock alternative sourcing posted successfully.")
+            return
+
+        logger.info("Running in LLM Mode")
+        try:
+            retries = 1
+            while retries >= 0:
+                try:
+                    await super().on_message(
+                        msg=msg,
+                        tools=tools,
+                        history=history,
+                        participants_msg=participants_msg,
+                        contacts_msg=contacts_msg,
+                        is_session_bootstrap=is_session_bootstrap,
+                        room_id=room_id
+                    )
+                    break
+                except Exception as ex:
+                    logger.warning(f"LLM call failed (retries left={retries}): {ex}")
+                    retries -= 1
+                    if retries < 0:
+                        raise ex
+        except Exception as e:
+            logger.error(f"Error executing LLM call, posting insufficient_data: {e}")
+            response_envelope = {
+                "agent": "alt_sourcing",
+                "case_id": case_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "insufficient_data",
+                "findings": {},
+                "confidence": "LOW",
+                "flags": [f"LLM analysis failed: {str(e)}"]
+            }
+            await tools.send_message(
+                content=json.dumps(response_envelope, indent=2),
+                mentions=[supplier_impact_handle]
+            )
+
+
+# ---------------------------------------------------------------------------
 # Main entry point
 # ---------------------------------------------------------------------------
 
@@ -273,7 +553,7 @@ async def main():
     # Primary LLM: AI/ML API
     try:
         llm = ChatOpenAI(
-            model="meta-llama/llama-3.3-70b-versatile",
+            model="gpt-4o-mini",
             openai_api_key=os.getenv("AIML_API_KEY"),
             openai_api_base="https://api.aimlapi.com/v1",
         )
@@ -287,7 +567,8 @@ async def main():
         )
         logger.info("Using Featherless AI (fallback)")
 
-    adapter = LangGraphAdapter(
+    # Use check_trigger custom adapter
+    adapter = CustomAltSourcingAdapter(
         llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=ALT_SOURCING_PROMPT,
