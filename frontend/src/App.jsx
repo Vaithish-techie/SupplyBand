@@ -4,6 +4,129 @@ import AgentCard from './components/AgentCard';
 import ExecutiveBrief from './components/ExecutiveBrief';
 import { Pulse, ArrowRight, Radio, Compass, Factory, ChartLineDown, Scales, Handshake } from '@phosphor-icons/react';
 
+const formatCurrency = (val) => {
+  if (val >= 1000000) return `$${(val / 1000000).toFixed(1)}M`;
+  if (val >= 1000) return `$${(val / 1000).toFixed(0)}K`;
+  return `$${val}`;
+};
+
+function TerminalConsole({ messages, loading }) {
+  const terminalRef = useRef(null);
+
+  const getTerminalLogs = () => {
+    const logs = [];
+    
+    if (messages.length === 0 && !loading) {
+      logs.push({
+        time: new Date().toLocaleTimeString(),
+        sender: 'SYSTEM',
+        text: 'Awaiting disruption signal on Band room...'
+      });
+    }
+
+    messages.forEach((m) => {
+      const time = m.timestamp ? new Date(m.timestamp).toLocaleTimeString() : new Date().toLocaleTimeString();
+      const parsed = m.parsed || {};
+      
+      if (parsed.phase === 'kickoff') {
+        logs.push({
+          time,
+          sender: 'coordinator',
+          text: `Investigation started: ${parsed.case_id}`
+        });
+      } else if (parsed.agent === 'event_intelligence') {
+        logs.push({
+          time,
+          sender: 'event_intel',
+          text: `Classified as ${parsed.findings?.event_type} at ${parsed.findings?.location}.`
+        });
+      } else if (parsed.agent === 'supplier_impact') {
+        logs.push({
+          time,
+          sender: 'supplier_impact',
+          text: `Mapped components: ${parsed.findings?.affected_components?.join(', ')}. Runway: ${parsed.findings?.inventory_buffer_days} days.`
+        });
+      } else if (parsed.agent === 'financial_exposure') {
+        logs.push({
+          time,
+          sender: 'financial_risk',
+          text: `Exposure calculated: peak rate ${formatCurrency(parsed.findings?.week6_risk_usd)}. Margin: -${parsed.findings?.margin_impact_pct}%.`
+        });
+      } else if (parsed.agent === 'regulatory_trade') {
+        logs.push({
+          time,
+          sender: 'compliance_trade',
+          text: `Audited. Force Majeure: ${parsed.findings?.force_majeure_applicable ? 'APPLICABLE' : 'NOT DETECTED'}.`
+        });
+      } else if (parsed.agent === 'alt_sourcing') {
+        logs.push({
+          time,
+          sender: 'alt_sourcing',
+          text: `Sourcing scanned. Backup recommendation: ${parsed.findings?.recommended}.`
+        });
+      } else if (parsed.phase === 'executive_brief') {
+        logs.push({
+          time,
+          sender: 'coordinator',
+          text: `Brief synthesized. Verdict: ${parsed.verdict}. Resolution active.`
+        });
+      }
+    });
+
+    if (loading && logs.length === 0) {
+      logs.push({
+        time: new Date().toLocaleTimeString(),
+        sender: 'SYSTEM',
+        text: 'Booting multi-agent environment...'
+      });
+    }
+
+    return logs;
+  };
+
+  const logs = getTerminalLogs();
+
+  useEffect(() => {
+    if (terminalRef.current) {
+      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
+    }
+  }, [logs.length]);
+
+  return (
+    <div className="shell-bezel mt-4" style={{ padding: '4px' }}>
+      <div className="core-bezel" style={{ padding: '16px', background: 'rgba(5, 5, 6, 0.4)' }}>
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-1.5">
+            <Radio size={12} className="text-accent" style={{ animation: 'pulse 1.5s infinite ease-in-out' }} />
+            <span className="font-mono text-secondary" style={{ fontSize: '9px', letterSpacing: '0.1em', fontWeight: 600 }}>
+              BAND ROOM TERMINAL
+            </span>
+          </div>
+          <span className="tag" style={{ border: 'none', background: 'rgba(212, 255, 0, 0.05)', color: 'var(--color-accent)', padding: '2px 8px', fontSize: '8px' }}>
+            LOGS
+          </span>
+        </div>
+        
+        <div ref={terminalRef} className="terminal-console">
+          {logs.map((log, idx) => (
+            <div key={idx} className="terminal-line">
+              <span className="timestamp">[{log.time}]</span>
+              <span className="sender">[{log.sender}]</span>
+              <span>{log.text}</span>
+            </div>
+          ))}
+          <div className="terminal-line">
+            <span className="timestamp">[{new Date().toLocaleTimeString()}]</span>
+            <span className="sender">[system]</span>
+            <span className="text-secondary">active listening</span>
+            <span className="terminal-cursor" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [messages, setMessages] = useState([]);
   const [caseId, setCaseId] = useState(null);
@@ -260,6 +383,9 @@ function App() {
               Active Case: <span className="text-accent" style={{ fontWeight: 600 }}>{caseId}</span>
             </div>
           )}
+
+          {/* Terminal Logs panel */}
+          <TerminalConsole messages={messages} loading={loading} />
         </div>
 
         {/* Right Column (Timeline & Brief) */}
@@ -294,7 +420,7 @@ function App() {
           </div>
 
           {briefMessage && (
-            <ExecutiveBrief brief={briefMessage} handleMouseMove={handleMouseMove} />
+            <ExecutiveBrief brief={briefMessage} messages={messages} handleMouseMove={handleMouseMove} />
           )}
           
           <div ref={endOfMessagesRef} />
@@ -306,4 +432,5 @@ function App() {
 }
 
 export default App;
+
 
