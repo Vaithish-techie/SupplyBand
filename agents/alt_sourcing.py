@@ -282,7 +282,7 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
         room_id: str,
     ) -> None:
         logger.info(f"Alt Sourcing Agent received message: {msg.content[:100]}...")
-        
+
         all_msgs = []
         for m in history:
             content = m.content
@@ -295,7 +295,7 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
                 all_msgs.append(data)
             except Exception:
                 pass
-                
+
         try:
             content = msg.content
             if content.startswith("[") and "]: " in content:
@@ -306,81 +306,89 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
             all_msgs.append(current_data)
         except Exception:
             current_data = {}
-            
-        case_id = current_data.get("case_id")
-        if not case_id:
-            for d in reversed(all_msgs):
-                if d.get("case_id"):
-                    case_id = d.get("case_id")
-                    break
-                    
-        if not case_id:
-            import asyncio, random
-            await asyncio.sleep(0.5 + random.random() * 2.5)
-            return
 
-        # Check if already responded
-        already_responded = any(d.get("agent") == "alt_sourcing" and d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error") for d in all_msgs)
-        if already_responded:
-            import asyncio, random
-            await asyncio.sleep(0.5 + random.random() * 2.5)
-            return
+        # --- DIRECT TRIGGER PATH ---
+        # Trigger on supplier_impact (it's the first downstream agent we need data from)
+        if current_data.get("agent") == "supplier_impact":
+            case_id = current_data.get("case_id")
+            logger.info(f"Direct trigger: supplier_impact for case {case_id}")
 
-        # Check for all three upstream completions or failure
-        required = {"supplier_impact", "financial_exposure", "regulatory_trade"}
-        found = set()
-        for d in all_msgs:
-            if d.get("agent") in required and d.get("case_id") == case_id:
-                found.add(d.get("agent"))
-                
-        if found != required:
-            import asyncio, random
-            await asyncio.sleep(0.5 + random.random() * 2.5)
-            return
+            already_responded = any(
+                d.get("agent") == "alt_sourcing" and d.get("case_id") == case_id
+                and d.get("status") in ("complete", "insufficient_data", "escalate", "error")
+                for d in all_msgs
+            )
+            if already_responded:
+                logger.info(f"Already responded to {case_id}, skipping.")
+                return
 
-        # Skip stale cases: check supplier_impact timestamp
-        for d in all_msgs:
-            if d.get("agent") == "supplier_impact" and d.get("case_id") == case_id:
-                sup_ts = d.get("timestamp")
-                if sup_ts:
-                    try:
-                        st = datetime.fromisoformat(sup_ts.replace("Z", "+00:00"))
-                        age_secs = (AGENT_START_TIME - st).total_seconds()
-                        if age_secs > 300:
-                            logger.info(f"Skipping stale supplier_impact for case {case_id} (age={int(age_secs)}s > 300s)")
-                            await asyncio.sleep(0.5 + random.random() * 2.5)
-                            return
-                    except Exception:
-                        pass
-                break
-            
-        logger.info(f"All prerequisites found for case {case_id}. Triggering LLM logic.")
-        try:
-            await super().on_message(msg, tools, history, participants_msg, contacts_msg, is_session_bootstrap=is_session_bootstrap, room_id=room_id)
-        except Exception as e:
-            logger.error(f"Terminal LLM failure: {e}")
-            from datetime import datetime, timezone
-            from utils import get_room_participants
-            response = {
-                "agent": "alt_sourcing",
-                "case_id": case_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "status": "error",
-                "findings": {},
-                "confidence": "LOW",
-                "flags": [f"Terminal LLM failure: {str(e)}"]
-            }
-            if hasattr(tools, 'send_message'):
+            sup_status = current_data.get("status")
+            affected_components = (current_data.get("findings") or {}).get("affected_components", [])
+
+            if sup_status in ("insufficient_data", "escalate", "error") or not affected_components:
+                envelope = {
+                    "agent": "alt_sourcing",
+                    "case_id": case_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "status": "insufficient_data",
+                    "findings": {"alternatives": [], "recommended": None, "recommendation_reason": "Upstream failure"},
+                    "confidence": "LOW",
+                    "flags": ["Upstream supplier_impact failure or no components"]
+                }
+                coord_handle = "@coordinator"
                 try:
+                    from utils import get_room_participants
                     p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
                     handles = await get_room_participants(room_id, "alt_sourcing", p_str)
                     coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@coordinator")
-                except:
-                    coord_handle = "@coordinator"
-                try:
-                    await tools.send_message(content=json.dumps(response), mentions=[coord_handle])
-                except Exception as send_err:
-                    logger.error(f"Failed to send fallback error message: {send_err}")
+                except Exception as e:
+                    logger.error(f"Failed to resolve coordinator handle: {e}")
+                await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
+                return
+
+            try:
+                alternatives = load_alternatives()
+                top_alts = find_top_alternatives(affected_components, [], alternatives)
+                recommended = top_alts[0]["supplier"] if top_alts else None
+                reason = "Fastest lead time with lowest cost premium" if top_alts else "No alternatives found"
+                envelope = {
+                    "agent": "alt_sourcing",
+                    "case_id": case_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "status": "complete",
+                    "findings": {
+                        "alternatives": top_alts,
+                        "recommended": recommended,
+                        "recommendation_reason": reason
+                    },
+                    "confidence": "HIGH",
+                    "flags": []
+                }
+            except Exception as e:
+                logger.error(f"Alt sourcing calculation failed: {e}")
+                envelope = {
+                    "agent": "alt_sourcing",
+                    "case_id": case_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "status": "insufficient_data",
+                    "findings": {"alternatives": [], "recommended": None, "recommendation_reason": f"Error: {e}"},
+                    "confidence": "LOW",
+                    "flags": [str(e)]
+                }
+
+            coord_handle = "@coordinator"
+            try:
+                from utils import get_room_participants
+                p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
+                handles = await get_room_participants(room_id, "alt_sourcing", p_str)
+                coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@coordinator")
+            except Exception as e:
+                logger.error(f"Failed to resolve coordinator handle: {e}")
+            await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
+            logger.info(f"Alt sourcing posted for {case_id}: {envelope['status']}")
+            return
+
+
 
 async def main():
     load_dotenv()

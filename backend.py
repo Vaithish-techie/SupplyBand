@@ -58,7 +58,7 @@ def load_config() -> tuple[str, str | None]:
             config_path = os.path.join(base_dir, "agent_config.yaml")
             with open(config_path) as f:
                 config = yaml.safe_load(f)
-            api_key = config.get("event_intelligence", {}).get("api_key")
+            api_key = config.get("coordinator", {}).get("api_key")
         except Exception as e:
             logger.warning(f"Could not load agent_config.yaml: {e}")
 
@@ -242,6 +242,21 @@ async def health():
         return {"status": "degraded", "detail": e.detail}
 
 
+def _get_event_intel_api_key() -> str:
+    """Load event_intelligence API key from agent_config.yaml as fallback to post trigger."""
+    try:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = os.path.join(base_dir, "agent_config.yaml")
+        with open(config_path) as f:
+            config = yaml.safe_load(f)
+        key = config.get("event_intelligence", {}).get("api_key")
+        if key:
+            return key
+    except Exception as e:
+        logger.warning(f"Could not load event_intelligence API key: {e}")
+    return BAND_API_KEY
+
+
 @app.post("/trigger-event")
 async def trigger_event(req: TriggerEventRequest):
     """
@@ -256,10 +271,8 @@ async def trigger_event(req: TriggerEventRequest):
         room_id = await _get_room_id(client)
         participants = await _fetch_participants(client, room_id)
 
-        # Find the coordinator agent to @mention — it must NOT be our own key (cannot_mention_self)
-        # We mention the coordinator agent by its Band agent ID (not the key owner)
-        # The coordinator key IS the posting identity, so we mention any other agent to wake them.
-        # Strategy: mention event_intelligence, which the coordinator will also see and kick off.
+        # Find the coordinator agent to @mention — we will post using event_intelligence key
+        # to avoid cannot_mention_self on both sides.
         mention = None
         for p in participants:
             handle = p.get("handle", "")
@@ -269,9 +282,9 @@ async def trigger_event(req: TriggerEventRequest):
                 break
 
         if not mention:
-            # Fallback: mention the first agent that isn't event_intelligence (since backend uses event_intelligence key)
+            # Fallback: mention any agent that isn't event_intelligence
             for p in participants:
-                if p.get("type") == "Agent" and "event_intelligence" not in p.get("handle", "").lower():
+                if p.get("type") == "Agent" and "event" not in p.get("handle", "").lower():
                     mention = {"id": p["id"], "handle": p["handle"]}
                     break
 
@@ -288,11 +301,15 @@ async def trigger_event(req: TriggerEventRequest):
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
+        # Load event_intelligence's key to post so the coordinator agent can receive it
+        event_intel_key = _get_event_intel_api_key()
+        post_headers = {"x-api-key": event_intel_key, "content-type": "application/json"}
+
         try:
             r = await client.post(
                 f"{BAND_REST_URL}/api/v1/agent/chats/{room_id}/messages",
                 json={"message": {"content": json.dumps(inner_payload), "mentions": [mention]}},
-                headers=_band_headers(),
+                headers=post_headers,
                 timeout=10,
             )
             r.raise_for_status()

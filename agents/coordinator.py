@@ -137,7 +137,7 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
             import asyncio
             async def monitor_completion(case_id_param, m_list):
                 start_time = time.time()
-                timeout = 90
+                timeout = 180
                 room_data = None
                 
                 while time.time() - start_time < timeout:

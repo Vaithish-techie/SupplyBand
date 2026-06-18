@@ -96,8 +96,8 @@ class CustomRegulatoryTradeAdapter(LangGraphAdapter):
         room_id: str,
     ) -> None:
         logger.info(f"Regulatory Trade Agent received message: {msg.content[:100]}...")
-        
-        # Parse all messages in history to check state
+
+        # Parse current message
         all_msgs = []
         for m in history:
             content = m.content
@@ -110,7 +110,7 @@ class CustomRegulatoryTradeAdapter(LangGraphAdapter):
                 all_msgs.append(data)
             except Exception:
                 pass
-                
+
         try:
             content = msg.content
             if content.startswith("[") and "]: " in content:
@@ -121,79 +121,113 @@ class CustomRegulatoryTradeAdapter(LangGraphAdapter):
             all_msgs.append(current_data)
         except Exception:
             current_data = {}
-            
-        case_id = current_data.get("case_id")
-        if not case_id:
-            for d in reversed(all_msgs):
-                if d.get("case_id"):
-                    case_id = d.get("case_id")
-                    break
-                    
-        if not case_id:
-            import asyncio, random
-            await asyncio.sleep(0.5 + random.random() * 2.5)
-            return
 
-        # Check if already responded
-        already_responded = any(d.get("agent") == "regulatory_trade" and d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error") for d in all_msgs)
-        if already_responded:
-            import asyncio, random
-            await asyncio.sleep(0.5 + random.random() * 2.5)
-            return
+        # --- DIRECT TRIGGER PATH ---
+        if current_data.get("agent") == "supplier_impact":
+            case_id = current_data.get("case_id")
+            logger.info(f"Direct trigger: supplier_impact for case {case_id}")
 
-        # Check for supplier_impact completion or failure
-        supplier_impact_post = None
-        for d in all_msgs:
-            if d.get("agent") == "supplier_impact" and d.get("case_id") == case_id:
-                supplier_impact_post = d
-                break
-                
-        if not supplier_impact_post:
-            import asyncio, random
-            await asyncio.sleep(0.5 + random.random() * 2.5)
-            return
+            already_responded = any(
+                d.get("agent") == "regulatory_trade" and d.get("case_id") == case_id
+                and d.get("status") in ("complete", "insufficient_data", "escalate", "error")
+                for d in all_msgs
+            )
+            if already_responded:
+                logger.info(f"Already responded to {case_id}, skipping.")
+                return
 
-        # Skip stale supplier_impact posts from before this process started (>5 min old)
-        sup_ts = supplier_impact_post.get("timestamp")
-        if sup_ts:
-            try:
-                from datetime import datetime, timezone
-                st = datetime.fromisoformat(sup_ts.replace("Z", "+00:00"))
-                age_secs = (AGENT_START_TIME - st).total_seconds()
-                if age_secs > 300:
-                    logger.info(f"Skipping stale supplier_impact for case {case_id} (age={int(age_secs)}s > 300s)")
-                    await asyncio.sleep(0.5 + random.random() * 2.5)
-                    return
-            except Exception:
-                pass
-            
-        logger.info(f"Supplier impact post found for case {case_id}. Triggering LLM logic.")
-        try:
-            await super().on_message(msg, tools, history, participants_msg, contacts_msg, is_session_bootstrap=is_session_bootstrap, room_id=room_id)
-        except Exception as e:
-            logger.error(f"Terminal LLM failure: {e}")
-            from datetime import datetime, timezone
-            from utils import get_room_participants
-            response = {
-                "agent": "regulatory_trade",
-                "case_id": case_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "status": "error",
-                "findings": {},
-                "confidence": "LOW",
-                "flags": [f"Terminal LLM failure: {str(e)}"]
-            }
-            if hasattr(tools, 'send_message'):
+            sup_status = current_data.get("status")
+            if sup_status in ("insufficient_data", "escalate", "error"):
+                envelope = {
+                    "agent": "regulatory_trade",
+                    "case_id": case_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "status": "insufficient_data",
+                    "findings": {},
+                    "confidence": "LOW",
+                    "flags": ["Upstream supplier_impact failure"]
+                }
+                coord_handle = "@coordinator"
                 try:
+                    from utils import get_room_participants
                     p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
                     handles = await get_room_participants(room_id, "regulatory_trade", p_str)
                     coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@coordinator")
-                except:
-                    coord_handle = "@coordinator"
-                try:
-                    await tools.send_message(content=json.dumps(response), mentions=[coord_handle])
-                except Exception as send_err:
-                    logger.error(f"Failed to send fallback error message: {send_err}")
+                except Exception as e:
+                    logger.error(f"Failed to resolve coordinator handle: {e}")
+                await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
+                return
+
+            # Load regulations
+            try:
+                reg_data_str = get_regulatory_data.invoke({})
+                reg_data = json.loads(reg_data_str) if reg_data_str and reg_data_str.strip().startswith("{") else {}
+            except Exception as e:
+                logger.error(f"Failed to load regulations: {e}")
+                reg_data = {}
+
+            # Determine regulatory findings based on event type / location
+            sup_findings = current_data.get("findings") or {}
+            event_type = ""
+            location = ""
+            # Extract from parent event_intelligence if available in all_msgs
+            for d in all_msgs:
+                if d.get("agent") == "event_intelligence" and d.get("case_id") == case_id:
+                    event_type = (d.get("findings") or {}).get("event_type", "")
+                    location = (d.get("findings") or {}).get("location", "")
+                    break
+
+            # Apply regulations lookup
+            force_majeure = True
+            insurer_hours = 72
+            export_controls = []
+            tariff_implications = "none"
+            compliance_actions = []
+
+            for rule in reg_data.get("rules", []):
+                if any(k in (event_type + location).lower() for k in rule.get("keywords", [])):
+                    force_majeure = rule.get("force_majeure", force_majeure)
+                    insurer_hours = rule.get("insurer_notify_deadline_hours", insurer_hours)
+                    export_controls = rule.get("export_controls", export_controls)
+                    tariff_implications = rule.get("tariff_implications", tariff_implications)
+                    compliance_actions = rule.get("compliance_actions", compliance_actions)
+
+            if not compliance_actions:
+                compliance_actions = [
+                    f"Notify insurer within {insurer_hours} hours",
+                    "File force majeure notice with affected suppliers"
+                ]
+
+            envelope = {
+                "agent": "regulatory_trade",
+                "case_id": case_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "complete",
+                "findings": {
+                    "force_majeure_applicable": force_majeure,
+                    "insurer_notify_deadline_hours": insurer_hours,
+                    "export_controls": export_controls,
+                    "tariff_implications": tariff_implications,
+                    "compliance_actions": compliance_actions
+                },
+                "confidence": "MEDIUM",
+                "flags": []
+            }
+            coord_handle = "@coordinator"
+            try:
+                from utils import get_room_participants
+                p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
+                handles = await get_room_participants(room_id, "regulatory_trade", p_str)
+                coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@coordinator")
+            except Exception as e:
+                logger.error(f"Failed to resolve coordinator handle: {e}")
+            await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
+            logger.info(f"Regulatory trade posted for {case_id}: complete")
+            return
+
+        # Not a supplier_impact trigger — ignore silently
+        import asyncio, random
+        await asyncio.sleep(0.5 + random.random() * 2.5)
 
 async def main():
     # Load env variables from local and parent dir
