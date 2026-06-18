@@ -15,6 +15,10 @@ from langchain_core.tools import tool
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Track when this agent process started — skip stale bootstrap messages
+from datetime import datetime, timezone
+AGENT_START_TIME = datetime.now(timezone.utc)
+
 # System prompt for the regulatory trade agent
 AGENT_PROMPT = """
 You are the Regulatory Trade Agent in a Supply Chain Disruption Intelligence System.
@@ -127,14 +131,14 @@ class CustomRegulatoryTradeAdapter(LangGraphAdapter):
                     
         if not case_id:
             import asyncio, random
-            await asyncio.sleep(0.1 + random.random() * 0.4)
+            await asyncio.sleep(0.5 + random.random() * 2.5)
             return
 
         # Check if already responded
         already_responded = any(d.get("agent") == "regulatory_trade" and d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error") for d in all_msgs)
         if already_responded:
             import asyncio, random
-            await asyncio.sleep(0.1 + random.random() * 0.4)
+            await asyncio.sleep(0.5 + random.random() * 2.5)
             return
 
         # Check for supplier_impact completion or failure
@@ -146,8 +150,22 @@ class CustomRegulatoryTradeAdapter(LangGraphAdapter):
                 
         if not supplier_impact_post:
             import asyncio, random
-            await asyncio.sleep(0.1 + random.random() * 0.4)
+            await asyncio.sleep(0.5 + random.random() * 2.5)
             return
+
+        # Skip stale supplier_impact posts from before this process started (>5 min old)
+        sup_ts = supplier_impact_post.get("timestamp")
+        if sup_ts:
+            try:
+                from datetime import datetime, timezone
+                st = datetime.fromisoformat(sup_ts.replace("Z", "+00:00"))
+                age_secs = (AGENT_START_TIME - st).total_seconds()
+                if age_secs > 300:
+                    logger.info(f"Skipping stale supplier_impact for case {case_id} (age={int(age_secs)}s > 300s)")
+                    await asyncio.sleep(0.5 + random.random() * 2.5)
+                    return
+            except Exception:
+                pass
             
         logger.info(f"Supplier impact post found for case {case_id}. Triggering LLM logic.")
         try:
@@ -155,6 +173,7 @@ class CustomRegulatoryTradeAdapter(LangGraphAdapter):
         except Exception as e:
             logger.error(f"Terminal LLM failure: {e}")
             from datetime import datetime, timezone
+            from utils import get_room_participants
             response = {
                 "agent": "regulatory_trade",
                 "case_id": case_id,
@@ -167,11 +186,14 @@ class CustomRegulatoryTradeAdapter(LangGraphAdapter):
             if hasattr(tools, 'send_message'):
                 try:
                     p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
-                    participants_list = json.loads(p_str)
-                    coord_handle = next((p.get("handle") for p in participants_list if "coordinator" in p.get("handle", "").lower()), "@coordinator")
+                    handles = await get_room_participants(room_id, "regulatory_trade", p_str)
+                    coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@coordinator")
                 except:
                     coord_handle = "@coordinator"
-                await tools.send_message(content=json.dumps(response), mentions=[coord_handle])
+                try:
+                    await tools.send_message(content=json.dumps(response), mentions=[coord_handle])
+                except Exception as send_err:
+                    logger.error(f"Failed to send fallback error message: {send_err}")
 
 async def main():
     # Load env variables from local and parent dir

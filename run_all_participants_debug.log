@@ -1,0 +1,642 @@
+Cleaning up any existing agent processes...
+Waiting 3 seconds to ensure sockets close cleanly...
+Checking Python environment...
+Activating conda environment...
+Starting Coordinator first (it must be online before others post)...
+INFO:httpx_monkeypatch:[coordinator] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:__main__:Coordinator Agent running...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/me "HTTP/1.1 200 OK"
+INFO:band.adapters.langgraph:LangGraph adapter started for agent: coordinator
+INFO:band.runtime.runtime:Starting AgentRuntime for agent b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_control:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_control:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_control:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:band.platform.link:Connected to platform
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_rooms:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+Starting Event Intelligence...
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_rooms:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_rooms:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats?page=1&page_size=100 "HTTP/1.1 200 OK"
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.runtime.execution:Starting ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: BOjZa4AI
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.runtime.execution:Starting ExecutionContext for room: 9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages | Key: BOjZa4AI
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.runtime.execution:Starting ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages | Key: BOjZa4AI
+INFO:band.runtime.presence:Subscribed to 3 rooms during startup
+INFO:band.runtime.presence:RoomPresence started for agent b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:band.runtime.platform_runtime:Platform runtime started for agent: coordinator
+INFO:band.agent:Agent started: coordinator (band-sdk 1.0.0)
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BOjZa4AI
+INFO:httpx_monkeypatch:[event_intelligence] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: BOjZa4AI
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 200 OK"
+INFO:band.runtime.execution:Processing backlog message a89c65c6-be60-42de-b4e4-5e7df31ce7d9 in room 0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/a89c65c6-be60-42de-b4e4-5e7df31ce7d9/processing | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext 9876323e-1687-48f9-9f9d-a4805f7b5653: Synchronized, switching to WebSocket
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext e9ec1b10-77d6-45e7-aa79-68a6540f9d1a: Synchronized, switching to WebSocket
+INFO:__main__:Event Intelligence Agent running...
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/a89c65c6-be60-42de-b4e4-5e7df31ce7d9/processing "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/me "HTTP/1.1 200 OK"
+INFO:band.adapters.langgraph:LangGraph adapter started for agent: Event Intelligence
+INFO:band.runtime.runtime:Starting AgentRuntime for agent 2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+Starting Supplier Impact...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context "HTTP/1.1 200 OK"
+INFO:band.preprocessing.default:Room 0ed6ab44-a64e-4e60-910f-77f32b86a175: Loading history...
+INFO:band.preprocessing.default:Room 0ed6ab44-a64e-4e60-910f-77f32b86a175: Got 12 messages
+INFO:__main__:Received human operator message, sending Phase 1 kickoff...
+INFO:__main__:[PARTICIPANTS_DEBUG] participants_msg type: <class 'str'>
+INFO:__main__:[PARTICIPANTS_DEBUG] participants_msg raw (len=625): "## Current Participants\n- @sreedarsan0311/alt-sourcing — alt_sourcing (Agent)\n- @rshricharan29/event-intelligence — Event Intelligence (Agent)\n- @sreedarsan0311/financial-exposure — financial_exposure (Agent)\n- @sreedarsan0311/regulatory-trade — regulatory_trade (Agent)\n- @vaithish7/coordinator — coordinator (Agent)\n- @sreedarsan0311 — Sree Darsan Balaji (User)\n- @rshricharan29/supplier-impact — Supplier Impact (Agent)\n\nIMPORTANT: In band_send_message mentions, always use the exact handle shown above (e.g. '@john' for users, '@john/weather-agent' for agents), NOT the display name. Handles are lowercase with no spaces."
+ERROR:__main__:Failed to parse participants_msg: Expecting value: line 1 column 1 (char 0)
+ERROR:band.runtime.execution:Error processing backlog message a89c65c6-be60-42de-b4e4-5e7df31ce7d9: Unknown participant 'human_operator'. Available handles: ['sreedarsan0311/alt-sourcing', 'rshricharan29/event-intelligence', 'sreedarsan0311/financial-exposure', 'sreedarsan0311/regulatory-trade', 'vaithish7/coordinator', 'sreedarsan0311', 'rshricharan29/supplier-impact']
+Traceback (most recent call last):
+  File "/home/vaiunix_111/miniconda3/envs/aml-agents/lib/python3.11/site-packages/band/runtime/execution.py", line 1269, in _process_backlog_message
+    await self._on_execute(self, event)
+  File "/home/vaiunix_111/miniconda3/envs/aml-agents/lib/python3.11/site-packages/band/agent.py", line 349, in _on_execute
+    await self._adapter.on_event(inp)
+  File "/home/vaiunix_111/miniconda3/envs/aml-agents/lib/python3.11/site-packages/band/core/simple_adapter.py", line 147, in on_event
+    await self.on_message(
+  File "/home/vaiunix_111/College/Hackathon/supply-chain-agent/agents/coordinator.py", line 126, in on_message
+    await tools.send_message(
+  File "/home/vaiunix_111/miniconda3/envs/aml-agents/lib/python3.11/site-packages/band/runtime/tools.py", line 1245, in send_message
+    resolved_mentions = self._resolve_mentions(mentions or [])
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/vaiunix_111/miniconda3/envs/aml-agents/lib/python3.11/site-packages/band/runtime/tools.py", line 1975, in _resolve_mentions
+    raise ValueError(
+ValueError: Unknown participant 'human_operator'. Available handles: ['sreedarsan0311/alt-sourcing', 'rshricharan29/event-intelligence', 'sreedarsan0311/financial-exposure', 'sreedarsan0311/regulatory-trade', 'vaithish7/coordinator', 'sreedarsan0311', 'rshricharan29/supplier-impact']
+WARNING:band.platform.link:Marking message a89c65c6-be60-42de-b4e4-5e7df31ce7d9 as failed: Unknown participant 'human_operator'. Available handles: ['sreedarsan0311/alt-sourcing', 'rshricharan29/event-intelligence', 'sreedarsan0311/financial-exposure', 'sreedarsan0311/regulatory-trade', 'vaithish7/coordinator', 'sreedarsan0311', 'rshricharan29/supplier-impact']
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/a89c65c6-be60-42de-b4e4-5e7df31ce7d9/failed | Key: BOjZa4AI
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/a89c65c6-be60-42de-b4e4-5e7df31ce7d9/failed "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BOjZa4AI
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_control:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 200 OK"
+INFO:band.runtime.execution:Processing backlog message a89c65c6-be60-42de-b4e4-5e7df31ce7d9 in room 0ed6ab44-a64e-4e60-910f-77f32b86a175
+ERROR:band.runtime.retry_tracker:Message a89c65c6-be60-42de-b4e4-5e7df31ce7d9 exceeded max retries (1), marking as permanently failed
+WARNING:band.runtime.execution:Message a89c65c6-be60-42de-b4e4-5e7df31ce7d9 exceeded max retries (2 attempts)
+WARNING:band.runtime.execution:ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Message a89c65c6-be60-42de-b4e4-5e7df31ce7d9 permanently failed
+INFO:band.runtime.execution:ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Synchronized, switching to WebSocket
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_control:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_control:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:band.platform.link:Connected to platform
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_rooms:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_rooms:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_rooms:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:httpx_monkeypatch:[supplier_impact] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats?page=1&page_size=100 "HTTP/1.1 200 OK"
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:5368bf9d-456b-4968-90c8-efc9d8b280ff
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:__main__:Supplier Impact Agent running...
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:5368bf9d-456b-4968-90c8-efc9d8b280ff
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:5368bf9d-456b-4968-90c8-efc9d8b280ff
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/me "HTTP/1.1 200 OK"
+INFO:band.adapters.langgraph:LangGraph adapter started for agent: Supplier Impact
+INFO:band.runtime.runtime:Starting AgentRuntime for agent e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.runtime.execution:Starting ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: BsP-G1j7
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:5368bf9d-456b-4968-90c8-efc9d8b280ff
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.runtime.execution:Starting ExecutionContext for room: 9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.runtime.execution:Starting ExecutionContext for room: 5368bf9d-456b-4968-90c8-efc9d8b280ff
+INFO:band.runtime.execution:Starting ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages | Key: BsP-G1j7
+INFO:band.runtime.presence:Subscribed to 4 rooms during startup
+INFO:band.runtime.presence:RoomPresence started for agent 2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:band.runtime.platform_runtime:Platform runtime started for agent: Event Intelligence
+INFO:band.agent:Agent started: Event Intelligence (band-sdk 1.0.0)
+Starting Financial Exposure and Regulatory & Trade (in parallel)...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Synchronized, switching to WebSocket
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext 9876323e-1687-48f9-9f9d-a4805f7b5653: Synchronized, switching to WebSocket
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext e9ec1b10-77d6-45e7-aa79-68a6540f9d1a: Synchronized, switching to WebSocket
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext 5368bf9d-456b-4968-90c8-efc9d8b280ff: Synchronized, switching to WebSocket
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_control:e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_control:e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_control:e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:band.platform.link:Connected to platform
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_rooms:e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_rooms:e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_rooms:e07d4a68-4995-4757-a810-9e89337c1b57
+2026-06-18 15:52:33,108 [financial_exposure] Loaded 6 components from financials.json
+2026-06-18 15:52:33,108 [financial_exposure] [financial_exposure] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats?page=1&page_size=100 "HTTP/1.1 200 OK"
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:52:33,452 [financial_exposure] Using AI/ML API (primary) with Featherless AI (fallback)
+2026-06-18 15:52:33,486 [financial_exposure] Financial Exposure Agent running — waiting for supplier_impact post...
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:httpx_monkeypatch:[regulatory_trade] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.runtime.execution:Starting ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: hC9b4um9
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.runtime.execution:Starting ExecutionContext for room: 9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages | Key: hC9b4um9
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.runtime.execution:Starting ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages | Key: hC9b4um9
+2026-06-18 15:52:33,800 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/me "HTTP/1.1 200 OK"
+INFO:band.runtime.presence:Subscribed to 3 rooms during startup
+INFO:band.runtime.presence:RoomPresence started for agent e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:band.runtime.platform_runtime:Platform runtime started for agent: Supplier Impact
+INFO:band.agent:Agent started: Supplier Impact (band-sdk 1.0.0)
+2026-06-18 15:52:33,800 [financial_exposure] LangGraph adapter started for agent: financial_exposure
+2026-06-18 15:52:33,801 [financial_exposure] Starting AgentRuntime for agent 465538ac-4e11-4698-a3f2-ad6667a3f0c5
+INFO:__main__:Initializing LLM via AIML API (primary) and Featherless (fallback)...
+INFO:__main__:Regulatory Trade Agent running...
+Starting Alternative Sourcing last...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/me "HTTP/1.1 200 OK"
+INFO:band.adapters.langgraph:LangGraph adapter started for agent: Regulatory Agent
+INFO:band.runtime.runtime:Starting AgentRuntime for agent fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Synchronized, switching to WebSocket
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext e9ec1b10-77d6-45e7-aa79-68a6540f9d1a: Synchronized, switching to WebSocket
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext 9876323e-1687-48f9-9f9d-a4805f7b5653: Synchronized, switching to WebSocket
+2026-06-18 15:52:34,549 [financial_exposure] [WebSocket] Subscribing to topic: agent_control:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 15:52:34,772 [financial_exposure] Successfully subscribed to topic agent_control:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 15:52:34,773 [financial_exposure] [WebSocket] Subscribed to topic: agent_control:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 15:52:34,773 [financial_exposure] Connected to platform
+2026-06-18 15:52:34,773 [financial_exposure] [WebSocket] Subscribing to topic: agent_rooms:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_control:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+2026-06-18 15:52:34,998 [financial_exposure] Successfully subscribed to topic agent_rooms:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 15:52:34,998 [financial_exposure] [WebSocket] Subscribed to topic: agent_rooms:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 15:52:35,101 [alt_sourcing] Loaded 6 alternative suppliers from alternatives.json
+2026-06-18 15:52:35,101 [alt_sourcing] [alt_sourcing] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_control:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_control:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+INFO:band.platform.link:Connected to platform
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_rooms:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+2026-06-18 15:52:35,263 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 15:52:35,264 [financial_exposure] [WebSocket] Subscribing to topic: chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:52:35,264 [financial_exposure] [WebSocket] Subscribing to topic: chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:52:35,265 [financial_exposure] [WebSocket] Subscribing to topic: chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:52:35,473 [alt_sourcing] Using AI/ML API (primary) with Featherless AI (fallback)
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_rooms:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_rooms:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+2026-06-18 15:52:35,519 [alt_sourcing] Alternative Sourcing Agent running — waiting for supplier_impact + financial_exposure + regulatory_trade posts...
+2026-06-18 15:52:35,526 [financial_exposure] Successfully subscribed to topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:52:35,526 [financial_exposure] [WebSocket] Subscribing to topic: room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:52:35,529 [financial_exposure] Successfully subscribed to topic chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:52:35,530 [financial_exposure] [WebSocket] Subscribing to topic: room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:52:35,535 [financial_exposure] Successfully subscribed to topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:52:35,535 [financial_exposure] [WebSocket] Subscribing to topic: room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats?page=1&page_size=100 "HTTP/1.1 200 OK"
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:52:35,753 [financial_exposure] Successfully subscribed to topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:52:35,753 [financial_exposure] Successfully subscribed to topic room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:52:35,753 [financial_exposure] Starting ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:52:35,753 [financial_exposure] Starting ExecutionContext for room: 9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:52:35,765 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: AQpRXTyY
+2026-06-18 15:52:35,766 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages | Key: AQpRXTyY
+2026-06-18 15:52:35,769 [financial_exposure] Successfully subscribed to topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:52:35,769 [financial_exposure] Starting ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:52:35,771 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages | Key: AQpRXTyY
+2026-06-18 15:52:35,774 [financial_exposure] Subscribed to 3 rooms during startup
+2026-06-18 15:52:35,775 [financial_exposure] RoomPresence started for agent 465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 15:52:35,775 [financial_exposure] Platform runtime started for agent: financial_exposure
+2026-06-18 15:52:35,775 [financial_exposure] Agent started: financial_exposure (band-sdk 1.0.0)
+2026-06-18 15:52:35,833 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/me "HTTP/1.1 200 OK"
+2026-06-18 15:52:35,834 [alt_sourcing] LangGraph adapter started for agent: alt_sourcing
+2026-06-18 15:52:35,834 [alt_sourcing] Starting AgentRuntime for agent 2a747b94-0950-4ffd-8fc3-46d0293882ee
+Starting FastAPI backend on port 8000...
+
+==========================================
+All 6 agents + backend are running.
+Backend:  http://localhost:8000
+Docs:     http://localhost:8000/docs
+Press Ctrl+C to stop everything.
+==========================================
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:52:36,009 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+2026-06-18 15:52:36,010 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: AQpRXTyY
+INFO:     Will watch for changes in these directories: ['/home/vaiunix_111/College/Hackathon/supply-chain-agent']
+2026-06-18 15:52:36,080 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+2026-06-18 15:52:36,081 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+2026-06-18 15:52:36,081 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: AQpRXTyY
+2026-06-18 15:52:36,082 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: AQpRXTyY
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.runtime.execution:Starting ExecutionContext for room: 9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages | Key: g719fFvF
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.runtime.execution:Starting ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages | Key: g719fFvF
+INFO:band.runtime.presence:Subscribed to 2 rooms during startup
+INFO:band.runtime.presence:RoomPresence started for agent fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+INFO:band.runtime.platform_runtime:Platform runtime started for agent: Regulatory Agent
+INFO:band.agent:Agent started: Regulatory Agent (band-sdk 1.0.0)
+2026-06-18 15:52:36,251 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:52:36,251 [financial_exposure] ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Synchronized, switching to WebSocket
+2026-06-18 15:52:36,333 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:52:36,334 [financial_exposure] ExecutionContext 9876323e-1687-48f9-9f9d-a4805f7b5653: Synchronized, switching to WebSocket
+2026-06-18 15:52:36,339 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:52:36,340 [financial_exposure] ExecutionContext e9ec1b10-77d6-45e7-aa79-68a6540f9d1a: Synchronized, switching to WebSocket
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [7771] using StatReload
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: g719fFvF
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: g719fFvF
+2026-06-18 15:52:36,600 [alt_sourcing] [WebSocket] Subscribing to topic: agent_control:2a747b94-0950-4ffd-8fc3-46d0293882ee
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext 9876323e-1687-48f9-9f9d-a4805f7b5653: Synchronized, switching to WebSocket
+INFO:     Started server process [7773]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext e9ec1b10-77d6-45e7-aa79-68a6540f9d1a: Synchronized, switching to WebSocket
+2026-06-18 15:52:36,836 [alt_sourcing] Successfully subscribed to topic agent_control:2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 15:52:36,836 [alt_sourcing] [WebSocket] Subscribed to topic: agent_control:2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 15:52:36,836 [alt_sourcing] Connected to platform
+2026-06-18 15:52:36,836 [alt_sourcing] [WebSocket] Subscribing to topic: agent_rooms:2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 15:52:37,118 [alt_sourcing] Successfully subscribed to topic agent_rooms:2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 15:52:37,118 [alt_sourcing] [WebSocket] Subscribed to topic: agent_rooms:2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 15:52:37,388 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 15:52:37,390 [alt_sourcing] [WebSocket] Subscribing to topic: chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:52:37,391 [alt_sourcing] [WebSocket] Subscribing to topic: chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:52:37,392 [alt_sourcing] [WebSocket] Subscribing to topic: chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:52:37,642 [alt_sourcing] Successfully subscribed to topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:52:37,643 [alt_sourcing] [WebSocket] Subscribing to topic: room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:52:37,648 [alt_sourcing] Successfully subscribed to topic chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:52:37,648 [alt_sourcing] [WebSocket] Subscribing to topic: room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:52:37,659 [alt_sourcing] Successfully subscribed to topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:52:37,659 [alt_sourcing] [WebSocket] Subscribing to topic: room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:52:37,882 [alt_sourcing] Successfully subscribed to topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:52:37,883 [alt_sourcing] Starting ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:52:37,903 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: xiyJzWNM
+2026-06-18 15:52:37,906 [alt_sourcing] Successfully subscribed to topic room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:52:37,906 [alt_sourcing] Successfully subscribed to topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:52:37,906 [alt_sourcing] Starting ExecutionContext for room: 9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:52:37,906 [alt_sourcing] Starting ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:52:37,906 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages | Key: xiyJzWNM
+2026-06-18 15:52:37,907 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages | Key: xiyJzWNM
+2026-06-18 15:52:37,909 [alt_sourcing] Subscribed to 3 rooms during startup
+2026-06-18 15:52:37,909 [alt_sourcing] RoomPresence started for agent 2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 15:52:37,910 [alt_sourcing] Platform runtime started for agent: alt_sourcing
+2026-06-18 15:52:37,910 [alt_sourcing] Agent started: alt_sourcing (band-sdk 1.0.0)
+2026-06-18 15:52:38,168 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+2026-06-18 15:52:38,170 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: xiyJzWNM
+2026-06-18 15:52:38,233 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+2026-06-18 15:52:38,234 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: xiyJzWNM
+2026-06-18 15:52:38,273 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+2026-06-18 15:52:38,274 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: xiyJzWNM
+2026-06-18 15:52:38,435 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:52:38,436 [alt_sourcing] ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Synchronized, switching to WebSocket
+2026-06-18 15:52:38,512 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:52:38,513 [alt_sourcing] ExecutionContext e9ec1b10-77d6-45e7-aa79-68a6540f9d1a: Synchronized, switching to WebSocket
+2026-06-18 15:52:38,525 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:52:38,526 [alt_sourcing] ExecutionContext 9876323e-1687-48f9-9f9d-a4805f7b5653: Synchronized, switching to WebSocket
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: BOjZa4AI
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 200 OK"
+WARNING:band.runtime.execution:ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Skipping permanently failed message a89c65c6-be60-42de-b4e4-5e7df31ce7d9 during resync
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: hC9b4um9
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: hC9b4um9
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:53:36,255 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: AQpRXTyY
+2026-06-18 15:53:36,336 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: AQpRXTyY
+2026-06-18 15:53:36,341 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: AQpRXTyY
+2026-06-18 15:53:36,584 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:53:36,652 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:53:36,658 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: g719fFvF
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: g719fFvF
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:53:38,440 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: xiyJzWNM
+2026-06-18 15:53:38,514 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: xiyJzWNM
+2026-06-18 15:53:38,528 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: xiyJzWNM
+2026-06-18 15:53:38,814 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:53:38,838 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:53:38,911 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: BOjZa4AI
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 200 OK"
+WARNING:band.runtime.execution:ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Skipping permanently failed message a89c65c6-be60-42de-b4e4-5e7df31ce7d9 during resync
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: hC9b4um9
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: hC9b4um9
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:54:36,589 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: AQpRXTyY
+2026-06-18 15:54:36,654 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: AQpRXTyY
+2026-06-18 15:54:36,659 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: AQpRXTyY
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: g719fFvF
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: g719fFvF
+2026-06-18 15:54:37,421 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:54:37,430 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:54:37,683 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:54:38,820 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: xiyJzWNM
+2026-06-18 15:54:38,840 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: xiyJzWNM
+2026-06-18 15:54:38,913 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: xiyJzWNM
+2026-06-18 15:54:39,123 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:54:39,137 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:54:39,225 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+WARNING:  StatReload detected changes in 'agents/utils.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7773]
+INFO:     Started server process [8763]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'agents/coordinator.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8763]
+INFO:     Started server process [8936]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BOjZa4AI
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 200 OK"
+WARNING:band.runtime.execution:ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Skipping permanently failed message a89c65c6-be60-42de-b4e4-5e7df31ce7d9 during resync
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: hC9b4um9
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: hC9b4um9
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:55:37,427 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: AQpRXTyY
+2026-06-18 15:55:37,432 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: AQpRXTyY
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: g719fFvF
+2026-06-18 15:55:37,684 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: AQpRXTyY
+WARNING:  StatReload detected changes in 'agents/event_intelligence.py'. Reloading...
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: g719fFvF
+INFO:     Shutting down
+2026-06-18 15:55:37,792 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:55:37,793 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8936]
+2026-06-18 15:55:37,984 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:     Started server process [9100]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+2026-06-18 15:55:39,128 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: xiyJzWNM
+2026-06-18 15:55:39,139 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: xiyJzWNM
+2026-06-18 15:55:39,228 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: xiyJzWNM
+2026-06-18 15:55:39,556 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:55:39,577 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:55:39,597 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+WARNING:  StatReload detected changes in 'agents/supplier_impact.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9100]
+INFO:     Started server process [9309]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+2026-06-18 15:56:17,664 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+2026-06-18 15:56:17,671 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context "HTTP/1.1 200 OK"
+2026-06-18 15:56:17,931 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context "HTTP/1.1 200 OK"
+2026-06-18 15:56:17,936 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: BOjZa4AI
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: hC9b4um9
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:56:37,795 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: AQpRXTyY
+2026-06-18 15:56:37,798 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: AQpRXTyY
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: g719fFvF
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: g719fFvF
+2026-06-18 15:56:38,103 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:56:38,104 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:56:39,561 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next | Key: xiyJzWNM
+2026-06-18 15:56:39,600 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: xiyJzWNM
+INFO:phoenix_channels_python_client.client:Event loop shutting down! reason=Signal received
+INFO:phoenix_channels_python_client.client:Event loop shutting down! reason=Signal received
+INFO:phoenix_channels_python_client.client:Event loop shutting down! reason=Signal received
+2026-06-18 15:56:39,813 [financial_exposure] Event loop shutting down! reason=Signal received
+INFO:phoenix_channels_python_client.client:Unregistered topic agent_control:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:phoenix_channels_python_client.client:Unregistered topic agent_rooms:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:phoenix_channels_python_client.client:Unregistered topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Unregistered topic chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:phoenix_channels_python_client.client:Unregistered topic chat_room:5368bf9d-456b-4968-90c8-efc9d8b280ff
+INFO:phoenix_channels_python_client.client:Unregistered topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:phoenix_channels_python_client.client:Unregistered topic agent_control:e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:phoenix_channels_python_client.client:Unregistered topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Unregistered topic agent_rooms:e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:phoenix_channels_python_client.client:Unregistered topic room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:phoenix_channels_python_client.client:Unregistered topic agent_control:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:phoenix_channels_python_client.client:Unregistered topic room_participants:5368bf9d-456b-4968-90c8-efc9d8b280ff
+2026-06-18 15:56:39,815 [financial_exposure] Unregistered topic agent_control:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 15:56:39,815 [alt_sourcing] Event loop shutting down! reason=Signal received
+INFO:phoenix_channels_python_client.client:Unregistered topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Unregistered topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:phoenix_channels_python_client.client:Unregistered topic agent_rooms:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:phoenix_channels_python_client.client:Unregistered topic chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:phoenix_channels_python_client.client:Unregistered topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Unregistered topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:56:39,815 [financial_exposure] Unregistered topic agent_rooms:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+INFO:phoenix_channels_python_client.client:Unregistered topic chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:phoenix_channels_python_client.client:Unregistered topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:56:39,815 [financial_exposure] Unregistered topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Unregistered topic room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:phoenix_channels_python_client.client:Unregistered topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:56:39,815 [financial_exposure] Unregistered topic chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:phoenix_channels_python_client.client:Unregistered topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:phoenix_channels_python_client.client:Unregistered topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:56:39,815 [financial_exposure] Unregistered topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:phoenix_channels_python_client.client:Event loop shutting down! reason=Signal received
+INFO:phoenix_channels_python_client.client:Unregistered topic room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:56:39,815 [financial_exposure] Unregistered topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Unregistered topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:56:39,816 [financial_exposure] Unregistered topic room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:56:39,816 [financial_exposure] Unregistered topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:phoenix_channels_python_client.client:Unregistered topic agent_control:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+INFO:phoenix_channels_python_client.client:Unregistered topic agent_rooms:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+2026-06-18 15:56:39,817 [alt_sourcing] Unregistered topic agent_control:2a747b94-0950-4ffd-8fc3-46d0293882ee
+INFO:phoenix_channels_python_client.client:Unregistered topic chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:56:39,817 [alt_sourcing] Unregistered topic agent_rooms:2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 15:56:39,817 [alt_sourcing] Unregistered topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Unregistered topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:phoenix_channels_python_client.client:Unregistered topic room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:phoenix_channels_python_client.client:Unregistered topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:56:39,817 [alt_sourcing] Unregistered topic chat_room:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:56:39,817 [alt_sourcing] Unregistered topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:56:39,817 [alt_sourcing] Unregistered topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:56:39,817 [alt_sourcing] Unregistered topic room_participants:9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:56:39,817 [alt_sourcing] Unregistered topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:56:39,871 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/9876323e-1687-48f9-9f9d-a4805f7b5653/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 15:56:39,892 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9309]
+INFO:     Stopping reloader process [7771]
+2026-06-18 15:56:40,036 [financial_exposure] Stopping AgentRuntime for agent 465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 15:56:40,036 [financial_exposure] Stopping ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:56:40,036 [financial_exposure] Stopping ExecutionContext for room: 9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:56:40,037 [financial_exposure] Stopping ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:56:40,037 [financial_exposure] RoomPresence stopped
+2026-06-18 15:56:40,037 [financial_exposure] [WebSocket] Unsubscribing from topic: agent_control:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 15:56:40,037 [financial_exposure] Error unsubscribing from agent_control: Topic agent_control:465538ac-4e11-4698-a3f2-ad6667a3f0c5 not subscribed
+2026-06-18 15:56:40,037 [financial_exposure] Disconnected from platform
+2026-06-18 15:56:40,037 [financial_exposure] Platform runtime stopped
+2026-06-18 15:56:40,037 [financial_exposure] Agent stopped: financial_exposure (graceful=True)
+INFO:band.runtime.runtime:Stopping AgentRuntime for agent 2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:band.runtime.execution:Stopping ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.runtime.execution:Stopping ExecutionContext for room: 9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.runtime.execution:Stopping ExecutionContext for room: 5368bf9d-456b-4968-90c8-efc9d8b280ff
+INFO:band.runtime.execution:Stopping ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.runtime.presence:RoomPresence stopped
+INFO:band.client.streaming.client:[WebSocket] Unsubscribing from topic: agent_control:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+WARNING:band.platform.link:Error unsubscribing from agent_control: Topic agent_control:2cd4de36-fbe1-470d-964b-63082dfb0a8d not subscribed
+INFO:band.platform.link:Disconnected from platform
+INFO:band.runtime.platform_runtime:Platform runtime stopped
+INFO:band.agent:Agent stopped: Event Intelligence (graceful=True)
+INFO:band.runtime.runtime:Stopping AgentRuntime for agent e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:band.runtime.execution:Stopping ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.runtime.execution:Stopping ExecutionContext for room: 9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.runtime.execution:Stopping ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.runtime.presence:RoomPresence stopped
+INFO:band.client.streaming.client:[WebSocket] Unsubscribing from topic: agent_control:e07d4a68-4995-4757-a810-9e89337c1b57
+WARNING:band.platform.link:Error unsubscribing from agent_control: Topic agent_control:e07d4a68-4995-4757-a810-9e89337c1b57 not subscribed
+INFO:band.platform.link:Disconnected from platform
+INFO:band.runtime.platform_runtime:Platform runtime stopped
+INFO:band.agent:Agent stopped: Supplier Impact (graceful=True)
+INFO:band.runtime.runtime:Stopping AgentRuntime for agent b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:band.runtime.execution:Stopping ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.runtime.execution:Stopping ExecutionContext for room: 9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.runtime.execution:Stopping ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.runtime.presence:RoomPresence stopped
+INFO:band.client.streaming.client:[WebSocket] Unsubscribing from topic: agent_control:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+WARNING:band.platform.link:Error unsubscribing from agent_control: Topic agent_control:b90f2f3c-2046-40ac-a6c1-5ef9c114db28 not subscribed
+INFO:band.platform.link:Disconnected from platform
+INFO:band.runtime.platform_runtime:Platform runtime stopped
+INFO:band.agent:Agent stopped: coordinator (graceful=True)
+2026-06-18 15:56:40,055 [alt_sourcing] Stopping AgentRuntime for agent 2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 15:56:40,055 [alt_sourcing] Stopping ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 15:56:40,056 [alt_sourcing] Stopping ExecutionContext for room: 9876323e-1687-48f9-9f9d-a4805f7b5653
+2026-06-18 15:56:40,056 [alt_sourcing] Stopping ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 15:56:40,056 [alt_sourcing] RoomPresence stopped
+2026-06-18 15:56:40,056 [alt_sourcing] [WebSocket] Unsubscribing from topic: agent_control:2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 15:56:40,057 [alt_sourcing] Error unsubscribing from agent_control: Topic agent_control:2a747b94-0950-4ffd-8fc3-46d0293882ee not subscribed
+2026-06-18 15:56:40,057 [alt_sourcing] Disconnected from platform
+2026-06-18 15:56:40,057 [alt_sourcing] Platform runtime stopped
+2026-06-18 15:56:40,057 [alt_sourcing] Agent stopped: alt_sourcing (graceful=True)
+INFO:band.runtime.runtime:Stopping AgentRuntime for agent fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+INFO:band.runtime.execution:Stopping ExecutionContext for room: 9876323e-1687-48f9-9f9d-a4805f7b5653
+INFO:band.runtime.execution:Stopping ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.runtime.presence:RoomPresence stopped
+INFO:band.client.streaming.client:[WebSocket] Unsubscribing from topic: agent_control:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+WARNING:band.platform.link:Error unsubscribing from agent_control: Topic agent_control:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62 not subscribed
+INFO:band.platform.link:Disconnected from platform
+INFO:band.runtime.platform_runtime:Platform runtime stopped
+INFO:band.agent:Agent stopped: Regulatory Agent (graceful=True)

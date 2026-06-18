@@ -30,6 +30,10 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [alt_sourcing] %(message)s")
 logger = logging.getLogger(__name__)
 
+# Track when this agent process started — skip stale bootstrap messages
+from datetime import datetime, timezone
+AGENT_START_TIME = datetime.now(timezone.utc)
+
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
@@ -312,14 +316,14 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
                     
         if not case_id:
             import asyncio, random
-            await asyncio.sleep(0.1 + random.random() * 0.4)
+            await asyncio.sleep(0.5 + random.random() * 2.5)
             return
 
         # Check if already responded
         already_responded = any(d.get("agent") == "alt_sourcing" and d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error") for d in all_msgs)
         if already_responded:
             import asyncio, random
-            await asyncio.sleep(0.1 + random.random() * 0.4)
+            await asyncio.sleep(0.5 + random.random() * 2.5)
             return
 
         # Check for all three upstream completions or failure
@@ -331,8 +335,24 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
                 
         if found != required:
             import asyncio, random
-            await asyncio.sleep(0.1 + random.random() * 0.4)
+            await asyncio.sleep(0.5 + random.random() * 2.5)
             return
+
+        # Skip stale cases: check supplier_impact timestamp
+        for d in all_msgs:
+            if d.get("agent") == "supplier_impact" and d.get("case_id") == case_id:
+                sup_ts = d.get("timestamp")
+                if sup_ts:
+                    try:
+                        st = datetime.fromisoformat(sup_ts.replace("Z", "+00:00"))
+                        age_secs = (AGENT_START_TIME - st).total_seconds()
+                        if age_secs > 300:
+                            logger.info(f"Skipping stale supplier_impact for case {case_id} (age={int(age_secs)}s > 300s)")
+                            await asyncio.sleep(0.5 + random.random() * 2.5)
+                            return
+                    except Exception:
+                        pass
+                break
             
         logger.info(f"All prerequisites found for case {case_id}. Triggering LLM logic.")
         try:
@@ -340,6 +360,7 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
         except Exception as e:
             logger.error(f"Terminal LLM failure: {e}")
             from datetime import datetime, timezone
+            from utils import get_room_participants
             response = {
                 "agent": "alt_sourcing",
                 "case_id": case_id,
@@ -352,11 +373,14 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
             if hasattr(tools, 'send_message'):
                 try:
                     p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
-                    participants_list = json.loads(p_str)
-                    coord_handle = next((p.get("handle") for p in participants_list if "coordinator" in p.get("handle", "").lower()), "@coordinator")
+                    handles = await get_room_participants(room_id, "alt_sourcing", p_str)
+                    coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@coordinator")
                 except:
                     coord_handle = "@coordinator"
-                await tools.send_message(content=json.dumps(response), mentions=[coord_handle])
+                try:
+                    await tools.send_message(content=json.dumps(response), mentions=[coord_handle])
+                except Exception as send_err:
+                    logger.error(f"Failed to send fallback error message: {send_err}")
 
 async def main():
     load_dotenv()

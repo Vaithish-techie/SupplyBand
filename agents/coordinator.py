@@ -31,7 +31,7 @@ PHASE 1 — When you receive a raw disruption event from a human:
 Post this exact JSON to the Band room:
 {
   "agent": "coordinator",
-  "case_id": "CASE-001",
+  "case_id": "<use the exact case_id given in your system instructions or the triggering message>",
   "phase": "kickoff",
   "event_text": "<raw event text here>",
   "instruction": "All specialist agents: analyze this event and post your findings",
@@ -47,7 +47,7 @@ PHASE 2 — When you see ALL 5 specialist agents have posted their findings:
 Post this JSON:
 {
   "agent": "coordinator",
-  "case_id": "CASE-001",
+  "case_id": "<use the actual case_id you are managing>",
   "phase": "executive_brief",
   "situation_summary": "plain english 2-3 sentence summary",
   "severity": "CRITICAL|HIGH|MEDIUM|LOW",
@@ -86,8 +86,11 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
             if "{" in content:
                 content = content[content.find("{"):content.rfind("}")+1]
             data = json.loads(content)
-        except Exception:
+        except Exception as e:
+            logger.error(f"Failed to parse coordinator msg: {e}")
             data = {}
+
+        logger.info(f"DEBUG COORDINATOR PARSED: {data}")
 
         # PHASE 1: Human operator kickoff
         if data.get("agent") == "human_operator":
@@ -101,21 +104,25 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
                 "phase": "kickoff",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "event_text": event_text,
-                "instruction": "All specialist agents: analyze this event and post your findings",
+                "instruction": "Specialist agents: please begin your respective analyses independently. ONLY respond with your own specific agent's findings.",
                 "agents_required": ["event_intelligence", "supplier_impact", "financial_exposure", "regulatory_trade", "alt_sourcing"]
             }
             
-            # Find specialist agents to mention using participants_msg
+            # Find specialist agents to mention using API or fallback
             mentions = []
+            from utils import get_room_participants
             try:
-                p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
-                participants_list = json.loads(p_str)
-                for p in participants_list:
-                    handle = p.get("handle", "")
-                    if p.get("type") == "Agent" and "coordinator" not in handle.lower():
-                        mentions.append(handle)
+                # Get list of all participant handles (e.g. ['vaithish7', 'vaithish7/coordinator', ...])
+                handles = await get_room_participants(room_id, "coordinator", participants_msg)
+                logger.info(f"[PARTICIPANTS_DEBUG] Extracted handles: {handles}")
+                
+                # We need to mention the specialist agents. Their handles usually contain their agent name
+                # or we just mention all agents that are not the coordinator.
+                for h in handles:
+                    if "/" in h and "coordinator" not in h.lower():
+                        mentions.append(h)
             except Exception as e:
-                logger.error(f"Failed to parse participants_msg: {e}")
+                logger.error(f"Failed to fetch participants: {e}")
             
             # If no mentions found, use human operator as fallback to avoid empty mentions error
             if not mentions:
@@ -170,7 +177,7 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
                     if m.get("parsed") and m["parsed"].get("agent") in ["event_intelligence", "supplier_impact", "financial_exposure", "regulatory_trade", "alt_sourcing", "coordinator"]:
                         findings_text += f"\n--- Message from {m['parsed']['agent']} ---\n{json.dumps(m['parsed'], indent=2)}\n"
 
-                prompt_text = COORDINATOR_PROMPT + "\n\n=== CHAT HISTORY ===\n" + findings_text
+                prompt_text = COORDINATOR_PROMPT + f"\n\nYOUR ASSIGNED CASE ID IS: {case_id_param}\n\n=== CHAT HISTORY ===\n" + findings_text
                 
                 if is_timeout:
                     prompt_text += f"\n\nNOTE: The following specialist agents FAILED to respond within the 90s timeout: {missing_agents}. Provide your Executive Brief based ONLY on the available data. Set confidence to LOW or MEDIUM and verdict leaning towards ESCALATE_TO_HUMAN due to missing data."

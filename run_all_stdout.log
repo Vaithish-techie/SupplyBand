@@ -1,0 +1,755 @@
+Cleaning up any existing agent processes...
+Waiting 3 seconds to ensure sockets close cleanly...
+Checking Python environment...
+Activating conda environment...
+Starting Coordinator first (it must be online before others post)...
+INFO:httpx_monkeypatch:[coordinator] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:__main__:Coordinator Agent running...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/me "HTTP/1.1 200 OK"
+INFO:band.adapters.langgraph:LangGraph adapter started for agent: coordinator
+INFO:band.runtime.runtime:Starting AgentRuntime for agent b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_control:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_control:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_control:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:band.platform.link:Connected to platform
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_rooms:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+Starting Event Intelligence...
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_rooms:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_rooms:b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats?page=1&page_size=100 "HTTP/1.1 200 OK"
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.runtime.execution:Starting ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: BOjZa4AI
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.runtime.execution:Starting ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages | Key: BOjZa4AI
+INFO:band.runtime.presence:Subscribed to 2 rooms during startup
+INFO:band.runtime.presence:RoomPresence started for agent b90f2f3c-2046-40ac-a6c1-5ef9c114db28
+INFO:band.runtime.platform_runtime:Platform runtime started for agent: coordinator
+INFO:band.agent:Agent started: coordinator (band-sdk 1.0.0)
+INFO:httpx_monkeypatch:[event_intelligence] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Synchronized, switching to WebSocket
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext e9ec1b10-77d6-45e7-aa79-68a6540f9d1a: Synchronized, switching to WebSocket
+INFO:__main__:Event Intelligence Agent running...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/me "HTTP/1.1 200 OK"
+Starting Supplier Impact...
+INFO:band.adapters.langgraph:LangGraph adapter started for agent: Event Intelligence
+INFO:band.runtime.runtime:Starting AgentRuntime for agent 2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_control:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_control:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_control:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:band.platform.link:Connected to platform
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_rooms:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:httpx_monkeypatch:[supplier_impact] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_rooms:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_rooms:2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats?page=1&page_size=100 "HTTP/1.1 200 OK"
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:5368bf9d-456b-4968-90c8-efc9d8b280ff
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:__main__:Supplier Impact Agent running...
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:5368bf9d-456b-4968-90c8-efc9d8b280ff
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:5368bf9d-456b-4968-90c8-efc9d8b280ff
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+Starting Financial Exposure and Regulatory & Trade (in parallel)...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/me "HTTP/1.1 200 OK"
+INFO:band.adapters.langgraph:LangGraph adapter started for agent: Supplier Impact
+INFO:band.runtime.runtime:Starting AgentRuntime for agent e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:5368bf9d-456b-4968-90c8-efc9d8b280ff
+INFO:band.runtime.execution:Starting ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: BsP-G1j7
+INFO:band.runtime.execution:Starting ExecutionContext for room: 5368bf9d-456b-4968-90c8-efc9d8b280ff
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages | Key: BsP-G1j7
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.runtime.execution:Starting ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages | Key: BsP-G1j7
+INFO:band.runtime.presence:Subscribed to 3 rooms during startup
+INFO:band.runtime.presence:RoomPresence started for agent 2cd4de36-fbe1-470d-964b-63082dfb0a8d
+INFO:band.runtime.platform_runtime:Platform runtime started for agent: Event Intelligence
+INFO:band.agent:Agent started: Event Intelligence (band-sdk 1.0.0)
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Synchronized, switching to WebSocket
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext 5368bf9d-456b-4968-90c8-efc9d8b280ff: Synchronized, switching to WebSocket
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext e9ec1b10-77d6-45e7-aa79-68a6540f9d1a: Synchronized, switching to WebSocket
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_control:e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_control:e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_control:e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:band.platform.link:Connected to platform
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_rooms:e07d4a68-4995-4757-a810-9e89337c1b57
+2026-06-18 18:26:39,819 [financial_exposure] Loaded 6 components from financials.json
+2026-06-18 18:26:39,819 [financial_exposure] [financial_exposure] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_rooms:e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_rooms:e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats?page=1&page_size=100 "HTTP/1.1 200 OK"
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:40,193 [financial_exposure] Using AI/ML API (primary) with Featherless AI (fallback)
+2026-06-18 18:26:40,233 [financial_exposure] Financial Exposure Agent running — waiting for supplier_impact post...
+INFO:httpx_monkeypatch:[regulatory_trade] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:40,531 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/me "HTTP/1.1 200 OK"
+2026-06-18 18:26:40,532 [financial_exposure] LangGraph adapter started for agent: financial_exposure
+2026-06-18 18:26:40,532 [financial_exposure] Starting AgentRuntime for agent 465538ac-4e11-4698-a3f2-ad6667a3f0c5
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.runtime.execution:Starting ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: hC9b4um9
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.runtime.execution:Starting ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages | Key: hC9b4um9
+INFO:band.runtime.presence:Subscribed to 2 rooms during startup
+INFO:band.runtime.presence:RoomPresence started for agent e07d4a68-4995-4757-a810-9e89337c1b57
+INFO:band.runtime.platform_runtime:Platform runtime started for agent: Supplier Impact
+INFO:band.agent:Agent started: Supplier Impact (band-sdk 1.0.0)
+Starting Alternative Sourcing last...
+INFO:__main__:Initializing LLM via AIML API (primary) and Featherless (fallback)...
+INFO:__main__:Regulatory Trade Agent running...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/me "HTTP/1.1 200 OK"
+INFO:band.adapters.langgraph:LangGraph adapter started for agent: Regulatory Agent
+INFO:band.runtime.runtime:Starting AgentRuntime for agent fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Synchronized, switching to WebSocket
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext e9ec1b10-77d6-45e7-aa79-68a6540f9d1a: Synchronized, switching to WebSocket
+2026-06-18 18:26:41,269 [financial_exposure] [WebSocket] Subscribing to topic: agent_control:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 18:26:41,501 [financial_exposure] Successfully subscribed to topic agent_control:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 18:26:41,501 [financial_exposure] [WebSocket] Subscribed to topic: agent_control:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 18:26:41,501 [financial_exposure] Connected to platform
+2026-06-18 18:26:41,501 [financial_exposure] [WebSocket] Subscribing to topic: agent_rooms:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 18:26:41,746 [financial_exposure] Successfully subscribed to topic agent_rooms:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 18:26:41,747 [financial_exposure] [WebSocket] Subscribed to topic: agent_rooms:465538ac-4e11-4698-a3f2-ad6667a3f0c5
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_control:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+2026-06-18 18:26:41,937 [alt_sourcing] Loaded 6 alternative suppliers from alternatives.json
+2026-06-18 18:26:41,937 [alt_sourcing] [alt_sourcing] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_control:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_control:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+INFO:band.platform.link:Connected to platform
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: agent_rooms:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+2026-06-18 18:26:41,995 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:26:41,996 [financial_exposure] [WebSocket] Subscribing to topic: chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:26:41,996 [financial_exposure] [WebSocket] Subscribing to topic: chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic agent_rooms:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+INFO:band.client.streaming.client:[WebSocket] Subscribed to topic: agent_rooms:fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+2026-06-18 18:26:42,226 [financial_exposure] Successfully subscribed to topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:26:42,226 [financial_exposure] [WebSocket] Subscribing to topic: room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:26:42,232 [financial_exposure] Successfully subscribed to topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:42,232 [financial_exposure] [WebSocket] Subscribing to topic: room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:42,297 [alt_sourcing] Using AI/ML API (primary) with Featherless AI (fallback)
+2026-06-18 18:26:42,332 [alt_sourcing] Alternative Sourcing Agent running — waiting for supplier_impact + financial_exposure + regulatory_trade posts...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats?page=1&page_size=100 "HTTP/1.1 200 OK"
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:42,465 [financial_exposure] Successfully subscribed to topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:26:42,465 [financial_exposure] Starting ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:26:42,484 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: AQpRXTyY
+2026-06-18 18:26:42,485 [financial_exposure] Successfully subscribed to topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:42,485 [financial_exposure] Starting ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:42,486 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages | Key: AQpRXTyY
+2026-06-18 18:26:42,488 [financial_exposure] Subscribed to 2 rooms during startup
+2026-06-18 18:26:42,488 [financial_exposure] RoomPresence started for agent 465538ac-4e11-4698-a3f2-ad6667a3f0c5
+2026-06-18 18:26:42,488 [financial_exposure] Platform runtime started for agent: financial_exposure
+2026-06-18 18:26:42,488 [financial_exposure] Agent started: financial_exposure (band-sdk 1.0.0)
+Starting FastAPI backend on port 8000...
+
+==========================================
+All 6 agents + backend are running.
+Backend:  http://localhost:8000
+Docs:     http://localhost:8000/docs
+Press Ctrl+C to stop everything.
+==========================================
+2026-06-18 18:26:42,649 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/me "HTTP/1.1 200 OK"
+2026-06-18 18:26:42,650 [alt_sourcing] LangGraph adapter started for agent: alt_sourcing
+2026-06-18 18:26:42,651 [alt_sourcing] Starting AgentRuntime for agent 2a747b94-0950-4ffd-8fc3-46d0293882ee
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.client.streaming.client:[WebSocket] Subscribing to topic: room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:42,724 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:     Will watch for changes in these directories: ['/home/vaiunix_111/College/Hackathon/supply-chain-agent']
+2026-06-18 18:26:42,725 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: AQpRXTyY
+2026-06-18 18:26:42,780 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+2026-06-18 18:26:42,782 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: AQpRXTyY
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:band.runtime.execution:Starting ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: g719fFvF
+INFO:phoenix_channels_python_client.client:Successfully subscribed to topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:band.runtime.execution:Starting ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages | Key: g719fFvF
+INFO:band.runtime.presence:Subscribed to 2 rooms during startup
+INFO:band.runtime.presence:RoomPresence started for agent fa402438-d0f9-4d3b-8dc1-5e18f65fdc62
+INFO:band.runtime.platform_runtime:Platform runtime started for agent: Regulatory Agent
+INFO:band.agent:Agent started: Regulatory Agent (band-sdk 1.0.0)
+2026-06-18 18:26:42,968 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 200 OK"
+2026-06-18 18:26:42,969 [financial_exposure] Processing backlog message eeb480fc-a6d5-40a3-8fa4-f92d231bab32 in room 0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:26:42,970 [financial_exposure] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/eeb480fc-a6d5-40a3-8fa4-f92d231bab32/processing | Key: AQpRXTyY
+2026-06-18 18:26:43,046 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:26:43,047 [financial_exposure] ExecutionContext e9ec1b10-77d6-45e7-aa79-68a6540f9d1a: Synchronized, switching to WebSocket
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [94370] using StatReload
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: g719fFvF
+2026-06-18 18:26:43,227 [financial_exposure] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/eeb480fc-a6d5-40a3-8fa4-f92d231bab32/processing "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: g719fFvF
+2026-06-18 18:26:43,414 [alt_sourcing] [WebSocket] Subscribing to topic: agent_control:2a747b94-0950-4ffd-8fc3-46d0293882ee
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Synchronized, switching to WebSocket
+2026-06-18 18:26:43,480 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:band.runtime.execution:ExecutionContext e9ec1b10-77d6-45e7-aa79-68a6540f9d1a: Synchronized, switching to WebSocket
+INFO:     Started server process [94372]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+2026-06-18 18:26:43,638 [alt_sourcing] Successfully subscribed to topic agent_control:2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 18:26:43,639 [alt_sourcing] [WebSocket] Subscribed to topic: agent_control:2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 18:26:43,639 [alt_sourcing] Connected to platform
+2026-06-18 18:26:43,639 [alt_sourcing] [WebSocket] Subscribing to topic: agent_rooms:2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 18:26:43,739 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context "HTTP/1.1 200 OK"
+2026-06-18 18:26:43,749 [financial_exposure] Room 0ed6ab44-a64e-4e60-910f-77f32b86a175: Loading history...
+2026-06-18 18:26:43,750 [financial_exposure] Room 0ed6ab44-a64e-4e60-910f-77f32b86a175: Got 50 messages
+2026-06-18 18:26:43,750 [financial_exposure] Financial Exposure Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+2026-06-18 18:26:43,864 [alt_sourcing] Successfully subscribed to topic agent_rooms:2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 18:26:43,864 [alt_sourcing] [WebSocket] Subscribed to topic: agent_rooms:2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 18:26:44,114 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:26:44,117 [alt_sourcing] [WebSocket] Subscribing to topic: chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:26:44,118 [alt_sourcing] [WebSocket] Subscribing to topic: chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:44,352 [alt_sourcing] Successfully subscribed to topic chat_room:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:26:44,352 [alt_sourcing] [WebSocket] Subscribing to topic: room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:26:44,368 [alt_sourcing] Successfully subscribed to topic chat_room:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:44,368 [alt_sourcing] [WebSocket] Subscribing to topic: room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:44,585 [alt_sourcing] Successfully subscribed to topic room_participants:0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:26:44,586 [alt_sourcing] Starting ExecutionContext for room: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:26:44,615 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: xiyJzWNM
+2026-06-18 18:26:44,618 [alt_sourcing] Successfully subscribed to topic room_participants:e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:44,619 [alt_sourcing] Starting ExecutionContext for room: e9ec1b10-77d6-45e7-aa79-68a6540f9d1a
+2026-06-18 18:26:44,620 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages | Key: xiyJzWNM
+2026-06-18 18:26:44,622 [alt_sourcing] Subscribed to 2 rooms during startup
+2026-06-18 18:26:44,623 [alt_sourcing] RoomPresence started for agent 2a747b94-0950-4ffd-8fc3-46d0293882ee
+2026-06-18 18:26:44,623 [alt_sourcing] Platform runtime started for agent: alt_sourcing
+2026-06-18 18:26:44,624 [alt_sourcing] Agent started: alt_sourcing (band-sdk 1.0.0)
+2026-06-18 18:26:44,865 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+2026-06-18 18:26:44,867 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: xiyJzWNM
+2026-06-18 18:26:44,949 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages?status=processing&page=1 "HTTP/1.1 200 OK"
+2026-06-18 18:26:44,950 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: xiyJzWNM
+2026-06-18 18:26:45,112 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:26:45,113 [alt_sourcing] ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Synchronized, switching to WebSocket
+2026-06-18 18:26:45,207 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:26:45,209 [alt_sourcing] ExecutionContext e9ec1b10-77d6-45e7-aa79-68a6540f9d1a: Synchronized, switching to WebSocket
+2026-06-18 18:26:46,074 [financial_exposure] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/eeb480fc-a6d5-40a3-8fa4-f92d231bab32/processed | Key: AQpRXTyY
+2026-06-18 18:26:46,337 [financial_exposure] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/eeb480fc-a6d5-40a3-8fa4-f92d231bab32/processed "HTTP/1.1 200 OK"
+2026-06-18 18:26:46,339 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: AQpRXTyY
+2026-06-18 18:26:46,586 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 200 OK"
+2026-06-18 18:26:46,587 [financial_exposure] Processing backlog message 9a1ae61f-fb86-4c1f-891c-82b7ef35278c in room 0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:26:46,587 [financial_exposure] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/9a1ae61f-fb86-4c1f-891c-82b7ef35278c/processing | Key: AQpRXTyY
+2026-06-18 18:26:46,845 [financial_exposure] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/9a1ae61f-fb86-4c1f-891c-82b7ef35278c/processing "HTTP/1.1 200 OK"
+2026-06-18 18:26:46,847 [financial_exposure] Financial Exposure Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+2026-06-18 18:26:47,576 [financial_exposure] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/9a1ae61f-fb86-4c1f-891c-82b7ef35278c/processed | Key: AQpRXTyY
+2026-06-18 18:26:47,831 [financial_exposure] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/9a1ae61f-fb86-4c1f-891c-82b7ef35278c/processed "HTTP/1.1 200 OK"
+2026-06-18 18:26:47,833 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: AQpRXTyY
+2026-06-18 18:26:48,100 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:26:48,101 [financial_exposure] ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Synchronized, switching to WebSocket
+2026-06-18 18:27:01,781 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats "HTTP/1.1 200 OK"
+2026-06-18 18:27:01,782 [backend] Resolved Band room_id: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:27:02,034 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+2026-06-18 18:27:02,431 [backend] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages "HTTP/1.1 201 Created"
+2026-06-18 18:27:02,433 [backend] Triggered investigation for CASE-SUCCESS1
+INFO:     127.0.0.1:52916 - "POST /trigger-event HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/606961e9-ac56-43ec-ab71-24dcc09a178d/processing | Key: BOjZa4AI
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/606961e9-ac56-43ec-ab71-24dcc09a178d/processing "HTTP/1.1 200 OK"
+INFO:band.preprocessing.default:Room 0ed6ab44-a64e-4e60-910f-77f32b86a175: Loading history...
+INFO:band.preprocessing.default:Room 0ed6ab44-a64e-4e60-910f-77f32b86a175: Got 50 messages
+INFO:__main__:DEBUG COORDINATOR PARSED: {'agent': 'human_operator', 'case_id': 'CASE-SUCCESS1', 'event_text': 'Magnitude 7.4 earthquake strikes Hsinchu, Taiwan suspending TSMC production indefinitely.', 'timestamp': '2026-06-18T12:57:02.035989+00:00'}
+INFO:__main__:Received human operator message, sending Phase 1 kickoff...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:__main__:[PARTICIPANTS_DEBUG] Extracted handles: ['rshricharan29', 'belugaok3', 'sreedarsan0311/alt-sourcing', 'rshricharan29/event-intelligence', 'sreedarsan0311/financial-exposure', 'vaithish7', 'vaithish7/coordinator', 'sreedarsan0311', 'rshricharan29/supplier-impact', 'belugaok3/regulatory-agent']
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: BOjZa4AI
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages "HTTP/1.1 201 Created"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/606961e9-ac56-43ec-ab71-24dcc09a178d/processed | Key: BOjZa4AI
+2026-06-18 18:27:04,070 [financial_exposure] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processing | Key: AQpRXTyY
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/606961e9-ac56-43ec-ab71-24dcc09a178d/processed "HTTP/1.1 200 OK"
+2026-06-18 18:27:04,396 [financial_exposure] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processing "HTTP/1.1 200 OK"
+2026-06-18 18:27:04,397 [financial_exposure] Financial Exposure Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+2026-06-18 18:27:04,439 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processing | Key: g719fFvF
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processing "HTTP/1.1 200 OK"
+INFO:__main__:Regulatory Trade Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processing | Key: hC9b4um9
+2026-06-18 18:27:04,797 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context "HTTP/1.1 200 OK"
+2026-06-18 18:27:04,811 [alt_sourcing] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processing | Key: xiyJzWNM
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processing | Key: BsP-G1j7
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processing "HTTP/1.1 200 OK"
+INFO:band.preprocessing.default:Room 0ed6ab44-a64e-4e60-910f-77f32b86a175: Loading history...
+INFO:band.preprocessing.default:Room 0ed6ab44-a64e-4e60-910f-77f32b86a175: Got 50 messages
+INFO:__main__:Supplier Impact Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+2026-06-18 18:27:05,067 [alt_sourcing] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processing "HTTP/1.1 200 OK"
+2026-06-18 18:27:05,068 [alt_sourcing] Room 0ed6ab44-a64e-4e60-910f-77f32b86a175: Loading history...
+2026-06-18 18:27:05,069 [alt_sourcing] Room 0ed6ab44-a64e-4e60-910f-77f32b86a175: Got 50 messages
+2026-06-18 18:27:05,069 [alt_sourcing] Alt Sourcing Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processing "HTTP/1.1 200 OK"
+INFO:band.preprocessing.default:Room 0ed6ab44-a64e-4e60-910f-77f32b86a175: Loading history...
+INFO:band.preprocessing.default:Room 0ed6ab44-a64e-4e60-910f-77f32b86a175: Got 50 messages
+INFO:__main__:Event Intelligence Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:__main__:Processing kickoff event for case CASE-SUCCESS1
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:__main__:Skipping stale kickoff CASE-1781780956 (age=6440s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781780923 (age=6473s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781780619 (age=6776s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781780202 (age=7194s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781780116 (age=7280s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781780028 (age=7367s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781779692 (age=7703s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781779004 (age=8391s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781778820 (age=8576s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781777950 (age=8985s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781760606 (age=26785s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781760443 (age=26952s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781760298 (age=27097s > 300s)
+INFO:__main__:Skipping stale kickoff CASE-1781759930 (age=27465s > 300s)
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:__main__:Calling LLM directly via ainvoke (bypass super to prevent 422)...
+INFO:httpx_monkeypatch:[event_intelligence] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+2026-06-18 18:27:05,482 [financial_exposure] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processed | Key: AQpRXTyY
+2026-06-18 18:27:05,746 [financial_exposure] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processed "HTTP/1.1 200 OK"
+2026-06-18 18:27:06,141 [alt_sourcing] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processed | Key: xiyJzWNM
+2026-06-18 18:27:06,400 [alt_sourcing] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processed "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processed | Key: g719fFvF
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processed "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processed | Key: hC9b4um9
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processed "HTTP/1.1 200 OK"
+2026-06-18 18:27:09,465 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:09,803 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:10,161 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:58838 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.aimlapi.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:__main__:LLM responded (attempt 1): {
+  "agent": "event_intelligence",
+  "case_id": "CASE-SUCCESS1",
+  "timestamp": "2026-06-18T12:57:05.385760+00:00",
+  "status": "complete",
+  "findings": {
+    "event_type": "natural_disaster",
+    "s...
+INFO:__main__:Successfully parsed LLM JSON for case CASE-SUCCESS1
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: BsP-G1j7
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages "HTTP/1.1 422 Unprocessable Entity"
+ERROR:__main__:Fatal error in event_intelligence for case CASE-SUCCESS1: headers: {'date': 'Thu, 18 Jun 2026 12:57:11 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '125', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'vary': 'accept-encoding', 'cache-control': 'max-age=0, private, must-revalidate', 'x-request-id': '968e56db7ed641ef565e56c33ff5edce', 'x-api-version': '1.8.0', 'x-build-commit': '', 'x-build-timestamp': '', 'referrer-policy': 'strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'x-download-options': 'noopen', 'x-frame-options': 'SAMEORIGIN', 'x-permitted-cross-domain-policies': 'none', 'cf-cache-status': 'DYNAMIC', 'server': 'cloudflare', 'cf-ray': 'a0da75576eb67c1e-MAA'}, status_code: 422, body: {'error': {'code': 'validation_error', 'message': 'cannot_mention_self', 'details': {}, 'request_id': '968e56db7ed641ef565e56c33ff5edce'}}
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: BsP-G1j7
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages "HTTP/1.1 422 Unprocessable Entity"
+ERROR:__main__:Even emergency send failed: headers: {'date': 'Thu, 18 Jun 2026 12:57:12 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '126', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'vary': 'accept-encoding', 'cache-control': 'max-age=0, private, must-revalidate', 'x-request-id': 'bd5af9e1dd37cf689180b40616bece33', 'x-api-version': '1.8.0', 'x-build-commit': '', 'x-build-timestamp': '', 'referrer-policy': 'strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'x-download-options': 'noopen', 'x-frame-options': 'SAMEORIGIN', 'x-permitted-cross-domain-policies': 'none', 'cf-cache-status': 'DYNAMIC', 'server': 'cloudflare', 'cf-ray': 'a0da7558ec7f7c1e-MAA'}, status_code: 422, body: {'error': {'code': 'validation_error', 'message': 'cannot_mention_self', 'details': {}, 'request_id': 'bd5af9e1dd37cf689180b40616bece33'}}
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processed | Key: BsP-G1j7
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/65cbad8a-b0fa-4ec4-8855-a99ede46703d/processed "HTTP/1.1 200 OK"
+2026-06-18 18:27:15,524 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:15,794 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:16,077 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:58848 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+2026-06-18 18:27:21,512 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:21,798 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:22,078 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:43680 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+2026-06-18 18:27:27,444 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:27,794 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:28,081 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:59208 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+2026-06-18 18:27:33,509 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:33,803 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:34,113 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:59222 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BsP-G1j7
+2026-06-18 18:27:39,485 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:27:39,908 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:40,217 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:56260 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:27:43,051 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: AQpRXTyY
+2026-06-18 18:27:43,348 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: g719fFvF
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:27:45,212 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: xiyJzWNM
+2026-06-18 18:27:46,485 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:46,554 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:27:46,752 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:47,089 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:56268 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+2026-06-18 18:27:52,460 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:52,726 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:53,001 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:59350 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+2026-06-18 18:27:58,364 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:58,685 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:27:58,982 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:46858 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BOjZa4AI
+2026-06-18 18:28:04,351 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:28:04,627 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:04,919 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:46864 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+2026-06-18 18:28:05,752 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: AQpRXTyY
+2026-06-18 18:28:06,048 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:28:06,406 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: xiyJzWNM
+2026-06-18 18:28:06,708 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: g719fFvF
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:28:10,283 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:10,579 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:10,852 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:40610 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:28:16,210 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:16,483 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:16,752 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:40612 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+2026-06-18 18:28:22,089 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:22,372 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:22,645 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:56232 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+2026-06-18 18:28:28,003 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:28,273 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:28,544 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:34202 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+2026-06-18 18:28:30,912 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:31,177 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:31,484 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:34208 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+WARNING:  StatReload detected changes in 'agents/event_intelligence.py'. Reloading...
+INFO:     Shutting down
+INFO:     Waiting for connections to close. (CTRL+C to force quit)
+2026-06-18 18:28:33,919 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:34,368 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:34,641 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:34224 - "GET /case-status?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+WARNING:__main__:90s timeout reached for CASE-SUCCESS1. Proceeding with missing specialists.
+INFO:httpx_monkeypatch:MONKEYPATCH: GET http://localhost:8000/room-messages?case_id=CASE-SUCCESS1 | Key: None
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [94372]
+INFO:     Started server process [95332]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+2026-06-18 18:28:35,636 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats "HTTP/1.1 200 OK"
+2026-06-18 18:28:35,638 [backend] Resolved Band room_id: 0ed6ab44-a64e-4e60-910f-77f32b86a175
+2026-06-18 18:28:35,914 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:36,199 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BOjZa4AI
+2026-06-18 18:28:36,485 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:34238 - "GET /room-messages?case_id=CASE-SUCCESS1 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/room-messages?case_id=CASE-SUCCESS1 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:[coordinator] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:28:43,352 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: AQpRXTyY
+2026-06-18 18:28:43,649 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: g719fFvF
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: POST https://api.aimlapi.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: BOjZa4AI
+2026-06-18 18:28:45,652 [financial_exposure] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processing | Key: AQpRXTyY
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages "HTTP/1.1 201 Created"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processing | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processing | Key: hC9b4um9
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processing | Key: g719fFvF
+2026-06-18 18:28:45,684 [alt_sourcing] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processing | Key: xiyJzWNM
+2026-06-18 18:28:45,909 [financial_exposure] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processing "HTTP/1.1 200 OK"
+2026-06-18 18:28:45,911 [financial_exposure] Financial Exposure Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processing "HTTP/1.1 200 OK"
+INFO:__main__:Regulatory Trade Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processing "HTTP/1.1 200 OK"
+INFO:__main__:Supplier Impact Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+2026-06-18 18:28:46,004 [alt_sourcing] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processing "HTTP/1.1 200 OK"
+2026-06-18 18:28:46,007 [alt_sourcing] Alt Sourcing Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processing "HTTP/1.1 200 OK"
+INFO:__main__:Event Intelligence Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:__main__:Trigger kickoff message not found. Skipping.
+2026-06-18 18:28:46,556 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: xiyJzWNM
+2026-06-18 18:28:46,807 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:28:46,816 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed | Key: hC9b4um9
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/88a6a6aa-1855-4c83-9913-c4ea62dd6125/processing | Key: BOjZa4AI
+2026-06-18 18:28:47,153 [backend] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages "HTTP/1.1 201 Created"
+2026-06-18 18:28:47,154 [backend] Triggered investigation for CASE-SUCCESS2
+INFO:     127.0.0.1:57176 - "POST /trigger-event HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/88a6a6aa-1855-4c83-9913-c4ea62dd6125/processing "HTTP/1.1 200 OK"
+INFO:__main__:DEBUG COORDINATOR PARSED: {'agent': 'human_operator', 'case_id': 'CASE-SUCCESS2', 'event_text': 'Massive fire engulfs primary ASML lithography facility in Veldhoven, expected to halt shipments for 4 months.', 'timestamp': '2026-06-18T12:58:46.816997+00:00'}
+INFO:__main__:Received human operator message, sending Phase 1 kickoff...
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:__main__:[PARTICIPANTS_DEBUG] Extracted handles: ['rshricharan29', 'belugaok3', 'sreedarsan0311/alt-sourcing', 'rshricharan29/event-intelligence', 'sreedarsan0311/financial-exposure', 'vaithish7', 'vaithish7/coordinator', 'sreedarsan0311', 'rshricharan29/supplier-impact', 'belugaok3/regulatory-agent']
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: BOjZa4AI
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages "HTTP/1.1 201 Created"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/88a6a6aa-1855-4c83-9913-c4ea62dd6125/processed | Key: BOjZa4AI
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/be8b1394-1172-4d96-8bdf-4aee49af0e20/processing | Key: hC9b4um9
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed | Key: g719fFvF
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/88a6a6aa-1855-4c83-9913-c4ea62dd6125/processed "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/be8b1394-1172-4d96-8bdf-4aee49af0e20/processing | Key: BsP-G1j7
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/be8b1394-1172-4d96-8bdf-4aee49af0e20/processing "HTTP/1.1 200 OK"
+INFO:__main__:Supplier Impact Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/be8b1394-1172-4d96-8bdf-4aee49af0e20/processing "HTTP/1.1 200 OK"
+INFO:__main__:Event Intelligence Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:__main__:Processing kickoff event for case CASE-SUCCESS2
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed "HTTP/1.1 422 Unprocessable Entity"
+WARNING:band.platform.link:Failed to mark message f94c5f95-d548-41ea-a37b-47bd64eeaceb as processed: headers: {'date': 'Thu, 18 Jun 2026 12:58:48 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '126', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'vary': 'accept-encoding', 'cache-control': 'max-age=0, private, must-revalidate', 'x-request-id': '8bfaa50d29566ef0427ecd9e7da1bc3a', 'x-api-version': '1.8.0', 'x-build-commit': '', 'x-build-timestamp': '', 'referrer-policy': 'strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'x-download-options': 'noopen', 'x-frame-options': 'SAMEORIGIN', 'x-permitted-cross-domain-policies': 'none', 'cf-cache-status': 'DYNAMIC', 'server': 'cloudflare', 'cf-ray': 'a0da77b2fc5b7f4d-MAA'}, status_code: 422, body: {'error': {'code': 'validation_error', 'message': 'Validation failed', 'details': {}, 'request_id': '8bfaa50d29566ef0427ecd9e7da1bc3a'}}
+WARNING:band.runtime.execution:ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Local execution completed but durable processed mark failed for message f94c5f95-d548-41ea-a37b-47bd64eeaceb
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed | Key: g719fFvF
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+2026-06-18 18:28:48,826 [financial_exposure] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed | Key: AQpRXTyY
+2026-06-18 18:28:48,882 [alt_sourcing] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed | Key: xiyJzWNM
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed "HTTP/1.1 422 Unprocessable Entity"
+WARNING:band.platform.link:Failed to mark message f94c5f95-d548-41ea-a37b-47bd64eeaceb as processed: headers: {'date': 'Thu, 18 Jun 2026 12:58:48 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '126', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'vary': 'accept-encoding', 'cache-control': 'max-age=0, private, must-revalidate', 'x-request-id': '2f59c7691d07bcc0707448df98a5d76a', 'x-api-version': '1.8.0', 'x-build-commit': '', 'x-build-timestamp': '', 'referrer-policy': 'strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'x-download-options': 'noopen', 'x-frame-options': 'SAMEORIGIN', 'x-permitted-cross-domain-policies': 'none', 'cf-cache-status': 'DYNAMIC', 'server': 'cloudflare', 'cf-ray': 'a0da77b60f7b7f4d-MAA'}, status_code: 422, body: {'error': {'code': 'validation_error', 'message': 'Validation failed', 'details': {}, 'request_id': '2f59c7691d07bcc0707448df98a5d76a'}}
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/participants "HTTP/1.1 200 OK"
+INFO:__main__:Calling LLM directly via ainvoke (bypass super to prevent 422)...
+INFO:httpx_monkeypatch:[event_intelligence] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+2026-06-18 18:28:49,083 [financial_exposure] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed "HTTP/1.1 200 OK"
+2026-06-18 18:28:49,084 [financial_exposure] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/be8b1394-1172-4d96-8bdf-4aee49af0e20/processing | Key: AQpRXTyY
+2026-06-18 18:28:49,121 [alt_sourcing] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed "HTTP/1.1 422 Unprocessable Entity"
+2026-06-18 18:28:49,122 [alt_sourcing] Failed to mark message f94c5f95-d548-41ea-a37b-47bd64eeaceb as processed: headers: {'date': 'Thu, 18 Jun 2026 12:58:49 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '124', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'vary': 'accept-encoding', 'cache-control': 'max-age=0, private, must-revalidate', 'x-request-id': 'f8a129da716deff4605b75d5cb560683', 'x-api-version': '1.8.0', 'x-build-commit': '', 'x-build-timestamp': '', 'referrer-policy': 'strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'x-download-options': 'noopen', 'x-frame-options': 'SAMEORIGIN', 'x-permitted-cross-domain-policies': 'none', 'cf-cache-status': 'DYNAMIC', 'server': 'cloudflare', 'cf-ray': 'a0da77b749d37ea3-MAA'}, status_code: 422, body: {'error': {'code': 'validation_error', 'message': 'Validation failed', 'details': {}, 'request_id': 'f8a129da716deff4605b75d5cb560683'}}
+2026-06-18 18:28:49,122 [alt_sourcing] ExecutionContext 0ed6ab44-a64e-4e60-910f-77f32b86a175: Local execution completed but durable processed mark failed for message f94c5f95-d548-41ea-a37b-47bd64eeaceb
+2026-06-18 18:28:49,123 [alt_sourcing] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed | Key: xiyJzWNM
+2026-06-18 18:28:49,338 [financial_exposure] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/be8b1394-1172-4d96-8bdf-4aee49af0e20/processing "HTTP/1.1 200 OK"
+2026-06-18 18:28:49,339 [financial_exposure] Financial Exposure Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+2026-06-18 18:28:49,375 [alt_sourcing] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed "HTTP/1.1 422 Unprocessable Entity"
+2026-06-18 18:28:49,376 [alt_sourcing] Failed to mark message f94c5f95-d548-41ea-a37b-47bd64eeaceb as processed: headers: {'date': 'Thu, 18 Jun 2026 12:58:49 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '126', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'vary': 'accept-encoding', 'cache-control': 'max-age=0, private, must-revalidate', 'x-request-id': 'ae26579d3a10eb16fe4889c20d214568', 'x-api-version': '1.8.0', 'x-build-commit': '', 'x-build-timestamp': '', 'referrer-policy': 'strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'x-download-options': 'noopen', 'x-frame-options': 'SAMEORIGIN', 'x-permitted-cross-domain-policies': 'none', 'cf-cache-status': 'DYNAMIC', 'server': 'cloudflare', 'cf-ray': 'a0da77b8cb4d7ea3-MAA'}, status_code: 422, body: {'error': {'code': 'validation_error', 'message': 'Validation failed', 'details': {}, 'request_id': 'ae26579d3a10eb16fe4889c20d214568'}}
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/be8b1394-1172-4d96-8bdf-4aee49af0e20/processed | Key: hC9b4um9
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/be8b1394-1172-4d96-8bdf-4aee49af0e20/processed "HTTP/1.1 200 OK"
+2026-06-18 18:28:50,626 [financial_exposure] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/be8b1394-1172-4d96-8bdf-4aee49af0e20/processed | Key: AQpRXTyY
+2026-06-18 18:28:50,873 [financial_exposure] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/be8b1394-1172-4d96-8bdf-4aee49af0e20/processed "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://api.aimlapi.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:__main__:LLM responded (attempt 1): {
+  "agent": "event_intelligence",
+  "case_id": "CASE-SUCCESS2",
+  "timestamp": "2026-06-18T12:58:48.987796+00:00",
+  "status": "complete",
+  "findings": {
+    "event_type": "natural_disaster",
+    "s...
+INFO:__main__:Successfully parsed LLM JSON for case CASE-SUCCESS2
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: BsP-G1j7
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages "HTTP/1.1 422 Unprocessable Entity"
+ERROR:__main__:Fatal error in event_intelligence for case CASE-SUCCESS2: headers: {'date': 'Thu, 18 Jun 2026 12:58:52 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '126', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'vary': 'accept-encoding', 'cache-control': 'max-age=0, private, must-revalidate', 'x-request-id': '7998acb612133648e0456267af4ad993', 'x-api-version': '1.8.0', 'x-build-commit': '', 'x-build-timestamp': '', 'referrer-policy': 'strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'x-download-options': 'noopen', 'x-frame-options': 'SAMEORIGIN', 'x-permitted-cross-domain-policies': 'none', 'cf-cache-status': 'DYNAMIC', 'server': 'cloudflare', 'cf-ray': 'a0da77cb6ee81792-MAA'}, status_code: 422, body: {'error': {'code': 'validation_error', 'message': 'cannot_mention_self', 'details': {}, 'request_id': '7998acb612133648e0456267af4ad993'}}
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: BsP-G1j7
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages "HTTP/1.1 422 Unprocessable Entity"
+ERROR:__main__:Even emergency send failed: headers: {'date': 'Thu, 18 Jun 2026 12:58:52 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '126', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'vary': 'accept-encoding', 'cache-control': 'max-age=0, private, must-revalidate', 'x-request-id': '4c042a05d73f96d8f75c0fe3c674cb2e', 'x-api-version': '1.8.0', 'x-build-commit': '', 'x-build-timestamp': '', 'referrer-policy': 'strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'x-download-options': 'noopen', 'x-frame-options': 'SAMEORIGIN', 'x-permitted-cross-domain-policies': 'none', 'cf-cache-status': 'DYNAMIC', 'server': 'cloudflare', 'cf-ray': 'a0da77ccf8461792-MAA'}, status_code: 422, body: {'error': {'code': 'validation_error', 'message': 'cannot_mention_self', 'details': {}, 'request_id': '4c042a05d73f96d8f75c0fe3c674cb2e'}}
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/be8b1394-1172-4d96-8bdf-4aee49af0e20/processed | Key: BsP-G1j7
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/be8b1394-1172-4d96-8bdf-4aee49af0e20/processed "HTTP/1.1 200 OK"
+2026-06-18 18:28:53,493 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:53,759 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:54,056 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:37522 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+2026-06-18 18:28:59,434 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:59,698 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:28:59,969 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:35578 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+2026-06-18 18:29:05,302 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:05,581 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:05,852 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:35586 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+2026-06-18 18:29:11,209 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:11,476 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:11,752 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:36796 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+2026-06-18 18:29:17,099 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:17,385 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:17,662 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:36804 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+2026-06-18 18:29:23,060 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:23,342 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:23,621 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:55296 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+2026-06-18 18:29:28,969 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:29,247 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:29,507 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:51544 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+2026-06-18 18:29:34,858 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:35,130 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:35,431 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:51560 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BsP-G1j7
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/5368bf9d-456b-4968-90c8-efc9d8b280ff/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:29:40,778 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:41,051 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:41,325 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54306 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:29:43,653 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: AQpRXTyY
+2026-06-18 18:29:43,953 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: g719fFvF
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:29:46,730 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:46,813 [alt_sourcing] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: xiyJzWNM
+2026-06-18 18:29:46,992 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:47,101 [alt_sourcing] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:29:47,476 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:54320 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed | Key: g719fFvF
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed "HTTP/1.1 422 Unprocessable Entity"
+WARNING:band.platform.link:Failed to mark message f94c5f95-d548-41ea-a37b-47bd64eeaceb as processed: headers: {'date': 'Thu, 18 Jun 2026 12:59:49 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '126', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'vary': 'accept-encoding', 'cache-control': 'max-age=0, private, must-revalidate', 'x-request-id': '6858ef63c747c98a328961ea516c703d', 'x-api-version': '1.8.0', 'x-build-commit': '', 'x-build-timestamp': '', 'referrer-policy': 'strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'x-download-options': 'noopen', 'x-frame-options': 'SAMEORIGIN', 'x-permitted-cross-domain-policies': 'none', 'cf-cache-status': 'DYNAMIC', 'server': 'cloudflare', 'cf-ray': 'a0da792eae0bb540-MAA'}, status_code: 422, body: {'error': {'code': 'validation_error', 'message': 'Validation failed', 'details': {}, 'request_id': '6858ef63c747c98a328961ea516c703d'}}
+2026-06-18 18:29:49,379 [alt_sourcing] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed | Key: xiyJzWNM
+2026-06-18 18:29:49,623 [alt_sourcing] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/f94c5f95-d548-41ea-a37b-47bd64eeaceb/processed "HTTP/1.1 422 Unprocessable Entity"
+2026-06-18 18:29:49,624 [alt_sourcing] Failed to mark message f94c5f95-d548-41ea-a37b-47bd64eeaceb as processed: headers: {'date': 'Thu, 18 Jun 2026 12:59:49 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '123', 'connection': 'keep-alive', 'content-encoding': 'gzip', 'vary': 'accept-encoding', 'cache-control': 'max-age=0, private, must-revalidate', 'x-request-id': '23e3a8a780a78061897d26bbf40d5d9c', 'x-api-version': '1.8.0', 'x-build-commit': '', 'x-build-timestamp': '', 'referrer-policy': 'strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'x-download-options': 'noopen', 'x-frame-options': 'SAMEORIGIN', 'x-permitted-cross-domain-policies': 'none', 'cf-cache-status': 'DYNAMIC', 'server': 'cloudflare', 'cf-ray': 'a0da79315ade7237-MAA'}, status_code: 422, body: {'error': {'code': 'validation_error', 'message': 'Validation failed', 'details': {}, 'request_id': '23e3a8a780a78061897d26bbf40d5d9c'}}
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: hC9b4um9
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:29:50,882 [financial_exposure] MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: AQpRXTyY
+2026-06-18 18:29:51,208 [financial_exposure] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:29:52,838 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next | Key: BsP-G1j7
+2026-06-18 18:29:53,108 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/next "HTTP/1.1 204 No Content"
+2026-06-18 18:29:53,381 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:45722 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+2026-06-18 18:29:58,738 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:59,032 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:29:59,300 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57374 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+2026-06-18 18:30:04,658 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:30:04,951 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:30:05,220 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:57390 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+2026-06-18 18:30:10,588 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:30:10,886 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:30:11,159 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:39916 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+2026-06-18 18:30:16,527 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:30:16,802 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:30:17,095 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:39926 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+2026-06-18 18:30:22,463 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:30:22,733 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:30:23,000 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:39760 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/case-status?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+WARNING:__main__:90s timeout reached for CASE-SUCCESS2. Proceeding with missing specialists.
+INFO:httpx_monkeypatch:MONKEYPATCH: GET http://localhost:8000/room-messages?case_id=CASE-SUCCESS2 | Key: None
+2026-06-18 18:30:23,340 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:30:23,612 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:30:23,877 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:39776 - "GET /room-messages?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:httpx:HTTP Request: GET http://localhost:8000/room-messages?case_id=CASE-SUCCESS2 "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:[coordinator] Initializing LLM via AIML API (primary=gpt-4o-mini, fallback=gpt-4o)...
+2026-06-18 18:30:26,837 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=1&page_size=100 "HTTP/1.1 200 OK"
+2026-06-18 18:30:27,111 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=2&page_size=100 "HTTP/1.1 200 OK"
+WARNING:  StatReload detected changes in 'agents/event_intelligence.py'. Reloading...
+INFO:     Shutting down
+2026-06-18 18:30:27,377 [backend] HTTP Request: GET https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/context?page=3&page_size=100 "HTTP/1.1 200 OK"
+INFO:     127.0.0.1:39782 - "GET /case-status?case_id=CASE-SUCCESS2 HTTP/1.1" 200 OK
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [95332]
+INFO:     Started server process [96262]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:httpx:HTTP Request: POST https://api.aimlapi.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages | Key: BOjZa4AI
+2026-06-18 18:30:29,189 [financial_exposure] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/851989a8-75ed-4903-b572-2da568309736/processing | Key: AQpRXTyY
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages "HTTP/1.1 201 Created"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/851989a8-75ed-4903-b572-2da568309736/processing | Key: BsP-G1j7
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/851989a8-75ed-4903-b572-2da568309736/processing | Key: hC9b4um9
+2026-06-18 18:30:29,494 [financial_exposure] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/851989a8-75ed-4903-b572-2da568309736/processing "HTTP/1.1 200 OK"
+2026-06-18 18:30:29,495 [financial_exposure] Financial Exposure Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/851989a8-75ed-4903-b572-2da568309736/processing "HTTP/1.1 200 OK"
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/851989a8-75ed-4903-b572-2da568309736/processing "HTTP/1.1 200 OK"
+INFO:__main__:Event Intelligence Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:__main__:Supplier Impact Agent received message: @[[fa402438-d0f9-4d3b-8dc1-5e18f65fdc62]] @[[e07d4a68-4995-4757-a810-9e89337c1b57]] @[[465538ac-4e11...
+INFO:__main__:Trigger kickoff message not found. Skipping.
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/851989a8-75ed-4903-b572-2da568309736/processed | Key: BsP-G1j7
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/851989a8-75ed-4903-b572-2da568309736/processed "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/851989a8-75ed-4903-b572-2da568309736/processed | Key: hC9b4um9
+2026-06-18 18:30:32,473 [financial_exposure] MONKEYPATCH: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/851989a8-75ed-4903-b572-2da568309736/processed | Key: AQpRXTyY
+INFO:httpx:HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/851989a8-75ed-4903-b572-2da568309736/processed "HTTP/1.1 200 OK"
+2026-06-18 18:30:32,718 [financial_exposure] HTTP Request: POST https://app.band.ai/api/v1/agent/chats/0ed6ab44-a64e-4e60-910f-77f32b86a175/messages/851989a8-75ed-4903-b572-2da568309736/processed "HTTP/1.1 200 OK"
+INFO:httpx_monkeypatch:MONKEYPATCH: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next | Key: BOjZa4AI
+INFO:httpx:HTTP Request: GET https://app.band.ai/api/v1/agent/chats/e9ec1b10-77d6-45e7-aa79-68a6540f9d1a/messages/next "HTTP/1.1 204 No Content"
+./run_all.sh: line 57: 94253 Killed                  python agents/coordinator.py
+./run_all.sh: line 57: 94305 Killed                  python agents/event_intelligence.py
+./run_all.sh: line 57: 94322 Killed                  python agents/supplier_impact.py
+./run_all.sh: line 57: 94337 Killed                  python agents/financial_exposure.py
+./run_all.sh: line 57: 94354 Killed                  python agents/alt_sourcing.py
+INFO:     Stopping reloader process [94370]

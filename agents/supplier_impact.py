@@ -117,6 +117,9 @@ def generate_mock_supplier_impact(event_findings):
             "severity": "LOW"
         }, "LOW", ["Unknown trigger location"]
 
+# Track when this agent process started — used to skip stale bootstrap messages
+AGENT_START_TIME = datetime.now(timezone.utc)
+
 class CustomSupplierImpactAdapter(LangGraphAdapter):
     async def on_message(
         self,
@@ -163,11 +166,23 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
         # 2. Check for coordinator kickoff messages
         kickoffs = [data for sender, data in all_msgs if data.get("agent") == "coordinator" and data.get("phase") == "kickoff"]
         
-        # Process each kickoff case
-        for kickoff in kickoffs:
+        # Process each kickoff case (most recent first to prioritize new cases)
+        for kickoff in reversed(kickoffs):
             case_id = kickoff.get("case_id")
             if not case_id:
                 continue
+
+            # Skip stale kickoffs from before this process started (>5 min old)
+            kickoff_ts = kickoff.get("timestamp")
+            if kickoff_ts:
+                try:
+                    kt = datetime.fromisoformat(kickoff_ts.replace("Z", "+00:00"))
+                    age_secs = (AGENT_START_TIME - kt).total_seconds()
+                    if age_secs > 300:  # 5 minutes
+                        logger.info(f"Skipping stale kickoff {case_id} (age={int(age_secs)}s > 300s)")
+                        continue
+                except Exception:
+                    pass
 
             # Check if we already responded to this case
             already_responded = False
@@ -188,11 +203,16 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                         event_intel = data
                         break
                     elif data.get("status") in ("insufficient_data", "escalate"):
+                        # Real upstream failure (not just slow) — cascade immediately
+                        upstream_failed = True
+                        break
+                    # status == 'error' also counts as failed
+                    elif data.get("status") == "error":
                         upstream_failed = True
                         break
 
             if upstream_failed:
-                logger.warning(f"Upstream agent event_intelligence failed for case {case_id}. Posting insufficient_data immediately.")
+                logger.warning(f"Upstream agent event_intelligence failed/errored for case {case_id}. Cascading insufficient_data.")
                 response_envelope = {
                     "agent": "supplier_impact",
                     "case_id": case_id,
@@ -202,17 +222,22 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                     "confidence": "LOW",
                     "flags": ["Upstream agent event_intelligence failed. Cascading failure."]
                 }
-                if hasattr(tools, 'send_message'):
-                    tools.send_message(json.dumps(response_envelope))
+                await tools.send_message(
+                    content=json.dumps(response_envelope),
+                    mentions=[event_intel_handle]
+                )
                 continue
 
+            from utils import get_room_participants
+            event_intel_handle = "@event_intelligence"
             try:
-                p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
-                participants_list = json.loads(p_str)
-                event_intel_handle = find_participant_handle(participants_list, "event_intelligence")
+                handles = await get_room_participants(room_id, "supplier_impact", participants_msg)
+                for h in handles:
+                    if "event-intelligence" in h.lower() or "event_intelligence" in h.lower():
+                        event_intel_handle = h
+                        break
             except Exception as e:
-                logger.error(f"Failed to parse participants_msg: {e}")
-                event_intel_handle = "@event_intelligence"
+                logger.error(f"Failed to fetch participants: {e}")
 
             # If event_intel is found, process it!
             if event_intel:
@@ -220,15 +245,17 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                 await self.process_supplier_impact(case_id, event_intel.get("findings"), tools, msg, history, participants_msg, contacts_msg, is_session_bootstrap, room_id, event_intel_handle)
                 return
 
-            # If no event_intel found, check if coordinator kickoff was > 60 seconds ago
+            # If no event_intel found, check if coordinator kickoff was > 120 seconds ago.
+            # Issue #4 fix: 60s was too aggressive — LLM retries can take 60-90s legitimately.
+            # 120s gives genuine processing time before declaring failure.
             kickoff_timestamp = kickoff.get("timestamp")
             if kickoff_timestamp:
                 try:
                     kickoff_time = datetime.fromisoformat(kickoff_timestamp.replace("Z", "+00:00"))
-                    current_time = datetime.now(timezone.utc)
+                    current_time = datetime.now(timezone.utc)  # Always our own timestamp (Issue #3)
                     elapsed = (current_time - kickoff_time).total_seconds()
-                    if elapsed > 60:
-                        logger.warning(f"Upstream agent event_intelligence missing after {elapsed}s (>60s) for case {case_id}. Posting insufficient_data.")
+                    if elapsed > 120:
+                        logger.warning(f"Upstream agent event_intelligence missing after {elapsed}s (>120s) for case {case_id}. Posting insufficient_data.")
                         response_envelope = {
                             "agent": "supplier_impact",
                             "case_id": case_id,
@@ -236,10 +263,10 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                             "status": "insufficient_data",
                             "findings": {},
                             "confidence": "LOW",
-                            "flags": [f"Upstream agent event_intelligence post missing after 60s (elapsed={int(elapsed)}s)"]
+                            "flags": [f"Upstream agent event_intelligence post missing after 120s timeout (elapsed={int(elapsed)}s)"]
                         }
                         await tools.send_message(
-                            content=json.dumps(response_envelope, indent=2),
+                            content=json.dumps(response_envelope),
                             mentions=[event_intel_handle]
                         )
                         return
@@ -247,7 +274,7 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                     logger.error(f"Error parsing kickoff timestamp: {ex}")
 
         import asyncio, random
-        await asyncio.sleep(0.1 + random.random() * 0.4)
+        await asyncio.sleep(0.5 + random.random() * 2.5)
 
     async def process_supplier_impact(self, case_id, findings, tools, msg, history, participants_msg, contacts_msg, is_session_bootstrap, room_id, event_intel_handle):
         # Check if suppliers.json is missing
@@ -336,6 +363,7 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                         raise ex
         except Exception as e:
             logger.error(f"Error executing LLM call, posting insufficient_data: {e}")
+            from utils import get_room_participants
             response_envelope = {
                 "agent": "supplier_impact",
                 "case_id": case_id,
@@ -345,10 +373,20 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                 "confidence": "LOW",
                 "flags": [f"LLM analysis failed: {str(e)}"]
             }
-            await tools.send_message(
-                content=json.dumps(response_envelope, indent=2),
-                mentions=[event_intel_handle]
-            )
+            if hasattr(tools, 'send_message'):
+                try:
+                    p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
+                    handles = await get_room_participants(room_id, "supplier_impact", p_str)
+                    coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@coordinator")
+                except:
+                    coord_handle = "@coordinator"
+                try:
+                    await tools.send_message(
+                        content=json.dumps(response_envelope, indent=2),
+                        mentions=[coord_handle]
+                    )
+                except Exception as send_err:
+                    logger.error(f"Failed to send fallback error message: {send_err}")
 
 async def main():
     load_dotenv()

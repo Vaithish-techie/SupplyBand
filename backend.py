@@ -146,23 +146,28 @@ async def _fetch_participants(client: httpx.AsyncClient, room_id: str) -> list[d
 
 async def _fetch_messages(client: httpx.AsyncClient, room_id: str, page_size: int = 100) -> list[dict]:
     """
-    Fetch the full chat history from the Band room via the /context endpoint.
-
-    The /messages endpoint is an agent-facing *queue* — messages are consumed
-    and removed once an agent processes them. The /context endpoint is the
-    persistent history and is the correct source for both /room-messages and
-    /case-status reads.
+    Fetch recent messages from the Band room via the /context endpoint.
+    The Band API caps page_size at 100 messages per page regardless of the parameter.
+    Fetches up to 3 pages (300 messages) to ensure active investigations are visible
+    even when the room has many historic messages from past sessions.
     """
+    all_messages = []
     try:
-        r = await client.get(
-            f"{BAND_REST_URL}/api/v1/agent/chats/{room_id}/context",
-            headers={"x-api-key": BAND_API_KEY},
-            params={"page": 1, "page_size": page_size},
-            timeout=10,
-        )
-        r.raise_for_status()
-        data = r.json()
-        return data.get("data", data if isinstance(data, list) else [])
+        for page in [1, 2, 3]:  # Fetch up to 3 pages = 300 messages total
+            r = await client.get(
+                f"{BAND_REST_URL}/api/v1/agent/chats/{room_id}/context",
+                headers={"x-api-key": BAND_API_KEY},
+                params={"page": page, "page_size": page_size},
+                timeout=15,
+            )
+            r.raise_for_status()
+            data = r.json()
+            page_msgs = data.get("data", data if isinstance(data, list) else [])
+            all_messages.extend(page_msgs)
+            # Stop if we got 0 messages (empty page = no more data)
+            if len(page_msgs) == 0:
+                break
+        return all_messages
     except httpx.TimeoutException:
         raise HTTPException(status_code=503, detail="Band API timed out fetching message history.")
     except httpx.HTTPStatusError as e:
