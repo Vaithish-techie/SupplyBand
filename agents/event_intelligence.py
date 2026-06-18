@@ -181,8 +181,7 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
         if not trigger_msg_data:
             logger.info("Trigger kickoff message not found. Skipping.")
             await asyncio.sleep(0.5 + random.random() * 2.5)
-            return
-
+            return {"status": "skipped"}
         # Skip stale kickoffs from before this process started (>5 min old)
         kickoff_ts = trigger_msg_data.get("timestamp")
         if kickoff_ts:
@@ -192,7 +191,7 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
                 if age_secs > 300:
                     logger.info(f"Skipping stale kickoff {trigger_msg_data.get('case_id')} (age={int(age_secs)}s > 300s)")
                     await asyncio.sleep(0.5 + random.random() * 2.5)
-                    return
+                    return {"status": "skipped"}
             except Exception:
                 pass
 
@@ -200,8 +199,7 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
         if already_responded:
             logger.info(f"Already responded to case {case_id}. Skipping.")
             await asyncio.sleep(0.5 + random.random() * 2.5)
-            return
-
+            return {"status": "skipped"}
         logger.info(f"Processing kickoff event for case {case_id}")
         event_text = trigger_msg_data.get("event_text", "")
 
@@ -210,15 +208,23 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
         mentions = []
         try:
             handles = await get_room_participants(room_id, "event_intelligence", participants_msg)
+            print(f"[event_intelligence] All participant handles: {handles}")
             for h in handles:
-                # Exclude the agent's own handle and user identity to prevent cannot_mention_self
-                if "event" not in h.lower() and h.lower() != "rshricharan29":
+                # Only include proper agent handles (username/agent-slug format)
+                # Bare usernames like @rshricharan29 (no slash) are NOT valid agent mentions
+                if "/" in h and "event" not in h.lower():
                     mentions.append(h)
         except Exception as e:
             logger.error(f"Failed to fetch participants: {e}")
             
         if not mentions:
-            mentions = ["vaithish7/coordinator"]  # Fallback
+            # Hardcoded real Band handles — fallback when participants API fails
+            mentions = [
+                "@vaithish7/coordinator",
+                "@rshricharan29/supplier-impact",
+            ]
+        # Always log what we are about to mention
+        print(f"[event_intelligence] Mentioning: {mentions}")
 
         # --- Issue #2 fix: call LLM directly via ainvoke, never via super().on_message() ---
         # This ensures we own the send flow entirely, preventing malformed /processed payloads.
@@ -243,8 +249,7 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
                     mentions=mentions
                 )
                 logger.info(f"Heuristic event intelligence posted for case {case_id}.")
-                return
-
+                return {"status": "skipped"}
             # Call LLM directly — never via super().on_message()
             logger.info("Calling LLM directly via ainvoke (bypass super to prevent 422)...")
             llm = get_llm_for_agent("event_intelligence")
@@ -346,6 +351,7 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
                 logger.info(f"Emergency heuristic fallback posted for case {case_id}.")
             except Exception as send_err:
                 logger.error(f"Even emergency send failed: {send_err}")
+        return {"status": "acknowledged"}
 
 
 async def main():

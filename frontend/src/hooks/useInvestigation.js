@@ -19,7 +19,15 @@ export function useInvestigation(caseId) {
       try {
         const response = await axios.get(`${API_BASE}/room-messages?case_id=${caseId}`);
         if (isMounted) {
-          const fetchedMsgs = response.data.messages || [];
+          const fetchedMsgs = (response.data.messages || []).map(m => {
+            const parsed = m.parsed || {};
+            return {
+              ...m,
+              ...parsed,
+              raw_content: m.content,
+              timestamp: parsed.timestamp || m.inserted_at || new Date().toISOString()
+            };
+          });
           setMessages(fetchedMsgs);
           
           // Map agent states

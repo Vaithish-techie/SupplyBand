@@ -2,48 +2,138 @@
   "suppliers": [
     {
       "id": "SUP-001",
-      "name": "TSMC",
+      "name": "TSMC Fab 18",
       "tier": 1,
       "location": { "city": "Hsinchu", "country": "Taiwan" },
-      "components": ["A100 chips", "H100 chips"],
+      "components": ["A100 AI Chips", "H100 AI Chips"],
       "is_sole_source": true,
       "inventory_buffer_days": 12
     },
     {
       "id": "SUP-002",
-      "name": "Samsung Austin",
+      "name": "Foxconn Shenzhen",
       "tier": 1,
-      "location": { "city": "Austin", "country": "USA" },
-      "components": ["NAND flash", "DRAM"],
+      "location": { "city": "Shenzhen", "country": "China" },
+      "components": ["Server Motherboards", "Consumer Electronics Assembly"],
+      "is_sole_source": false,
+      "inventory_buffer_days": 18
+    },
+    {
+      "id": "SUP-003",
+      "name": "Rotterdam Euro-Gateway",
+      "tier": 1,
+      "location": { "city": "Rotterdam", "country": "Netherlands" },
+      "components": ["European Logistics Routing", "Container Forwarding"],
+      "is_sole_source": true,
+      "inventory_buffer_days": 15
+    },
+    {
+      "id": "SUP-004",
+      "name": "Tesla Lathrop Megafactory",
+      "tier": 1,
+      "location": { "city": "Lathrop, California", "country": "USA" },
+      "components": ["Lithium-Ion Cells", "Battery Packs"],
       "is_sole_source": false,
       "inventory_buffer_days": 30
     },
     {
-      "id": "SUP-003",
-      "name": "ASE Group",
-      "tier": 2,
-      "location": { "city": "Kaohsiung", "country": "Taiwan" },
-      "components": ["chip packaging", "testing"],
+      "id": "SUP-005",
+      "name": "Bosch Stuttgart",
+      "tier": 1,
+      "location": { "city": "Stuttgart", "country": "Germany" },
+      "components": ["Automotive ECUs", "Sensors"],
       "is_sole_source": false,
       "inventory_buffer_days": 21
     },
     {
-      "id": "SUP-004",
-      "name": "LA Logistics Corp",
-      "tier": 1,
-      "location": { "city": "Los Angeles", "country": "USA" },
-      "components": ["shipping container transport", "logistics hub"],
-      "is_sole_source": true,
-      "inventory_buffer_days": 5
-    },
-    {
-      "id": "SUP-005",
-      "name": "SMIC",
+      "id": "SUP-006",
+      "name": "NXP Semiconductors",
       "tier": 2,
-      "location": { "city": "Shanghai", "country": "China" },
-      "components": ["legacy nodes chips", "power management ICs"],
+      "location": { "city": "Eindhoven", "country": "Netherlands" },
+      "components": ["Automotive ECUs"],
       "is_sole_source": false,
       "inventory_buffer_days": 25
+    },
+    {
+      "id": "SUP-007",
+      "name": "BYD Battery",
+      "tier": 2,
+      "location": { "city": "Shenzhen", "country": "China" },
+      "components": ["Lithium-Ion Cells"],
+      "is_sole_source": false,
+      "inventory_buffer_days": 40
+    },
+    {
+      "id": "SUP-008",
+      "name": "ASE Group",
+      "tier": 2,
+      "location": { "city": "Kaohsiung", "country": "Taiwan" },
+      "components": ["Chip Packaging", "Testing Services"],
+      "is_sole_source": false,
+      "inventory_buffer_days": 14
+    },
+    {
+      "id": "SUP-009",
+      "name": "CATL",
+      "tier": 1,
+      "location": { "city": "Ningde", "country": "China" },
+      "components": ["Lithium-Ion Cells", "EV Battery Modules"],
+      "is_sole_source": false,
+      "inventory_buffer_days": 45
+    },
+    {
+      "id": "SUP-010",
+      "name": "Maersk Red Sea Transit",
+      "tier": 1,
+      "location": { "city": "Suez", "country": "Egypt" },
+      "components": ["Asia-Europe Shipping", "Global Sea Freight"],
+      "is_sole_source": true,
+      "inventory_buffer_days": 10
+    },
+    {
+      "id": "SUP-011",
+      "name": "Flex Austin",
+      "tier": 2,
+      "location": { "city": "Austin", "country": "USA" },
+      "components": ["Server Motherboards"],
+      "is_sole_source": false,
+      "inventory_buffer_days": 28
+    },
+    {
+      "id": "SUP-012",
+      "name": "GlobalFoundries",
+      "tier": 2,
+      "location": { "city": "Malta, New York", "country": "USA" },
+      "components": ["Legacy Node Chips", "IoT ICs"],
+      "is_sole_source": false,
+      "inventory_buffer_days": 35
+    },
+    {
+      "id": "SUP-013",
+      "name": "Wistron InfoComm",
+      "tier": 2,
+      "location": { "city": "Ho Chi Minh City", "country": "Vietnam" },
+      "components": ["Consumer Electronics Assembly"],
+      "is_sole_source": false,
+      "inventory_buffer_days": 20
+    },
+    {
+      "id": "SUP-014",
+      "name": "Tata Electronics",
+      "tier": 2,
+      "location": { "city": "Pune", "country": "India" },
+      "components": ["Consumer Electronics Assembly", "Component Manufacturing"],
+      "is_sole_source": false,
+      "inventory_buffer_days": 22
+    },
+    {
+      "id": "SUP-015",
+      "name": "Port of Los Angeles",
+      "tier": 1,
+      "location": { "city": "Los Angeles", "country": "USA" },
+      "components": ["Transpacific Logistics Routing", "Container Forwarding"],
+      "is_sole_source": false,
+      "inventory_buffer_days": 12
     }
   ]
 }

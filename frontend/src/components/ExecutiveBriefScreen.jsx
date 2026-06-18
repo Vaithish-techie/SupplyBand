@@ -10,6 +10,7 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [decision, setDecision] = useState(null);
+  const [alternatives, setAlternatives] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -19,9 +20,13 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
         if (isMounted) {
           const fetchedMsgs = response.data.messages || [];
           const briefMsg = fetchedMsgs.find(m => m.parsed?.agent === 'coordinator' && m.parsed?.phase === 'executive_brief');
+          const altMsg = fetchedMsgs.find(m => m.parsed?.agent === 'alt_sourcing');
           
           if (briefMsg && briefMsg.parsed) {
             setBrief(briefMsg.parsed);
+            if (altMsg && altMsg.parsed?.findings?.alternatives) {
+              setAlternatives(altMsg.parsed.findings.alternatives);
+            }
           } else {
             setError("Executive brief not found for this case.");
           }
@@ -87,6 +92,17 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
     }
   };
 
+  const formatFinancials = (text) => {
+    if (!text) return 'No significant financial risk reported.';
+    return text.replace(/\$?\b(\d{1,3}(?:,\d{3})+)(?:\.\d+)?\b/g, (match, p1) => {
+      const num = parseInt(p1.replace(/,/g, ''), 10);
+      if (num >= 1e6) {
+        return `$${(num / 1e6).toFixed(2)}M`;
+      }
+      return match;
+    });
+  };
+
   return (
     <div className="brief-screen animate-fade-in">
       <header className="brief-header">
@@ -95,8 +111,8 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
           <button className="glass-button small" onClick={onBack}>New Investigation</button>
         </div>
         <h1>Executive Summary</h1>
-        <p className="brief-verdict" style={{ color: getSeverityColor(brief.severity) }}>
-          Verdict: {brief.verdict?.replace(/_/g, ' ')}
+        <p className="brief-verdict" style={{ color: getSeverityColor(brief.severity), fontWeight: 'bold' }}>
+          VERDICT: {brief.verdict?.replace(/_/g, ' ')}
         </p>
       </header>
 
@@ -109,7 +125,7 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
               {brief.severity} SEVERITY
             </span>
           </div>
-          <p className="summary-text">{brief.situation_summary}</p>
+          <p className="summary-text" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{brief.situation_summary}</p>
         </div>
 
         <div className="glass-panel brief-actions">
@@ -127,7 +143,7 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
         <div className="glass-panel brief-card">
           <div className="card-icon"><DollarSign size={24} /></div>
           <h3>Financial Exposure</h3>
-          <p>{brief.financial_exposure || 'No significant financial risk reported.'}</p>
+          <p>{formatFinancials(brief.financial_exposure)}</p>
         </div>
 
         <div className="glass-panel brief-card">
@@ -139,7 +155,17 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
         <div className="glass-panel brief-card">
           <div className="card-icon"><Truck size={24} /></div>
           <h3>Sourcing Recommendation</h3>
-          <p>{brief.recommended_supplier || 'Current suppliers adequate.'}</p>
+          {alternatives && alternatives.length > 0 ? (
+            <ul style={{ paddingLeft: '20px', marginTop: '10px', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+              {alternatives.map((alt, idx) => (
+                <li key={idx} style={{ marginBottom: '8px' }}>
+                  <strong>{alt.supplier}</strong> (Lead time: {alt.lead_time_days} days)
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>{brief.recommended_supplier || 'Current suppliers adequate.'}</p>
+          )}
         </div>
       </div>
 
@@ -151,13 +177,21 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
           </div>
         ) : (
           <div className="decision-actions">
-            <h3>Human Investigator Required</h3>
-            <div className="action-buttons">
-              <button className="glass-button primary approve" onClick={() => handleDecision('approve')}>
-                Approve Auto-Resolution
+            <h3>Compliance Workflow</h3>
+            <div className="action-buttons" style={{ display: 'flex', gap: '15px', marginTop: '15px' }}>
+              <button 
+                className="glass-button" 
+                style={{ backgroundColor: '#10b981', color: '#fff', padding: '12px 24px', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                onClick={() => handleDecision('approve')}
+              >
+                APPROVE RESOLUTION
               </button>
-              <button className="glass-button escalate" onClick={() => handleDecision('escalate')}>
-                Escalate & Intervene
+              <button 
+                className="glass-button" 
+                style={{ backgroundColor: '#ef4444', color: '#fff', padding: '12px 24px', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                onClick={() => handleDecision('escalate')}
+              >
+                ESCALATE TO VP
               </button>
             </div>
           </div>

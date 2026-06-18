@@ -83,6 +83,14 @@ def get_regulatory_data() -> str:
     except Exception as e:
         return f"Error reading regulations: {e}"
 
+def load_regulations():
+    try:
+        reg_data_str = get_regulatory_data.invoke({})
+        return json.loads(reg_data_str) if reg_data_str and reg_data_str.strip().startswith("{") else {}
+    except Exception as e:
+        logger.error(f"Failed to load regulations: {e}")
+        return {}
+
 class CustomRegulatoryTradeAdapter(LangGraphAdapter):
     async def on_message(
         self,
@@ -95,139 +103,126 @@ class CustomRegulatoryTradeAdapter(LangGraphAdapter):
         is_session_bootstrap: bool,
         room_id: str,
     ) -> None:
-        logger.info(f"Regulatory Trade Agent received message: {msg.content[:100]}...")
-
-        # Parse current message
-        all_msgs = []
-        for m in history:
-            content = m.content
-            if content.startswith("[") and "]: " in content:
-                content = content.split("]: ", 1)[1]
+        # Try msg.parsed first; fall back to parsing raw msg.content
+        parsed_data = getattr(msg, 'parsed', {}) or {}
+        if not parsed_data:
             try:
-                if "{" in content:
-                    content = content[content.find("{"):content.rfind("}")+1]
-                data = json.loads(content)
-                all_msgs.append(data)
+                raw = getattr(msg, 'content', '') or ''
+                if raw.startswith('[') and ']: ' in raw:
+                    raw = raw.split(']: ', 1)[1]
+                if '{' in raw:
+                    raw = raw[raw.find('{'):raw.rfind('}')+1]
+                parsed_data = json.loads(raw) if raw else {}
+                if not isinstance(parsed_data, dict):
+                    parsed_data = {}
             except Exception:
-                pass
+                parsed_data = {}
 
-        try:
-            content = msg.content
-            if content.startswith("[") and "]: " in content:
-                content = content.split("]: ", 1)[1]
-            if "{" in content:
-                content = content[content.find("{"):content.rfind("}")+1]
-            current_data = json.loads(content)
-            all_msgs.append(current_data)
-        except Exception:
-            current_data = {}
+        print(f"\n[DEBUG REGULATORY_TRADE] on_message fired. parsed agent={parsed_data.get('agent','?')} status={parsed_data.get('status','?')}\n")
 
-        # --- DIRECT TRIGGER PATH ---
-        if current_data.get("agent") == "supplier_impact":
-            case_id = current_data.get("case_id")
-            logger.info(f"Direct trigger: supplier_impact for case {case_id}")
+        # Normalize hyphens to underscores to guarantee a match
+        agent_sender = parsed_data.get('agent', '').replace('-', '_')
 
-            already_responded = any(
-                d.get("agent") == "regulatory_trade" and d.get("case_id") == case_id
-                and d.get("status") in ("complete", "insufficient_data", "escalate", "error")
-                for d in all_msgs
-            )
-            if already_responded:
-                logger.info(f"Already responded to {case_id}, skipping.")
-                return
+        if agent_sender == 'supplier_impact':
+            print(f"\n[DEBUG {self.name.upper()}] WAKING UP! RECEIVED DATA.\n")
+            case_id = parsed_data.get("case_id")
+            if not case_id:
+                return {"status": "skipped"}
+                
+            try:
+                sup_status = parsed_data.get("status")
+                affected_components = (parsed_data.get("findings") or {}).get("affected_components", [])
 
-            sup_status = current_data.get("status")
-            if sup_status in ("insufficient_data", "escalate", "error"):
-                envelope = {
+                if sup_status in ("insufficient_data", "escalate", "error", "fallback") or not affected_components:
+                    envelope = {
+                        "agent": "regulatory_trade",
+                        "case_id": case_id,
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "status": "insufficient_data",
+                        "findings": {},
+                        "confidence": "LOW",
+                        "flags": ["Upstream supplier_impact failure or no components"]
+                    }
+                else:
+                    reg_data = load_regulations()
+                    # Determine regulatory findings based on event type / location
+                    event_type = ""
+                    location = ""
+                    for d in history:
+                        content = d.content
+                        if content.startswith("[") and "]: " in content:
+                            content = content.split("]: ", 1)[1]
+                        if "{" in content:
+                            content = content[content.find("{"):content.rfind("}")+1]
+                        try:
+                            parsed_d = json.loads(content)
+                            if isinstance(parsed_d, dict) and parsed_d.get("agent") == "event_intelligence" and parsed_d.get("case_id") == case_id:
+                                event_type = (parsed_d.get("findings") or {}).get("event_type", "")
+                                location = (parsed_d.get("findings") or {}).get("location", "")
+                                break
+                        except Exception:
+                            pass
+
+                    force_majeure = True
+                    insurer_hours = 72
+                    export_controls = []
+                    tariff_implications = "none"
+                    compliance_actions = []
+
+                    for rule in reg_data.get("rules", []):
+                        search_str = (event_type + " " + location).lower()
+                        matched = False
+                        for k in rule.get("keywords", []):
+                            k_lower = str(k).lower().strip()
+                            if k_lower in search_str or search_str in k_lower or any(word in search_str for word in k_lower.split()):
+                                matched = True
+                                break
+                        if matched:
+                            force_majeure = rule.get("force_majeure", force_majeure)
+                            insurer_hours = int(rule.get("insurer_notify_deadline_hours") or insurer_hours)
+                            export_controls = rule.get("export_controls", export_controls)
+                            tariff_implications = rule.get("tariff_implications", tariff_implications)
+                            compliance_actions = rule.get("compliance_actions", compliance_actions)
+
+                    if not compliance_actions:
+                        compliance_actions = [
+                            f"Notify insurer within {insurer_hours} hours",
+                            "File force majeure notice with affected suppliers"
+                        ]
+
+                    envelope = {
+                        "agent": "regulatory_trade",
+                        "case_id": case_id,
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "status": "complete",
+                        "findings": {
+                            "force_majeure_applicable": force_majeure,
+                            "insurer_notify_deadline_hours": insurer_hours,
+                            "export_controls": export_controls,
+                            "tariff_implications": tariff_implications,
+                            "compliance_actions": compliance_actions
+                        },
+                        "confidence": "MEDIUM",
+                        "flags": []
+                    }
+
+                coord_handle = "@vaithish7/coordinator"
+                await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
+                print(f"[{self.name.upper()}] Final payload posted for {case_id}")
+            except Exception as e:
+                logger.error(f"FATAL ERROR: {e}")
+                error_envelope = {
                     "agent": "regulatory_trade",
                     "case_id": case_id,
                     "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "status": "insufficient_data",
+                    "status": "error",
                     "findings": {},
                     "confidence": "LOW",
-                    "flags": ["Upstream supplier_impact failure"]
+                    "flags": [f"Crash: {str(e)[:100]}"]
                 }
-                coord_handle = "@coordinator"
-                try:
-                    from utils import get_room_participants
-                    p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
-                    handles = await get_room_participants(room_id, "regulatory_trade", p_str)
-                    coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@coordinator")
-                except Exception as e:
-                    logger.error(f"Failed to resolve coordinator handle: {e}")
-                await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
-                return
-
-            # Load regulations
-            try:
-                reg_data_str = get_regulatory_data.invoke({})
-                reg_data = json.loads(reg_data_str) if reg_data_str and reg_data_str.strip().startswith("{") else {}
-            except Exception as e:
-                logger.error(f"Failed to load regulations: {e}")
-                reg_data = {}
-
-            # Determine regulatory findings based on event type / location
-            sup_findings = current_data.get("findings") or {}
-            event_type = ""
-            location = ""
-            # Extract from parent event_intelligence if available in all_msgs
-            for d in all_msgs:
-                if d.get("agent") == "event_intelligence" and d.get("case_id") == case_id:
-                    event_type = (d.get("findings") or {}).get("event_type", "")
-                    location = (d.get("findings") or {}).get("location", "")
-                    break
-
-            # Apply regulations lookup
-            force_majeure = True
-            insurer_hours = 72
-            export_controls = []
-            tariff_implications = "none"
-            compliance_actions = []
-
-            for rule in reg_data.get("rules", []):
-                if any(k in (event_type + location).lower() for k in rule.get("keywords", [])):
-                    force_majeure = rule.get("force_majeure", force_majeure)
-                    insurer_hours = rule.get("insurer_notify_deadline_hours", insurer_hours)
-                    export_controls = rule.get("export_controls", export_controls)
-                    tariff_implications = rule.get("tariff_implications", tariff_implications)
-                    compliance_actions = rule.get("compliance_actions", compliance_actions)
-
-            if not compliance_actions:
-                compliance_actions = [
-                    f"Notify insurer within {insurer_hours} hours",
-                    "File force majeure notice with affected suppliers"
-                ]
-
-            envelope = {
-                "agent": "regulatory_trade",
-                "case_id": case_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "status": "complete",
-                "findings": {
-                    "force_majeure_applicable": force_majeure,
-                    "insurer_notify_deadline_hours": insurer_hours,
-                    "export_controls": export_controls,
-                    "tariff_implications": tariff_implications,
-                    "compliance_actions": compliance_actions
-                },
-                "confidence": "MEDIUM",
-                "flags": []
-            }
-            coord_handle = "@coordinator"
-            try:
-                from utils import get_room_participants
-                p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
-                handles = await get_room_participants(room_id, "regulatory_trade", p_str)
-                coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@coordinator")
-            except Exception as e:
-                logger.error(f"Failed to resolve coordinator handle: {e}")
-            await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
-            logger.info(f"Regulatory trade posted for {case_id}: complete")
-            return
-
-        # Not a supplier_impact trigger — ignore silently
-        import asyncio, random
-        await asyncio.sleep(0.5 + random.random() * 2.5)
+                await tools.send_message(content=json.dumps(error_envelope, indent=2), mentions=["@vaithish7/coordinator"])
+        
+        return {"status": "skipped"}
 
 async def main():
     # Load env variables from local and parent dir

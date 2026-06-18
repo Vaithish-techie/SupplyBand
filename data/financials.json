@@ -1,23 +1,29 @@
 {
   "products": [
     {
-      "name": "Product A",
-      "margin_pct": 25.0,
-      "weekly_revenue_usd": 10000000,
-      "components_required": ["A100 chips", "chip packaging"]
+      "name": "Enterprise AI Server Clusters",
+      "margin_pct": 35.0,
+      "weekly_revenue_usd": 105000000,
+      "components_required": ["A100 AI Chips", "Server Motherboards", "Chip Packaging"]
     },
     {
-      "name": "Product B",
-      "margin_pct": 18.0,
-      "weekly_revenue_usd": 15000000,
-      "components_required": ["NAND flash", "DRAM"]
+      "name": "Next-Gen Electric Vehicles",
+      "margin_pct": 18.5,
+      "weekly_revenue_usd": 85000000,
+      "components_required": ["Lithium-Ion Cells", "Automotive ECUs", "Battery Packs"]
     },
     {
-      "name": "Product C",
+      "name": "Consumer Smart Devices",
+      "margin_pct": 22.0,
+      "weekly_revenue_usd": 45000000,
+      "components_required": ["Consumer Electronics Assembly", "Legacy Node Chips"]
+    },
+    {
+      "name": "Global Trade Logistics Revenue",
       "margin_pct": 12.0,
-      "weekly_revenue_usd": 5000000,
-      "components_required": ["legacy nodes chips", "power management ICs"]
+      "weekly_revenue_usd": 25000000,
+      "components_required": ["European Logistics Routing", "Asia-Europe Shipping", "Container Forwarding"]
     }
   ],
-  "logistics_weekly_cost_usd": 2000000
+  "logistics_weekly_cost_usd": 8500000
 }

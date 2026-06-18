@@ -89,7 +89,7 @@ async def get_room_participants(room_id: str, agent_name: str, participants_msg_
     """
     Fetches the list of participant handles from the Band API (PRIMARY).
     Falls back to regex-parsing the markdown participants_msg (SECONDARY).
-    Returns a list of handles (e.g. ['@john/agent', '@mary']).
+    Returns a list of handles with @ prefix (e.g. ['@john/agent', '@mary']).
     """
     import httpx
     handles = []
@@ -110,8 +110,12 @@ async def get_room_participants(room_id: str, agent_name: str, participants_msg_
                     if isinstance(p, dict):
                         h = p.get("handle")
                         if h:
+                            # Normalize: always prefix with @ for Band mentions
+                            if not h.startswith("@"):
+                                h = f"@{h}"
                             handles.append(h)
                 if handles:
+                    logger.info(f"[get_room_participants] API returned (normalized): {handles}")
                     return handles
             else:
                 logger.warning(f"Failed to fetch participants via API: HTTP {resp.status_code}")

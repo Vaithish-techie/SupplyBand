@@ -292,7 +292,8 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
                 if "{" in content:
                     content = content[content.find("{"):content.rfind("}")+1]
                 data = json.loads(content)
-                all_msgs.append(data)
+                if isinstance(data, dict):
+                    all_msgs.append(data)
             except Exception:
                 pass
 
@@ -303,90 +304,181 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
             if "{" in content:
                 content = content[content.find("{"):content.rfind("}")+1]
             current_data = json.loads(content)
-            all_msgs.append(current_data)
+            if not isinstance(current_data, dict):
+                current_data = {}
+            else:
+                all_msgs.append(current_data)
         except Exception:
             current_data = {}
 
-        # --- DIRECT TRIGGER PATH ---
-        # Trigger on supplier_impact (it's the first downstream agent we need data from)
-        if current_data.get("agent") == "supplier_impact":
-            case_id = current_data.get("case_id")
-            logger.info(f"Direct trigger: supplier_impact for case {case_id}")
+        # --- DEPENDENCY TRIGGER PATH ---
+        case_id = current_data.get("case_id")
+        if not case_id:
+            for d in reversed(all_msgs):
+                if isinstance(d, dict) and d.get("case_id"):
+                    case_id = d.get("case_id")
+                    break
 
-            already_responded = any(
-                d.get("agent") == "alt_sourcing" and d.get("case_id") == case_id
-                and d.get("status") in ("complete", "insufficient_data", "escalate", "error")
-                for d in all_msgs
-            )
-            if already_responded:
-                logger.info(f"Already responded to {case_id}, skipping.")
-                return
+        if not case_id:
+            return {"status": "skipped"}
 
-            sup_status = current_data.get("status")
-            affected_components = (current_data.get("findings") or {}).get("affected_components", [])
+        already_responded = any(
+            isinstance(d, dict) and d.get("agent") == "alt_sourcing" and d.get("case_id") == case_id
+            and d.get("status") in ("complete", "insufficient_data", "escalate", "error", "fallback")
+            for d in all_msgs
+        )
+        if already_responded:
+            logger.info(f"Already responded to {case_id}, skipping.")
+            return {"status": "skipped"}
 
-            if sup_status in ("insufficient_data", "escalate", "error") or not affected_components:
-                envelope = {
-                    "agent": "alt_sourcing",
-                    "case_id": case_id,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "status": "insufficient_data",
-                    "findings": {"alternatives": [], "recommended": None, "recommendation_reason": "Upstream failure"},
-                    "confidence": "LOW",
-                    "flags": ["Upstream supplier_impact failure or no components"]
-                }
-                coord_handle = "@coordinator"
-                try:
-                    from utils import get_room_participants
-                    p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
-                    handles = await get_room_participants(room_id, "alt_sourcing", p_str)
-                    coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@coordinator")
-                except Exception as e:
-                    logger.error(f"Failed to resolve coordinator handle: {e}")
-                await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
-                return
+        # Polling loop for upstream dependencies
+        required_agents = {"supplier_impact", "financial_exposure", "regulatory_trade"}
+        
+        while True:
+            found = set()
+            for d in all_msgs:
+                if not isinstance(d, dict):
+                    continue
+                agent_name = d.get("agent")
+                if agent_name == "supplier_impact" or agent_name == "financial_exposure" or agent_name == "regulatory_trade":
+                    if d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error", "fallback"):
+                        found.add(agent_name)
 
+            if "supplier_impact" in found and "financial_exposure" in found and "regulatory_trade" in found:
+                break
+                
+            logger.info(f"alt_sourcing polling... Found: {found}. Waiting for: {required_agents - found}")
+            await asyncio.sleep(5)
+            
+            # Fetch latest history with brute-force pagination (up to 5 pages)
             try:
-                alternatives = load_alternatives()
-                top_alts = find_top_alternatives(affected_components, [], alternatives)
-                recommended = top_alts[0]["supplier"] if top_alts else None
-                reason = "Fastest lead time with lowest cost premium" if top_alts else "No alternatives found"
-                envelope = {
-                    "agent": "alt_sourcing",
-                    "case_id": case_id,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "status": "complete",
-                    "findings": {
-                        "alternatives": top_alts,
-                        "recommended": recommended,
-                        "recommendation_reason": reason
-                    },
-                    "confidence": "HIGH",
-                    "flags": []
-                }
-            except Exception as e:
-                logger.error(f"Alt sourcing calculation failed: {e}")
-                envelope = {
-                    "agent": "alt_sourcing",
-                    "case_id": case_id,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                    "status": "insufficient_data",
-                    "findings": {"alternatives": [], "recommended": None, "recommendation_reason": f"Error: {e}"},
-                    "confidence": "LOW",
-                    "flags": [str(e)]
-                }
+                import httpx
+                from band.config import load_agent_config
+                _, api_key = load_agent_config("alt_sourcing")
+                new_msgs = []
+                async with httpx.AsyncClient() as client:
+                    all_messages = []
 
-            coord_handle = "@coordinator"
+                    for page_num in range(1, 6):
+                        resp = await client.get(
+                            f"https://app.band.ai/api/v1/agent/chats/{room_id}/context?page={page_num}&page_size=100",
+                            headers={"x-api-key": api_key}
+                        )
+                        if resp.status_code != 200:
+                            continue
+
+                        data = resp.json()
+                        messages = data.get("data", []) if isinstance(data, dict) else data
+
+                        if messages and isinstance(messages, list):
+                            all_messages.extend(messages)
+                            logger.info(f"Fetched page {page_num}: {len(messages)} messages (total so far: {len(all_messages)})")
+
+                    for m in all_messages:
+                        if not isinstance(m, dict):
+                            continue
+                        
+                        # Support both msg.parsed (if present in API) and raw content parsing
+                        parsed_data = m.get("parsed")
+                        if isinstance(parsed_data, dict) and parsed_data:
+                            new_msgs.append(parsed_data)
+                            continue
+
+                        content = m.get("content", "")
+                        if content.startswith("[") and "]: " in content:
+                            content = content.split("]: ", 1)[1]
+                        if "{" in content:
+                            content = content[content.find("{"):content.rfind("}")+1]
+                        try:
+                            parsed = json.loads(content)
+                            if isinstance(parsed, dict):
+                                new_msgs.append(parsed)
+                        except Exception:
+                            pass
+
+                    all_msgs = new_msgs
+            except Exception as e:
+                logger.warning(f"Polling error: {e}")
+
+        logger.info(f"All prerequisites found for case {case_id}. Triggering alt_sourcing logic.")
+
+        affected_components = []
+        blocked_regulatory_flags = []
+        upstream_failure = False
+
+        for d in all_msgs:
+            if isinstance(d, dict) and d.get("case_id") == case_id:
+                agent_name = d.get("agent")
+                if agent_name in required_agents:
+                    if d.get("status") != "complete":
+                        upstream_failure = True
+                    if agent_name == "supplier_impact":
+                        affected_components = (d.get("findings") or {}).get("affected_components", [])
+                    elif agent_name == "regulatory_trade":
+                        blocked_regulatory_flags = (d.get("findings") or {}).get("export_controls", [])
+
+        if upstream_failure or not affected_components:
+            envelope = {
+                "agent": "alt_sourcing",
+                "case_id": case_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "insufficient_data",
+                "findings": {"alternatives": [], "recommended": None, "recommendation_reason": "Upstream failure"},
+                "confidence": "LOW",
+                "flags": ["Upstream failure or no components"]
+            }
+            coord_handle = "@vaithish7/coordinator"
             try:
                 from utils import get_room_participants
                 p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
                 handles = await get_room_participants(room_id, "alt_sourcing", p_str)
-                coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@coordinator")
+                coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@vaithish7/coordinator")
             except Exception as e:
                 logger.error(f"Failed to resolve coordinator handle: {e}")
             await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
-            logger.info(f"Alt sourcing posted for {case_id}: {envelope['status']}")
-            return
+            return {"status": "skipped"}
+
+        try:
+            alternatives = load_alternatives()
+            top_alts = find_top_alternatives(affected_components, blocked_regulatory_flags, alternatives)
+            recommended = top_alts[0]["supplier"] if top_alts else None
+            reason = "Fastest lead time with lowest cost premium" if top_alts else "No alternatives found"
+            envelope = {
+                "agent": "alt_sourcing",
+                "case_id": case_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "complete",
+                "findings": {
+                    "alternatives": top_alts,
+                    "recommended": recommended,
+                    "recommendation_reason": reason
+                },
+                "confidence": "HIGH",
+                "flags": []
+            }
+        except Exception as e:
+            logger.error(f"Alt sourcing calculation failed: {e}")
+            envelope = {
+                "agent": "alt_sourcing",
+                "case_id": case_id,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "status": "insufficient_data",
+                "findings": {"alternatives": [], "recommended": None, "recommendation_reason": f"Error: {e}"},
+                "confidence": "LOW",
+                "flags": [str(e)]
+            }
+
+        coord_handle = "@vaithish7/coordinator"
+        try:
+            from utils import get_room_participants
+            p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
+            handles = await get_room_participants(room_id, "alt_sourcing", p_str)
+            coord_handle = next((h for h in handles if "coordinator" in h.lower()), "@vaithish7/coordinator")
+        except Exception as e:
+            logger.error(f"Failed to resolve coordinator handle: {e}")
+        await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
+        logger.info(f"Alt sourcing posted for {case_id}: {envelope['status']}")
+        return {"status": "skipped"}
 
 
 

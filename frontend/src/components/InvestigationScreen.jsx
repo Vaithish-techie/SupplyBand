@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useInvestigation } from '../hooks/useInvestigation';
-import AgentGraph from './AgentGraph';
+import PipelineStepper from './PipelineStepper';
 import LiveLog from './LiveLog';
 import { CheckCircle } from 'lucide-react';
 
@@ -25,7 +25,7 @@ export default function InvestigationScreen({ caseId, onBack, onViewBrief }) {
 
       <div className="inv-layout">
         <div className="inv-graph-pane glass-panel">
-          <AgentGraph agentStates={agentStates} isComplete={isComplete} />
+          <PipelineStepper agentStates={agentStates} isComplete={isComplete} />
           
           {showPayoff && (
             <div className="payoff-overlay animate-fade-in">

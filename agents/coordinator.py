@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 COORDINATOR_PROMPT = """
-You are the Coordinator Agent for a Supply Chain Disruption Intelligence System.
+You are the Coordinator Agent and Senior Supply Chain Analyst for a Disruption Intelligence System.
 
 Your job runs in TWO phases:
 
@@ -38,9 +38,9 @@ Post this exact JSON to the Band room:
   "agents_required": ["event_intelligence", "supplier_impact", "financial_exposure", "regulatory_trade", "alt_sourcing"]
 }
 
-PHASE 2 — When you see ALL 5 specialist agents have posted their findings:
-1. Read all findings from the Band room
-2. Write an executive brief summarizing the situation
+PHASE 2 — When you see ALL specialist agents have posted their findings:
+1. Read all findings from the Band room carefully.
+2. Write a highly detailed, professional, multi-paragraph situation overview summarizing the entire event. It must synthesize concrete data from ALL 4 specialist agents (Supplier Impact, Financial Exposure, Regulatory, and Alternative Sourcing) into a comprehensive final report. Do not just output 2-3 sentences. Write a senior-level analysis.
 3. Give a single verdict: AUTO_RESOLVE or ESCALATE_TO_HUMAN
 4. List the top 3 recommended actions
 
@@ -49,7 +49,7 @@ Post this JSON:
   "agent": "coordinator",
   "case_id": "<use the actual case_id you are managing>",
   "phase": "executive_brief",
-  "situation_summary": "plain english 2-3 sentence summary",
+  "situation_summary": "Highly detailed, professional, multi-paragraph situation overview synthesizing all data.",
   "severity": "CRITICAL|HIGH|MEDIUM|LOW",
   "verdict": "ESCALATE_TO_HUMAN|AUTO_RESOLVE",
   "top_3_actions": [
@@ -79,22 +79,33 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
     async def on_message(
         self, msg, tools, history, participants_msg, contacts_msg, *, is_session_bootstrap: bool, room_id: str
     ) -> None:
-        try:
-            content = msg.content
-            if content.startswith("[") and "]: " in content:
-                content = content.split("]: ", 1)[1]
-            if "{" in content:
-                content = content[content.find("{"):content.rfind("}")+1]
-            data = json.loads(content)
-        except Exception as e:
-            logger.error(f"Failed to parse coordinator msg: {e}")
-            data = {}
+        print(f"[COORDINATOR ENTRY] Message received. Parsed data: {getattr(msg, 'parsed', 'None')}")
+
+        # Parse from msg.parsed first (preferred), fall back to content parsing
+        data = {}
+        if isinstance(getattr(msg, 'parsed', None), dict):
+            data = msg.parsed
+            print(f"[COORDINATOR] Using msg.parsed directly: agent={data.get('agent')}")
+        else:
+            try:
+                content = msg.content
+                if content.startswith("[") and "]: " in content:
+                    content = content.split("]: ", 1)[1]
+                if "{" in content:
+                    content = content[content.find("{"):content.rfind("}")+1]
+                data = json.loads(content)
+                print(f"[COORDINATOR] Parsed from msg.content: agent={data.get('agent')}")
+            except Exception as e:
+                print(f"[COORDINATOR] Failed to parse msg.content: {e}")
+                logger.error(f"Failed to parse coordinator msg: {e}")
+                data = {}
 
         logger.info(f"DEBUG COORDINATOR PARSED: {data}")
 
         # PHASE 1: Human operator kickoff
         if data.get("agent") == "human_operator":
             logger.info("Received human operator message, sending Phase 1 kickoff...")
+            print(f"[COORDINATOR] PHASE 1 triggered for case {data.get('case_id')}")
             case_id = data.get("case_id", f"CASE-{int(datetime.now(timezone.utc).timestamp())}")
             event_text = data.get("event_text", "")
             
@@ -112,36 +123,55 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
             mentions = []
             from utils import get_room_participants
             try:
-                # Get list of all participant handles (e.g. ['vaithish7', 'vaithish7/coordinator', ...])
                 handles = await get_room_participants(room_id, "coordinator", participants_msg)
                 logger.info(f"[PARTICIPANTS_DEBUG] Extracted handles: {handles}")
+                print(f"[COORDINATOR] Participant handles (normalized): {handles}")
                 
-                # We need to mention the specialist agents. Their handles usually contain their agent name
-                # or we just mention all agents that are not the coordinator.
                 for h in handles:
                     if "/" in h and "coordinator" not in h.lower():
                         mentions.append(h)
             except Exception as e:
                 logger.error(f"Failed to fetch participants: {e}")
+                print(f"[COORDINATOR] ERROR fetching participants: {e}")
             
-            # If no mentions found, use human operator as fallback to avoid empty mentions error
+            # If no mentions found, use hardcoded real handles
             if not mentions:
-                mentions = ["@human_operator"]
-                
-            await tools.send_message(
-                content=json.dumps(kickoff_msg, indent=2),
-                mentions=mentions
-            )
+                print("[COORDINATOR] No mentions resolved — using hardcoded fallback handles")
+                mentions = [
+                    "@rshricharan29/event-intelligence",
+                    "@rshricharan29/supplier-impact",
+                    "@sreedarsan0311/financial-exposure",
+                    "@belugaok3/regulatory-agent",
+                    "@sreedarsan0311/alt-sourcing",
+                ]
+
+            print(f"[COORDINATOR] Posting kickoff with mentions: {mentions}")
+            try:
+                await tools.send_message(
+                    content=json.dumps(kickoff_msg, indent=2),
+                    mentions=mentions
+                )
+                print(f"[COORDINATOR] Kickoff posted successfully for {case_id}")
+            except Exception as send_err:
+                print(f"[COORDINATOR] FATAL: send_message failed: {type(send_err).__name__}: {send_err}")
+                logger.error(f"FATAL: Coordinator kickoff send_message failed: {send_err}")
+                raise
+
             
             # Spawn a non-blocking timeout task to poll completion and wake the coordinator
             import asyncio
             async def monitor_completion(case_id_param, m_list):
-                start_time = time.time()
-                timeout = 180
                 room_data = None
+                is_timeout = False
+                start_time = datetime.now(timezone.utc)
                 
-                while time.time() - start_time < timeout:
+                # Strictly wait for alt_sourcing and others
+                while True:
                     await asyncio.sleep(5)
+                    if (datetime.now(timezone.utc) - start_time).total_seconds() > 180:
+                        logger.warning("Timeout waiting for specialists. Generating brief anyway.")
+                        is_timeout = True
+                        break
                     try:
                         async with httpx.AsyncClient() as client:
                             resp = await client.get(f"http://localhost:8000/case-status?case_id={case_id_param}")
@@ -153,15 +183,6 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
                     except Exception as e:
                         logger.warning(f"Error polling case status: {e}")
                         
-                is_timeout = not room_data.get("specialists_done", False) if room_data else True
-                
-                if is_timeout:
-                    logger.warning(f"90s timeout reached for {case_id_param}. Proceeding with missing specialists.")
-                    missing_agents = room_data.get("agents_pending", []) if room_data else []
-                    missing_agents = [a for a in missing_agents if a != "coordinator_brief"]
-                else:
-                    missing_agents = []
-                    
                 # We fetch ALL room messages to feed to LLM
                 messages = []
                 try:
@@ -179,9 +200,6 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
 
                 prompt_text = COORDINATOR_PROMPT + f"\n\nYOUR ASSIGNED CASE ID IS: {case_id_param}\n\n=== CHAT HISTORY ===\n" + findings_text
                 
-                if is_timeout:
-                    prompt_text += f"\n\nNOTE: The following specialist agents FAILED to respond within the 90s timeout: {missing_agents}. Provide your Executive Brief based ONLY on the available data. Set confidence to LOW or MEDIUM and verdict leaning towards ESCALATE_TO_HUMAN due to missing data."
-
                 llm = get_llm_for_agent("coordinator").bind(response_format={"type": "json_object"})
                 try:
                     result = await llm.ainvoke([
@@ -191,6 +209,26 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
                     content = result.content
                     if "```json" in content:
                         content = content.split("```json")[1].split("```")[0]
+                    elif "```" in content:
+                        content = content.split("```")[1].split("```")[0]
+                    content = content.strip()
+                    
+                    try:
+                        json.loads(content)
+                    except json.JSONDecodeError as e:
+                        logger.error(f"Malformed JSON from coordinator LLM: {e}. Retrying once...")
+                        result = await llm.ainvoke([
+                            SystemMessage(content=prompt_text),
+                            HumanMessage(content="The last response was invalid JSON. Please generate the final Executive Brief JSON. Output ONLY valid raw JSON without markdown.")
+                        ])
+                        content = result.content
+                        if "```json" in content:
+                            content = content.split("```json")[1].split("```")[0]
+                        elif "```" in content:
+                            content = content.split("```")[1].split("```")[0]
+                        content = content.strip()
+                        json.loads(content) # if it fails here, it falls through to terminal failure
+                        
                     if hasattr(tools, 'send_message'):
                         await tools.send_message(content=content, mentions=m_list)
                 except Exception as e:
@@ -211,11 +249,9 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
                         await tools.send_message(content=json.dumps(response), mentions=m_list)
             
             asyncio.create_task(monitor_completion(case_id, mentions))
-            return
-
+            return {"status": "skipped"}
         # Phase 2 is now handled entirely by the background task monitor_completion
-        return
-
+        return {"status": "skipped"}
 async def main():
     # Load env variables from local and parent dir
     load_dotenv()
