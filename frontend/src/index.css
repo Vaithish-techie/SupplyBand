@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500;600&display=swap');
 
 :root {
-  /* High-end Dark Tech Palette */
+  /* Default: HUD mode variables */
   --color-surface: #070709;
   --color-surface-mid: rgba(18, 18, 22, 0.4);
   --color-surface-hi: rgba(28, 28, 35, 0.6);
@@ -9,10 +9,14 @@
   --color-accent: #D4FF00;
   --color-accent-dim: rgba(212, 255, 0, 0.05);
   --color-accent-hover: #e5ff33;
+  --color-accent-glow: rgba(212, 255, 0, 0.18);
   
   --color-text-primary: #F4F4F5;
   --color-text-secondary: #8F8F94;
   --color-rule: rgba(255, 255, 255, 0.04);
+  
+  --card-border: rgba(255, 255, 255, 0.03);
+  --grid-overlay-display: none;
 
   /* Typography */
   --font-display: 'Geist', system-ui, -apple-system, sans-serif;
@@ -35,6 +39,42 @@
   /* Motion Curves (Fluid Spring Dynamics) */
   --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
   --duration-fluid: 700ms;
+}
+
+[data-theme='blueprint'] {
+  --color-surface: #060f14;
+  --color-surface-mid: rgba(12, 29, 38, 0.45);
+  --color-surface-hi: rgba(20, 48, 64, 0.6);
+  
+  --color-accent: #00E5FF;
+  --color-accent-dim: rgba(0, 229, 255, 0.05);
+  --color-accent-hover: #33ebff;
+  --color-accent-glow: rgba(0, 229, 255, 0.15);
+  
+  --color-text-primary: #E0F7FA;
+  --color-text-secondary: #648A96;
+  --color-rule: rgba(0, 229, 255, 0.08);
+  
+  --card-border: rgba(0, 229, 255, 0.15);
+  --grid-overlay-display: block;
+}
+
+[data-theme='onyx'] {
+  --color-surface: #020202;
+  --color-surface-mid: rgba(10, 10, 10, 0.8);
+  --color-surface-hi: rgba(20, 20, 20, 0.9);
+  
+  --color-accent: #FF3300;
+  --color-accent-dim: rgba(255, 51, 0, 0.04);
+  --color-accent-hover: #ff5533;
+  --color-accent-glow: transparent;
+  
+  --color-text-primary: #FFFFFF;
+  --color-text-secondary: #707070;
+  --color-rule: rgba(255, 255, 255, 0.05);
+  
+  --card-border: rgba(255, 255, 255, 0.08);
+  --grid-overlay-display: none;
 }
 
 * {
@@ -67,8 +107,8 @@ h1, h2, h3, h4, h5, h6, .font-display {
 /* Mouse-Tracking Spotlight Card */
 .spotlight-card {
   position: relative;
-  border-radius: 20px;
-  background: rgba(255, 255, 255, 0.015);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.01);
   padding: 1px; /* space for border */
   overflow: hidden;
 }
@@ -81,7 +121,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   padding: 1px;
   background: radial-gradient(
     320px circle at var(--mouse-x, 0px) var(--mouse-y, 0px),
-    rgba(212, 255, 0, 0.18),
+    var(--color-accent-glow),
     transparent 80%
   );
   -webkit-mask: 
@@ -103,10 +143,10 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 /* Double-Bezel (Doppelrand) Card Architecture */
 .shell-bezel {
-  background: rgba(255, 255, 255, 0.012);
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.005);
+  border: 1px solid var(--card-border);
   padding: 6px;
-  border-radius: 20px;
+  border-radius: 24px;
   transition: border-color var(--duration-fluid) var(--ease-fluid),
               background var(--duration-fluid) var(--ease-fluid),
               transform var(--duration-fluid) var(--ease-fluid),
@@ -119,20 +159,20 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 
 .core-bezel {
-  background: rgba(18, 18, 22, 0.4);
+  background: var(--color-surface-mid);
   backdrop-filter: blur(12px) saturate(140%);
   -webkit-backdrop-filter: blur(12px) saturate(140%);
-  border-radius: calc(20px - 6px);
+  border-radius: calc(24px - 6px);
   padding: 24px;
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.03);
   height: 100%;
 }
 
 .shell-bezel:hover {
-  border-color: rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.02);
+  border-color: var(--color-accent);
+  background: rgba(255, 255, 255, 0.015);
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
 }
 
 .shell-bezel.accent:hover {
@@ -334,4 +374,158 @@ h1, h2, h3, h4, h5, h6, .font-display {
 @keyframes terminal-blink {
   50% { opacity: 0; }
 }
+
+/* CRT Screen Overlay & Effects */
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.04));
+  background-size: 100% 4px, 4px 100%;
+  opacity: 0.12;
+}
+
+.crt-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.45) 100%);
+  z-index: 10000;
+}
+
+@keyframes crt-flicker {
+  0% { opacity: 0.975; }
+  50% { opacity: 1; }
+  100% { opacity: 0.985; }
+}
+
+.crt-flicker {
+  animation: crt-flicker 0.15s infinite;
+}
+
+/* Halftone Texture Overlay */
+.halftone-bg {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+  background-size: 4px 4px;
+  opacity: 0.2;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* Blueprint Grid Background */
+.blueprint-grid {
+  display: var(--grid-overlay-display);
+  position: fixed;
+  inset: 0;
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 229, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 229, 255, 0.04) 1px, transparent 1px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Technical blueprint lines & details */
+.blueprint-line {
+  position: relative;
+  border-top: 1px dashed var(--color-rule);
+}
+.blueprint-line::before, .blueprint-line::after {
+  content: '+';
+  position: absolute;
+  top: -5px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--color-text-secondary);
+}
+.blueprint-line::before { left: 0; }
+.blueprint-line::after { right: 0; }
+
+.alignment-cross {
+  position: relative;
+  width: 12px;
+  height: 12px;
+}
+.alignment-cross::before, .alignment-cross::after {
+  content: '';
+  position: absolute;
+  background: var(--color-text-secondary);
+  opacity: 0.3;
+}
+.alignment-cross::before {
+  top: 5px; left: 0; width: 100%; height: 1px;
+}
+.alignment-cross::after {
+  left: 5px; top: 0; width: 1px; height: 100%;
+}
+
+/* Tabular numbers formatting */
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Rotator helper */
+@keyframes rotation-blueprint {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-rotate-blueprint {
+  animation: rotation-blueprint 20s linear infinite;
+  transform-origin: center;
+}
+
+/* Layout utilities */
+.w-full { width: 100%; }
+.h-full { height: 100%; }
+.max-w-bento { max-width: 1300px; margin: 0 auto; width: 100%; }
+.block { display: block; }
+.hidden { display: none; }
+.inline-block { display: inline-block; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+
+/* Grid systems */
+.grid { display: grid; }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.grid-cols-12 { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+.col-span-12 { grid-column: span 12 / span 12; }
+.col-span-8 { grid-column: span 8 / span 8; }
+.col-span-4 { grid-column: span 4 / span 4; }
+
+/* Flex adjustments */
+.justify-end { justify-content: flex-end; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-shrink-0 { flex-shrink: 0; }
+
+/* Interactive Command line styling */
+.terminal-input-form {
+  display: flex;
+  background: #030304;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  padding: 6px 12px;
+  align-items: center;
+}
+
+.terminal-prompt-token {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-accent);
+  margin-right: 6px;
+  font-weight: 600;
+}
+
+.terminal-prompt-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-text-primary);
+  caret-color: var(--color-accent);
+}
+
 

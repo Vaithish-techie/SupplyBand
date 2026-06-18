@@ -43,6 +43,14 @@ function RiskFlowMap({ messages }) {
 
       <div style={{ position: 'relative', width: '100%' }}>
         <svg viewBox="0 0 360 110" style={{ width: '100%', height: 'auto', overflow: 'visible' }}>
+          {/* Blueprint Crosshairs & Grid helper ticks */}
+          <g style={{ opacity: 0.15 }}>
+            <line x1="40" y1="5" x2="40" y2="105" stroke="var(--color-text-secondary)" strokeWidth="0.5" strokeDasharray="2" />
+            <line x1="170" y1="5" x2="170" y2="105" stroke="var(--color-text-secondary)" strokeWidth="0.5" strokeDasharray="2" />
+            <line x1="300" y1="5" x2="300" y2="105" stroke="var(--color-text-secondary)" strokeWidth="0.5" strokeDasharray="2" />
+            <circle cx="170" cy="55" r="15" fill="none" stroke="var(--color-text-secondary)" strokeWidth="0.5" strokeDasharray="3" />
+          </g>
+
           {/* Paths */}
           {/* Disruption to Supplier (Red warning) */}
           <path 
@@ -62,15 +70,16 @@ function RiskFlowMap({ messages }) {
             className="animate-flow-dash"
             style={{ opacity: 0.8 }}
           />
-          {/* Disruption to Alt Option (Muted Lime) */}
+          {/* Disruption to Alt Option (Muted Accent) */}
           <path 
             d="M 40 55 C 100 85, 110 85, 170 85" 
             fill="none" 
-            stroke="rgba(212, 255, 0, 0.15)" 
+            stroke="var(--color-accent)" 
             strokeWidth="1.5" 
             strokeDasharray="4,4"
+            style={{ opacity: 0.25 }}
           />
-          {/* Alt Option to Product (Active Lime) */}
+          {/* Alt Option to Product (Active Accent) */}
           <path 
             d="M 170 85 C 230 85, 240 55, 300 55" 
             fill="none" 

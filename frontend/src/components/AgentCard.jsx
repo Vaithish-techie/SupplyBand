@@ -85,7 +85,7 @@ const SupplierImpactRenderer = ({ data }) => {
       <div style={{ background: 'rgba(0,0,0,0.15)', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.02)' }}>
         <div className="flex justify-between items-center mb-1.5">
           <span className="text-secondary font-mono" style={{ fontSize: '9px' }}>INVENTORY BUFFER LEVEL</span>
-          <span className="font-mono" style={{ fontSize: '13px', fontWeight: 600, color: bufferColor }}>
+          <span className="font-mono font-tabular" style={{ fontSize: '13px', fontWeight: 600, color: bufferColor }}>
             {buffer} DAYS RUNWAY
           </span>
         </div>
@@ -112,13 +112,13 @@ const SupplierImpactRenderer = ({ data }) => {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
         <div style={{ background: 'rgba(0,0,0,0.15)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
           <span className="block text-secondary font-mono" style={{ fontSize: '9px', marginBottom: '2px' }}>TIER 1 AFFECTED</span>
-          <span className="font-mono" style={{ fontSize: '18px', fontWeight: 600, color: data.affected_tier1 > 0 ? '#FF9500' : 'var(--color-text-primary)' }}>
+          <span className="font-mono font-tabular" style={{ fontSize: '18px', fontWeight: 600, color: data.affected_tier1 > 0 ? '#FF9500' : 'var(--color-text-primary)' }}>
             {data.affected_tier1 || 0}
           </span>
         </div>
         <div style={{ background: 'rgba(0,0,0,0.15)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
           <span className="block text-secondary font-mono" style={{ fontSize: '9px', marginBottom: '2px' }}>TIER 2 AFFECTED</span>
-          <span className="font-mono" style={{ fontSize: '18px', fontWeight: 600 }}>
+          <span className="font-mono font-tabular" style={{ fontSize: '18px', fontWeight: 600 }}>
             {data.affected_tier2 || 0}
           </span>
         </div>
@@ -165,13 +165,13 @@ const FinancialExposureRenderer = ({ data }) => {
       }}>
         <div>
           <span className="block text-secondary font-mono" style={{ fontSize: '8px' }}>MARGIN IMPACT</span>
-          <span className="font-mono" style={{ fontSize: '16px', fontWeight: 700, color: '#FF3B30' }}>
+          <span className="font-mono font-tabular" style={{ fontSize: '16px', fontWeight: 700, color: '#FF3B30' }}>
             ▼ {data.margin_impact_pct || 0}%
           </span>
         </div>
         <div style={{ textAlign: 'right' }}>
           <span className="block text-secondary font-mono" style={{ fontSize: '8px' }}>PEAK RISK RATE</span>
-          <span className="font-mono" style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
+          <span className="font-mono font-tabular" style={{ fontSize: '16px', fontWeight: 700, color: 'var(--color-text-primary)' }}>
             {formatCurrency(w6)}
           </span>
         </div>
@@ -202,19 +202,19 @@ const FinancialExposureRenderer = ({ data }) => {
           <div className="flex flex-col items-center" style={{ zIndex: 1, width: '60px' }}>
             <span className="font-mono text-secondary" style={{ fontSize: '8px' }}>WEEK 1</span>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FF3B30', margin: '4px 0' }} />
-            <span className="font-mono" style={{ fontSize: '11px', fontWeight: 600 }}>{formatCurrency(w1)}</span>
+            <span className="font-mono font-tabular" style={{ fontSize: '11px', fontWeight: 600 }}>{formatCurrency(w1)}</span>
           </div>
 
           <div className="flex flex-col items-center" style={{ zIndex: 1, width: '60px' }}>
             <span className="font-mono text-secondary" style={{ fontSize: '8px' }}>WEEK 3</span>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FF3B30', margin: '4px 0' }} />
-            <span className="font-mono" style={{ fontSize: '11px', fontWeight: 600 }}>{formatCurrency(w3)}</span>
+            <span className="font-mono font-tabular" style={{ fontSize: '11px', fontWeight: 600 }}>{formatCurrency(w3)}</span>
           </div>
 
           <div className="flex flex-col items-center" style={{ zIndex: 1, width: '60px' }}>
             <span className="font-mono text-secondary" style={{ fontSize: '8px' }}>WEEK 6</span>
             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#FF3B30', margin: '4px 0' }} />
-            <span className="font-mono" style={{ fontSize: '11px', fontWeight: 600 }}>{formatCurrency(w6)}</span>
+            <span className="font-mono font-tabular" style={{ fontSize: '11px', fontWeight: 600 }}>{formatCurrency(w6)}</span>
           </div>
         </div>
       </div>
