@@ -44,17 +44,17 @@ function App() {
       <div className="app-atmosphere">
         <svg viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg" className="atmosphere-svg">
           <defs>
-            <radialGradient id="glow-cyan" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="var(--accent-cyan)" stopOpacity="0.06" />
-              <stop offset="100%" stopColor="var(--accent-cyan)" stopOpacity="0" />
+            <radialGradient id="glow-gold" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#C8960A" stopOpacity="0.07" />
+              <stop offset="100%" stopColor="#C8960A" stopOpacity="0" />
             </radialGradient>
-            <radialGradient id="glow-purple" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="var(--accent-purple)" stopOpacity="0.04" />
-              <stop offset="100%" stopColor="var(--accent-purple)" stopOpacity="0" />
+            <radialGradient id="glow-violet" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#5B4FBD" stopOpacity="0.04" />
+              <stop offset="100%" stopColor="#5B4FBD" stopOpacity="0" />
             </radialGradient>
           </defs>
-          <circle cx="200" cy="200" r="350" fill="url(#glow-cyan)" className="blob-1" />
-          <circle cx="800" cy="700" r="400" fill="url(#glow-purple)" className="blob-2" />
+          <circle cx="150" cy="180" r="380" fill="url(#glow-gold)"   className="blob-1" />
+          <circle cx="820" cy="720" r="420" fill="url(#glow-violet)" className="blob-2" />
         </svg>
       </div>
 

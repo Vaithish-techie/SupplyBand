@@ -1,48 +1,55 @@
 import { BaseEdge, getBezierPath } from '@xyflow/react';
 
+/**
+ * AnimatedEdge — premium "war room" version.
+ * Inactive: faint amber-gold stroke.
+ * Active:   brighter gold particle traveling along path.
+ */
 export default function AnimatedEdge({
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
-  sourcePosition,
-  targetPosition,
-  style = {},
-  markerEnd,
-  data
+  sourceX, sourceY, targetX, targetY,
+  sourcePosition, targetPosition,
+  style = {}, markerEnd, data
 }) {
   const [edgePath] = getBezierPath({
-    sourceX,
-    sourceY,
-    sourcePosition,
-    targetX,
-    targetY,
-    targetPosition,
+    sourceX, sourceY, sourcePosition,
+    targetX, targetY, targetPosition,
   });
 
-  const isAnimating = data?.isAnimating;
+  const isAnimating  = data?.isAnimating;
   const findingLabel = data?.findingLabel;
+  const edgeId       = `edge-path-${data?.id || Math.random()}`;
 
   return (
     <>
-      <BaseEdge path={edgePath} markerEnd={markerEnd} style={style} />
-      {isAnimating && findingLabel && (
-        <circle r="4" fill="#646cff">
-          <animateMotion dur="2s" repeatCount="indefinite" path={edgePath} />
+      {/* Base path — always visible */}
+      <BaseEdge
+        path={edgePath}
+        markerEnd={markerEnd}
+        style={{
+          ...style,
+          stroke: isAnimating ? 'rgba(200,150,10,0.5)' : 'rgba(255,255,255,0.06)',
+          strokeWidth: isAnimating ? 1.5 : 1,
+          transition: 'stroke 0.4s ease, stroke-width 0.4s ease',
+        }}
+      />
+
+      {/* Traveling particle */}
+      {isAnimating && (
+        <circle r="3.5" fill="#C8960A" style={{ filter: 'drop-shadow(0 0 4px #C8960A)' }}>
+          <animateMotion dur="2.2s" repeatCount="indefinite" path={edgePath} />
         </circle>
       )}
-      {/* We can use foreignObject or a div over the edge for the text label. 
-          For simplicity, an animated SVG text element moving along the path: */}
+
+      {/* Finding label along path */}
       {isAnimating && findingLabel && (
-        <text className="edge-finding-label" dy="-10">
-          <textPath href={`#edge-path-${data.id}`} startOffset="50%" textAnchor="middle">
-            {findingLabel}
-          </textPath>
-        </text>
-      )}
-      {/* Hidden path for text layout if needed */}
-      {isAnimating && findingLabel && (
-        <path id={`edge-path-${data.id}`} d={edgePath} fill="none" stroke="none" />
+        <>
+          <path id={edgeId} d={edgePath} fill="none" stroke="none" />
+          <text dy="-8" style={{ fontSize: '9px', fontFamily: 'var(--font-mono)', fill: 'rgba(200,150,10,0.7)', letterSpacing: '0.04em' }}>
+            <textPath href={`#${edgeId}`} startOffset="50%" textAnchor="middle">
+              {findingLabel}
+            </textPath>
+          </text>
+        </>
       )}
     </>
   );

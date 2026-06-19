@@ -1,10 +1,13 @@
 import { useEffect, useRef } from 'react';
 
 export default function LiveLog({ messages }) {
-  const logEndRef = useRef(null);
+  const logScrollRef = useRef(null);
 
   useEffect(() => {
-    logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Scroll only the inner log container — not the whole page
+    if (logScrollRef.current) {
+      logScrollRef.current.scrollTop = logScrollRef.current.scrollHeight;
+    }
   }, [messages]);
 
   const sortedMsgs = [...messages].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
@@ -168,7 +171,8 @@ export default function LiveLog({ messages }) {
   return (
     <div className="live-log-container">
       <h3>Live Intelligence Feed</h3>
-      <div className="log-scroll">
+      {/* ref is on the scrollable container itself, not on a child sentinel */}
+      <div className="log-scroll" ref={logScrollRef}>
         {sortedMsgs.length === 0 ? (
           <div className="log-empty">Waiting for agent activity...</div>
         ) : (
@@ -186,8 +190,8 @@ export default function LiveLog({ messages }) {
               <div className="log-body">
                 {msg.agent === 'human_operator' ? (
                   <div className="custom-findings" style={{ marginTop: 0 }}>
-                    <p style={{ color: 'var(--accent-cyan)', marginBottom: '8px', fontWeight: 'bold', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', letterSpacing: '0.05em' }}>INCOMING DISRUPTION INTEL</p>
-                    <p style={{ color: 'var(--text-main)', lineHeight: '1.5', fontSize: '0.9rem' }}>
+                    <p style={{ color: 'var(--gold)', marginBottom: '8px', fontWeight: 'bold', fontFamily: 'var(--font-mono)', fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Incoming Disruption Intel</p>
+                    <p style={{ color: 'var(--text-2)', lineHeight: '1.55', fontSize: '0.83rem' }}>
                       {(msg.raw_content || '').replace(/@\[\[.*?\]\]/g, '').replace(/[{}[\]"]/g, '').trim()}
                     </p>
                   </div>
@@ -217,7 +221,6 @@ export default function LiveLog({ messages }) {
             </div>
           ))
         )}
-        <div ref={logEndRef} />
       </div>
     </div>
   );

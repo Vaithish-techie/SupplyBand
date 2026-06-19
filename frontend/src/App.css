@@ -1,15 +1,30 @@
+/* App-level layout — minimal, just the outer wrapper */
 .app-container {
-  max-width: 1550px;
-  margin: 0 auto;
-  padding: 2rem 1.5rem;
-  width: 100%;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  align-items: center;
+  padding: 2rem 2.5rem 5rem;
+  position: relative;
 }
 
-@media (max-width: 768px) {
-  .app-container {
-    padding: 1rem;
-  }
+/* Scanning line effect — very subtle */
+.app-container::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent 0%, rgba(200,150,10,0.06) 50%, transparent 100%);
+  animation: scan-line 12s linear infinite;
+  pointer-events: none;
+  z-index: 200;
+}
+
+@keyframes scan-line {
+  0%   { top: -2px; opacity: 0; }
+  5%   { opacity: 1; }
+  95%  { opacity: 1; }
+  100% { top: 100vh; opacity: 0; }
 }

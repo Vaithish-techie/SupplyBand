@@ -95,7 +95,7 @@ export default function AgentGraph({ agentStates, isComplete }) {
         zoomOnScroll={true}
         panOnDrag={true}
       >
-        <Background color="#ffffff" gap={16} size={1} />
+        <Background color="rgba(255,255,255,0.08)" gap={40} size={0.8} />
         <Controls showInteractive={false} />
       </ReactFlow>
     </div>
