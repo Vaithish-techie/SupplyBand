@@ -174,7 +174,7 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
                         break
                     try:
                         async with httpx.AsyncClient() as client:
-                            resp = await client.get(f"http://localhost:8000/case-status?case_id={case_id_param}")
+                            resp = await client.get(f"http://localhost:8001/case-status?case_id={case_id_param}")
                             if resp.status_code == 200:
                                 room_data = resp.json()
                                 if room_data.get("specialists_done"):
@@ -187,7 +187,7 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
                 messages = []
                 try:
                     async with httpx.AsyncClient() as client:
-                        resp = await client.get(f"http://localhost:8000/room-messages?case_id={case_id_param}")
+                        resp = await client.get(f"http://localhost:8001/room-messages?case_id={case_id_param}")
                         if resp.status_code == 200:
                             messages = resp.json().get("messages", [])
                 except Exception as e:

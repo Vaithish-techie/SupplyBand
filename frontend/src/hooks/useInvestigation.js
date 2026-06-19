@@ -21,11 +21,20 @@ export function useInvestigation(caseId) {
         if (isMounted) {
           const fetchedMsgs = (response.data.messages || []).map(m => {
             const parsed = m.parsed || {};
+            const actualParsed = parsed.parsed || parsed;
+            
+            let agentStr = actualParsed.agent || m.agent || "";
+            if (agentStr.includes("/")) {
+              agentStr = agentStr.split("/").pop();
+            }
+            agentStr = agentStr.replace(/-/g, "_");
+
             return {
               ...m,
-              ...parsed,
+              ...actualParsed,
+              agent: agentStr,
               raw_content: m.content,
-              timestamp: parsed.timestamp || m.inserted_at || new Date().toISOString()
+              timestamp: actualParsed.timestamp || m.inserted_at || new Date().toISOString()
             };
           });
           setMessages(fetchedMsgs);

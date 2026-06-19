@@ -19,7 +19,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
-from band import Agent
+from band import Agent, SessionConfig
 from band.adapters import LangGraphAdapter
 from band.config import load_agent_config
 from langchain_core.tools import tool
@@ -260,7 +260,7 @@ class CustomFinancialExposureAdapter(LangGraphAdapter):
         agent_sender = parsed_data.get('agent', '').replace('-', '_')
 
         if agent_sender == 'supplier_impact':
-            print(f"\n[DEBUG {self.name.upper()}] WAKING UP! RECEIVED DATA.\n")
+            print(f"\n[DEBUG FINANCIAL_EXPOSURE] WAKING UP! RECEIVED DATA.\n")
             case_id = parsed_data.get("case_id")
             if not case_id:
                 return {"status": "skipped"}
@@ -292,7 +292,7 @@ class CustomFinancialExposureAdapter(LangGraphAdapter):
                 
                 coord_handle = "@vaithish7/coordinator"
                 await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
-                print(f"[{self.name.upper()}] Final payload posted for {case_id}: {status}")
+                print(f"[FINANCIAL_EXPOSURE] Final payload posted for {case_id}: {status}")
             except Exception as e:
                 logger.error(f"FATAL ERROR: {e}")
                 error_envelope = {
@@ -325,7 +325,13 @@ async def main():
     )
 
     agent_id, api_key = load_agent_config("financial_exposure")
-    agent = Agent.create(adapter=adapter, agent_id=agent_id, api_key=api_key)
+    session_config = SessionConfig(enable_context_hydration=False)
+    agent = Agent.create(
+        adapter=adapter,
+        agent_id=agent_id,
+        api_key=api_key,
+        session_config=session_config,
+    )
 
     logger.info("Financial Exposure Agent running — waiting for supplier_impact post...")
     await agent.run()

@@ -1,0 +1,10 @@
+        while True:
+            supplier_impact_data = None
+            for d in all_msgs:
+                if isinstance(d, dict) and d.get("agent") == "supplier_impact" and d.get("case_id") == case_id:
+                    if d.get("status") in ("complete", "insufficient_data", "escalate", "error", "fallback"):
+                        supplier_impact_data = d
+                        break
+            
+            if supplier_impact_data:
+                break

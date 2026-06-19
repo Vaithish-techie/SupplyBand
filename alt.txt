@@ -1,0 +1,13 @@
+        while True:
+            found = set()
+            for d in all_msgs:
+                if not isinstance(d, dict):
+                    continue
+                agent_name = d.get("agent")
+                if agent_name == "supplier_impact" or agent_name == "financial_exposure" or agent_name == "regulatory_trade":
+                    if d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error", "fallback"):
+                        found.add(agent_name)
+
+            if "supplier_impact" in found and "financial_exposure" in found and "regulatory_trade" in found:
+                break
+                

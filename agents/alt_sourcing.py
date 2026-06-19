@@ -20,7 +20,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
-from band import Agent
+from band import Agent, SessionConfig
 from band.adapters import LangGraphAdapter
 from band.config import load_agent_config
 from langchain_core.tools import tool
@@ -294,7 +294,8 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
                 data = json.loads(content)
                 if isinstance(data, dict):
                     all_msgs.append(data)
-            except Exception:
+            except Exception as e:
+                logger.error(f"Error parsing timestamp {kickoff_ts}: {e}")
                 pass
 
         try:
@@ -308,18 +309,54 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
                 current_data = {}
             else:
                 all_msgs.append(current_data)
-        except Exception:
+        except Exception as e:
+                logger.error(f"Error parsing timestamp {kickoff_ts}: {e}")
             current_data = {}
 
         # --- DEPENDENCY TRIGGER PATH ---
         case_id = current_data.get("case_id")
+        if not case_id and isinstance(current_data.get("parsed"), dict):
+            case_id = current_data["parsed"].get("case_id")
+            
         if not case_id:
             for d in reversed(all_msgs):
-                if isinstance(d, dict) and d.get("case_id"):
-                    case_id = d.get("case_id")
-                    break
+                if isinstance(d, dict):
+                    found_case = d.get("case_id")
+                    if not found_case and isinstance(d.get("parsed"), dict):
+                        found_case = d["parsed"].get("case_id")
+                    if found_case:
+                        case_id = found_case
+                        break
 
         if not case_id:
+            return {"status": "skipped"}
+            
+        # Try to find a timestamp for the stale check
+        kickoff_ts = current_data.get("timestamp")
+        if not kickoff_ts:
+            if isinstance(current_data.get("parsed"), dict):
+                kickoff_ts = current_data["parsed"].get("timestamp")
+            if not kickoff_ts:
+                for d in all_msgs:
+                    if isinstance(d, dict) and d.get("case_id") == case_id and d.get("timestamp"):
+                        kickoff_ts = d.get("timestamp")
+                        break
+
+        # Skip stale kickoffs from before this process started (>5 min old)
+        if kickoff_ts:
+            try:
+                from datetime import datetime, timezone
+                kt = datetime.fromisoformat(kickoff_ts.replace("Z", "+00:00"))
+                if (datetime.now(timezone.utc) - kt).total_seconds() > 300:
+                    logger.info(f"Skipping stale case {case_id}")
+                    return {"status": "skipped"}
+            except Exception as e:
+                logger.error(f"Error parsing timestamp {kickoff_ts}: {e}")
+                pass
+        else:
+            # If we can't find a timestamp for this case, it's either malformed or very old
+            # We MUST skip it to prevent un-acked poison messages from blocking the queue
+            logger.info(f"Skipping case {case_id} because no timestamp could be found")
             return {"status": "skipped"}
 
         already_responded = any(
@@ -347,7 +384,7 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
             if "supplier_impact" in found and "financial_exposure" in found and "regulatory_trade" in found:
                 break
                 
-            logger.info(f"alt_sourcing polling... Found: {found}. Waiting for: {required_agents - found}")
+            logger.info(f"alt_sourcing polling for {case_id}... Found: {found}. Waiting for: {required_agents - found}")
             await asyncio.sleep(5)
             
             # Fetch latest history with brute-force pagination (up to 5 pages)
@@ -359,7 +396,7 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
                 async with httpx.AsyncClient() as client:
                     all_messages = []
 
-                    for page_num in range(1, 6):
+                    for page_num in range(1, 3):
                         resp = await client.get(
                             f"https://app.band.ai/api/v1/agent/chats/{room_id}/context?page={page_num}&page_size=100",
                             headers={"x-api-key": api_key}
@@ -393,7 +430,8 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
                             parsed = json.loads(content)
                             if isinstance(parsed, dict):
                                 new_msgs.append(parsed)
-                        except Exception:
+                        except Exception as e:
+                logger.error(f"Error parsing timestamp {kickoff_ts}: {e}")
                             pass
 
                     all_msgs = new_msgs
@@ -508,7 +546,13 @@ async def main():
     )
 
     agent_id, api_key = load_agent_config("alt_sourcing")
-    agent = Agent.create(adapter=adapter, agent_id=agent_id, api_key=api_key)
+    session_config = SessionConfig(enable_context_hydration=False)
+    agent = Agent.create(
+        adapter=adapter, 
+        agent_id=agent_id, 
+        api_key=api_key,
+        session_config=session_config
+    )
 
     logger.info("Alternative Sourcing Agent running — waiting for supplier_impact + financial_exposure + regulatory_trade posts...")
     await agent.run()
