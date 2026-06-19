@@ -1,0 +1,21 @@
+/* ============================================================
+   APP SHELL
+   ============================================================ */
+
+.app-container {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Screen transition wrapper */
+.screen-enter {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.screen-active {
+  opacity: 1;
+  transform: translateY(0);
+}

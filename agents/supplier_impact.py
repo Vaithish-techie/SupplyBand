@@ -117,6 +117,9 @@ def generate_mock_supplier_impact(event_findings):
             "severity": "LOW"
         }, "LOW", ["Unknown trigger location"]
 
+# Track when this agent process started — used to skip stale bootstrap messages
+AGENT_START_TIME = datetime.now(timezone.utc)
+
 class CustomSupplierImpactAdapter(LangGraphAdapter):
     async def on_message(
         self,
@@ -130,8 +133,31 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
         room_id: str,
     ) -> None:
         logger.info(f"Supplier Impact Agent received message: {msg.content[:100]}...")
+        print(f"[SUPPLIER IMPACT ENTRY] msg.parsed={getattr(msg, 'parsed', 'N/A')}")
 
-        # 1. Parse all messages in history + current
+        # --- PARSE: msg.parsed first (SDK pre-parsed), fall back to content parsing ---
+        parsed_data = getattr(msg, 'parsed', {}) or {}
+        if not isinstance(parsed_data, dict):
+            parsed_data = {}
+
+        if parsed_data:
+            current_data = parsed_data
+            print(f"[SUPPLIER IMPACT] Using msg.parsed: agent={current_data.get('agent')}, status={current_data.get('status')}")
+        else:
+            try:
+                content = msg.content
+                if content.startswith("[") and "]: " in content:
+                    content = content.split("]: ", 1)[1]
+                if "{" in content:
+                    content = content[content.find("{"):content.rfind("}")+1]
+                current_data = json.loads(content)
+                print(f"[SUPPLIER IMPACT] Parsed from content: agent={current_data.get('agent')}, status={current_data.get('status')}")
+            except Exception as e:
+                print(f"[SUPPLIER IMPACT] Failed to parse content: {e}")
+                logger.error(f"Failed to parse supplier_impact msg: {e}")
+                current_data = {}
+
+        # Also build all_msgs from history for the fallback path
         all_msgs = []
         for m in history:
             content = m.content
@@ -140,7 +166,7 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                 sender = parts[0][1:]
                 content = parts[1]
             else:
-                sender = "supplier_impact"
+                sender = "unknown"
             try:
                 if "{" in content:
                     content = content[content.find("{"):content.rfind("}")+1]
@@ -148,26 +174,79 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
             except Exception:
                 data = {}
             all_msgs.append((sender, data))
-
-        try:
-            content = msg.content
-            if content.startswith("[") and "]: " in content:
-                content = content.split("]: ", 1)[1]
-            if "{" in content:
-                content = content[content.find("{"):content.rfind("}")+1]
-            current_data = json.loads(content)
-        except Exception:
-            current_data = {}
         all_msgs.append((msg.sender_name or msg.sender_type, current_data))
 
-        # 2. Check for coordinator kickoff messages
+        # --- BULLETPROOF TRIGGER ---
+        # Trigger if payload explicitly says event_intelligence OR contains event intel keys
+        is_event_intel_trigger = (
+            current_data.get("agent") == "event_intelligence" or
+            (current_data.get("status") == "complete" and "location" in current_data.get("findings", {})) or
+            (isinstance(current_data.get("findings"), dict) and "event_type" in current_data.get("findings", {}))
+        )
+
+        if is_event_intel_trigger:
+            case_id = current_data.get("case_id")
+            findings = current_data.get("findings", current_data)
+            print(f"[SUPPLIER IMPACT] Waking up! Received data: agent={current_data.get('agent')}, case_id={case_id}")
+            logger.info(f"Direct trigger: event_intelligence for case {case_id}. Processing now.")
+
+            downstream_handles = [
+                "@vaithish7/coordinator",
+                "@sreedarsan0311/financial-exposure",
+                "@belugaok3/regulatory-agent",
+                "@sreedarsan0311/alt-sourcing",
+            ]
+
+            try:
+                res = await self.process_supplier_impact(
+                    case_id,
+                    findings,
+                    tools, msg, history, participants_msg, contacts_msg,
+                    is_session_bootstrap, room_id, downstream_handles
+                )
+                return res
+            except Exception as e:
+                print(f"SUPPLIER CRASH: {e}")
+                logger.error(f"SUPPLIER CRASH in process_supplier_impact: {e}", exc_info=True)
+                mentions_text = " ".join(downstream_handles) if downstream_handles else "@vaithish7/coordinator"
+                error_envelope = {
+                    "agent": "supplier_impact",
+                    "case_id": case_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "status": "insufficient_data",
+                    "text": f"Supplier impact analysis crashed. {mentions_text} please review.",
+                    "findings": {},
+                    "confidence": "LOW",
+                    "flags": [f"Crash: {str(e)[:200]}"]
+                }
+                try:
+                    await tools.send_message(
+                        content=json.dumps(error_envelope, indent=2),
+                        mentions=downstream_handles
+                    )
+                except Exception:
+                    pass
+                return {"status": "error"}
+        # --- HISTORY-BASED FALLBACK (for cases where history is populated) ---
+        # Check for coordinator kickoff messages present in history
         kickoffs = [data for sender, data in all_msgs if data.get("agent") == "coordinator" and data.get("phase") == "kickoff"]
-        
-        # Process each kickoff case
-        for kickoff in kickoffs:
+
+        for kickoff in reversed(kickoffs):
             case_id = kickoff.get("case_id")
             if not case_id:
                 continue
+
+            # Skip stale kickoffs from before this process started (>5 min old)
+            kickoff_ts = kickoff.get("timestamp")
+            if kickoff_ts:
+                try:
+                    kt = datetime.fromisoformat(kickoff_ts.replace("Z", "+00:00"))
+                    age_secs = (AGENT_START_TIME - kt).total_seconds()
+                    if age_secs > 300:  # 5 minutes
+                        logger.info(f"Skipping stale kickoff {case_id} (age={int(age_secs)}s > 300s)")
+                        continue
+                except Exception:
+                    pass
 
             # Check if we already responded to this case
             already_responded = False
@@ -187,12 +266,23 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                     if data.get("status") == "complete":
                         event_intel = data
                         break
-                    elif data.get("status") in ("insufficient_data", "escalate"):
+                    elif data.get("status") in ("insufficient_data", "escalate", "error"):
                         upstream_failed = True
                         break
 
+            from utils import get_room_participants
+            downstream_handles = ["@event_intelligence"]
+            try:
+                handles = await get_room_participants(room_id, "supplier_impact", participants_msg)
+                for h in handles:
+                    if "event-intelligence" in h.lower() or "event_intelligence" in h.lower():
+                        downstream_handles = [h]
+                        break
+            except Exception as e:
+                logger.error(f"Failed to fetch participants: {e}")
+
             if upstream_failed:
-                logger.warning(f"Upstream agent event_intelligence failed for case {case_id}. Posting insufficient_data immediately.")
+                logger.warning(f"Upstream agent event_intelligence failed/errored for case {case_id}. Cascading insufficient_data.")
                 response_envelope = {
                     "agent": "supplier_impact",
                     "case_id": case_id,
@@ -202,33 +292,24 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                     "confidence": "LOW",
                     "flags": ["Upstream agent event_intelligence failed. Cascading failure."]
                 }
-                if hasattr(tools, 'send_message'):
-                    tools.send_message(json.dumps(response_envelope))
+                await tools.send_message(
+                    content=json.dumps(response_envelope),
+                    mentions=downstream_handles
+                )
                 continue
 
-            try:
-                p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
-                participants_list = json.loads(p_str)
-                event_intel_handle = find_participant_handle(participants_list, "event_intelligence")
-            except Exception as e:
-                logger.error(f"Failed to parse participants_msg: {e}")
-                event_intel_handle = "@event_intelligence"
-
-            # If event_intel is found, process it!
             if event_intel:
-                logger.info(f"Trigger event_intelligence complete found for case {case_id}. Processing.")
-                await self.process_supplier_impact(case_id, event_intel.get("findings"), tools, msg, history, participants_msg, contacts_msg, is_session_bootstrap, room_id, event_intel_handle)
-                return
-
-            # If no event_intel found, check if coordinator kickoff was > 60 seconds ago
+                logger.info(f"History-based trigger: event_intelligence complete for case {case_id}. Processing.")
+                await self.process_supplier_impact(case_id, event_intel.get("findings"), tools, msg, history, participants_msg, contacts_msg, is_session_bootstrap, room_id, downstream_handles)
+                return {"status": "skipped"}
+            # No event_intel found — check timeout
             kickoff_timestamp = kickoff.get("timestamp")
             if kickoff_timestamp:
                 try:
                     kickoff_time = datetime.fromisoformat(kickoff_timestamp.replace("Z", "+00:00"))
-                    current_time = datetime.now(timezone.utc)
-                    elapsed = (current_time - kickoff_time).total_seconds()
-                    if elapsed > 60:
-                        logger.warning(f"Upstream agent event_intelligence missing after {elapsed}s (>60s) for case {case_id}. Posting insufficient_data.")
+                    elapsed = (datetime.now(timezone.utc) - kickoff_time).total_seconds()
+                    if elapsed > 120:
+                        logger.warning(f"Upstream event_intelligence missing after {elapsed}s for case {case_id}. Posting insufficient_data.")
                         response_envelope = {
                             "agent": "supplier_impact",
                             "case_id": case_id,
@@ -236,58 +317,62 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                             "status": "insufficient_data",
                             "findings": {},
                             "confidence": "LOW",
-                            "flags": [f"Upstream agent event_intelligence post missing after 60s (elapsed={int(elapsed)}s)"]
+                            "flags": [f"Upstream event_intelligence post missing after 120s timeout (elapsed={int(elapsed)}s)"]
                         }
                         await tools.send_message(
-                            content=json.dumps(response_envelope, indent=2),
-                            mentions=[event_intel_handle]
+                            content=json.dumps(response_envelope),
+                            mentions=downstream_handles
                         )
-                        return
+                        return {"status": "skipped"}
                 except Exception as ex:
                     logger.error(f"Error parsing kickoff timestamp: {ex}")
 
         import asyncio, random
-        await asyncio.sleep(0.1 + random.random() * 0.4)
+        await asyncio.sleep(0.5 + random.random() * 2.5)
+        return {"status": "skipped"}
 
-    async def process_supplier_impact(self, case_id, findings, tools, msg, history, participants_msg, contacts_msg, is_session_bootstrap, room_id, event_intel_handle):
+    async def process_supplier_impact(self, case_id, findings, tools, msg, history, participants_msg, contacts_msg, is_session_bootstrap, room_id, downstream_handles):
         # Check if suppliers.json is missing
         if not os.path.exists("data/suppliers.json"):
             logger.error("suppliers.json file is missing!")
+            mentions_text = "Supplier impact analysis failed (file missing). @sreedarsan0311/financial-exposure @belugaok3/regulatory-agent please review."
             response_envelope = {
                 "agent": "supplier_impact",
                 "case_id": case_id,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "status": "insufficient_data",
+                "text": mentions_text,
                 "findings": {},
                 "confidence": "LOW",
                 "flags": ["data/suppliers.json file is missing"]
             }
             await tools.send_message(
                 content=json.dumps(response_envelope, indent=2),
-                mentions=[event_intel_handle]
+                mentions=downstream_handles
             )
-            return
-
+            return {"status": "skipped"}
+            
         # Load suppliers
         try:
             suppliers = load_suppliers()
         except Exception as e:
             logger.error(f"Error loading suppliers: {e}")
+            mentions_text = "Supplier impact analysis failed (load error). @sreedarsan0311/financial-exposure @belugaok3/regulatory-agent please review."
             response_envelope = {
                 "agent": "supplier_impact",
                 "case_id": case_id,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "status": "insufficient_data",
+                "text": mentions_text,
                 "findings": {},
                 "confidence": "LOW",
                 "flags": [f"Error loading data/suppliers.json: {str(e)}"]
             }
             await tools.send_message(
                 content=json.dumps(response_envelope, indent=2),
-                mentions=[event_intel_handle]
+                mentions=downstream_handles
             )
-            return
-
+            return {"status": "skipped"}
         # Determine mode
         api_key = os.getenv("FEATHERLESS_API_KEY")
         use_mock = not api_key or api_key.startswith("your_") or api_key == "key-from-band-dashboard"
@@ -296,59 +381,95 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
             logger.info("Running in Mock Fallback Mode")
             impact_findings, confidence, flags = generate_mock_supplier_impact(findings)
             
+            mention_text = "Supplier impact complete. @sreedarsan0311/financial-exposure @belugaok3/regulatory-agent please review."
+            mentions_list = ["@sreedarsan0311/financial-exposure", "@belugaok3/regulatory-agent"]
+            
             response_envelope = {
                 "agent": "supplier_impact",
                 "case_id": case_id,
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 "status": "complete",
+                "text": mention_text,
                 "findings": impact_findings,
                 "confidence": confidence,
                 "flags": flags
             }
+            
             await tools.send_message(
                 content=json.dumps(response_envelope, indent=2),
-                mentions=[event_intel_handle]
+                mentions=downstream_handles
             )
             logger.info("Mock supplier impact posted successfully.")
-            return
-
-        logger.info("Running in LLM Mode")
-        try:
-            # Let LLM handle it, we call super
-            # First, check if LLM call succeeds, retry once on error
-            retries = 1
-            while retries >= 0:
-                try:
-                    await super().on_message(
-                        msg=msg,
-                        tools=tools,
-                        history=history,
-                        participants_msg=participants_msg,
-                        contacts_msg=contacts_msg,
-                        is_session_bootstrap=is_session_bootstrap,
-                        room_id=room_id
-                    )
-                    break
-                except Exception as ex:
-                    logger.warning(f"LLM call failed (retries left={retries}): {ex}")
-                    retries -= 1
-                    if retries < 0:
-                        raise ex
-        except Exception as e:
-            logger.error(f"Error executing LLM call, posting insufficient_data: {e}")
-            response_envelope = {
+            return {
                 "agent": "supplier_impact",
-                "case_id": case_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "status": "error",
-                "findings": {},
-                "confidence": "LOW",
-                "flags": [f"LLM analysis failed: {str(e)}"]
+                "status": "complete",
+                "text": mention_text,
+                "mentions": mentions_list,
+                "parsed": response_envelope
             }
-            await tools.send_message(
-                content=json.dumps(response_envelope, indent=2),
-                mentions=[event_intel_handle]
-            )
+        logger.info("Running in LLM Mode — direct structured call")
+        from langchain_core.messages import SystemMessage, HumanMessage
+        llm = get_llm_for_agent("supplier_impact").bind(response_format={"type": "json_object"})
+        suppliers_json = json.dumps(suppliers, indent=2)
+        system_prompt = SUPPLIER_IMPACT_PROMPT_TEMPLATE.format(suppliers_json=suppliers_json)
+        user_content = (
+            f"Event Intelligence findings for {case_id}:\n"
+            f"{json.dumps(findings, indent=2)}\n\n"
+            "Analyze the supplier database and output ONLY a raw JSON object (no markdown) with keys: "
+            "affected_tier1, affected_tier2, critical_path_suppliers, affected_components, "
+            "inventory_buffer_days, severity, confidence, flags."
+        )
+        try:
+            result = await llm.ainvoke([
+                SystemMessage(content=system_prompt),
+                HumanMessage(content=user_content)
+            ])
+            raw = result.content
+            if "```json" in raw:
+                raw = raw.split("```json")[1].split("```")[0]
+            llm_data = json.loads(raw)
+            impact_findings = {
+                "affected_tier1": llm_data.get("affected_tier1", 0),
+                "affected_tier2": llm_data.get("affected_tier2", 0),
+                "critical_path_suppliers": llm_data.get("critical_path_suppliers", []),
+                "affected_components": llm_data.get("affected_components", []),
+                "inventory_buffer_days": llm_data.get("inventory_buffer_days", 30),
+                "severity": llm_data.get("severity", "LOW"),
+            }
+            confidence = llm_data.get("confidence", "MEDIUM")
+            flags = llm_data.get("flags", [])
+        except Exception as e:
+            logger.warning(f"LLM parse failed ({e}), falling back to mock")
+            impact_findings, confidence, flags = generate_mock_supplier_impact(findings)
+
+        mention_text = "Supplier impact complete. @sreedarsan0311/financial-exposure @belugaok3/regulatory-agent please review."
+        mentions_list = ["@sreedarsan0311/financial-exposure", "@belugaok3/regulatory-agent"]
+        
+        response_envelope = {
+            "agent": "supplier_impact",
+            "case_id": case_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "status": "complete",
+            "text": mention_text,
+            "findings": impact_findings,
+            "confidence": confidence,
+            "flags": flags
+        }
+        
+        # We also still send manually just in case, but using the updated text
+        await tools.send_message(
+            content=json.dumps(response_envelope, indent=2),
+            mentions=downstream_handles
+        )
+        logger.info("LLM supplier impact posted successfully.")
+        
+        return {
+            "agent": "supplier_impact",
+            "status": "complete",
+            "text": mention_text,
+            "mentions": mentions_list,
+            "parsed": response_envelope
+        }
 
 async def main():
     load_dotenv()

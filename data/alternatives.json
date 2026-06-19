@@ -1,54 +1,94 @@
 {
   "alternatives": [
     {
-      "component": "A100 chips",
+      "component": "A100 AI Chips",
       "suppliers": [
         {
-          "name": "Samsung Austin",
+          "name": "Samsung Austin (Texas, USA)",
+          "cost_delta_pct": 18.0,
+          "lead_time_days": 12,
+          "risk_level": "LOW",
+          "regulatory_flags": ["US Domestic Fab - Safe Regulatory Profile"]
+        },
+        {
+          "name": "Intel Foundry (Arizona, USA)",
+          "cost_delta_pct": 25.0,
+          "lead_time_days": 20,
+          "risk_level": "LOW",
+          "regulatory_flags": ["US Domestic Fab - Safe Regulatory Profile"]
+        }
+      ]
+    },
+    {
+      "component": "Lithium-Ion Cells",
+      "suppliers": [
+        {
+          "name": "LG Chem (South Korea)",
+          "cost_delta_pct": 15.0,
+          "lead_time_days": 14,
+          "risk_level": "LOW",
+          "regulatory_flags": ["No Section 301 Tariffs"]
+        },
+        {
+          "name": "Panasonic (Nevada, USA)",
+          "cost_delta_pct": 22.0,
+          "lead_time_days": 10,
+          "risk_level": "LOW",
+          "regulatory_flags": ["US Domestic - Safe"]
+        }
+      ]
+    },
+    {
+      "component": "Consumer Electronics Assembly",
+      "suppliers": [
+        {
+          "name": "Tata Electronics (Pune, India)",
           "cost_delta_pct": 12.0,
-          "lead_time_days": 8,
+          "lead_time_days": 15,
+          "risk_level": "LOW",
+          "regulatory_flags": ["Safe regulatory profile, bypasses China tariffs"]
+        },
+        {
+          "name": "Wistron InfoComm (Ho Chi Minh City, Vietnam)",
+          "cost_delta_pct": 8.0,
+          "lead_time_days": 18,
+          "risk_level": "MEDIUM",
+          "regulatory_flags": ["Southeast Asia trade pact compliance"]
+        }
+      ]
+    },
+    {
+      "component": "Automotive ECUs",
+      "suppliers": [
+        {
+          "name": "Denso (Japan)",
+          "cost_delta_pct": 10.0,
+          "lead_time_days": 21,
           "risk_level": "LOW",
           "regulatory_flags": []
         },
         {
-          "name": "Intel Foundry",
+          "name": "Continental (Mexico)",
+          "cost_delta_pct": 14.0,
+          "lead_time_days": 12,
+          "risk_level": "LOW",
+          "regulatory_flags": ["USMCA trade agreement benefits"]
+        }
+      ]
+    },
+    {
+      "component": "European Logistics Routing",
+      "suppliers": [
+        {
+          "name": "Port of Antwerp (Belgium)",
           "cost_delta_pct": 20.0,
-          "lead_time_days": 15,
+          "lead_time_days": 4,
           "risk_level": "MEDIUM",
-          "regulatory_flags": []
-        }
-      ]
-    },
-    {
-      "component": "H100 chips",
-      "suppliers": [
+          "regulatory_flags": ["Subject to EU overflow congestion regulations"]
+        },
         {
-          "name": "Samsung Austin",
-          "cost_delta_pct": 15.0,
-          "lead_time_days": 10,
-          "risk_level": "LOW",
-          "regulatory_flags": []
-        }
-      ]
-    },
-    {
-      "component": "chip packaging",
-      "suppliers": [
-        {
-          "name": "Amkor Technology",
-          "cost_delta_pct": 5.0,
-          "lead_time_days": 7,
-          "risk_level": "LOW",
-          "regulatory_flags": []
-        }
-      ]
-    },
-    {
-      "component": "NAND flash",
-      "suppliers": [
-        {
-          "name": "Micron",
-          "cost_delta_pct": 8.0,
+          "name": "Port of Hamburg (Germany)",
+          "cost_delta_pct": 25.0,
           "lead_time_days": 5,
           "risk_level": "LOW",
           "regulatory_flags": []
@@ -56,14 +96,21 @@
       ]
     },
     {
-      "component": "legacy nodes chips",
+      "component": "Asia-Europe Shipping",
       "suppliers": [
         {
-          "name": "GlobalFoundries",
-          "cost_delta_pct": 10.0,
-          "lead_time_days": 12,
+          "name": "Cape of Good Hope Routing (Vessel Reroute)",
+          "cost_delta_pct": 35.0,
+          "lead_time_days": 14,
           "risk_level": "LOW",
-          "regulatory_flags": []
+          "regulatory_flags": ["Increased emissions compliance costs"]
+        },
+        {
+          "name": "Air Freight Transcontinental",
+          "cost_delta_pct": 350.0,
+          "lead_time_days": 2,
+          "risk_level": "MEDIUM",
+          "regulatory_flags": ["Strict hazardous material (battery) air bans"]
         }
       ]
     }

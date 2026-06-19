@@ -1,0 +1,237 @@
+/* ============================================================
+   EXECUTIVE BRIEF SCREEN — Premium Layout
+   ============================================================ */
+
+.brief-screen {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-2xl) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  width: 100%;
+}
+
+.brief-loading,
+.brief-error {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+}
+
+/* ── Header ── */
+
+.brief-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding-bottom: var(--space-xl);
+  border-bottom: 1px solid var(--color-rule);
+}
+
+.brief-header__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brief-header h1 {
+  font-family: var(--font-display);
+  font-size: var(--size-display-md);
+  font-weight: 600;
+  letter-spacing: var(--tracking-display);
+  line-height: 1.1;
+}
+
+.brief-header__verdict {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+/* ── Bento Grid ── */
+
+.brief-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+/* Situation overview — spans 2 cols */
+.brief-main {
+  grid-column: span 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.brief-section-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.brief-section-header h2 {
+  font-family: var(--font-display);
+  font-size: var(--size-subheading);
+  font-weight: 500;
+}
+
+.brief-summary {
+  font-size: var(--size-body);
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+  max-width: 65ch;
+}
+
+/* Actions panel */
+.brief-actions {
+  grid-column: span 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.brief-card-label {
+  font-family: var(--font-mono);
+  font-size: var(--size-micro);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  margin-bottom: var(--space-xs);
+}
+
+.brief-action-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.brief-action-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  font-size: var(--size-small);
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-sm);
+  border-left: 2px solid var(--color-accent);
+}
+
+/* Metric cards */
+.brief-metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.brief-metric__icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-accent-dim);
+  border: 1px solid rgba(200, 255, 0, 0.12);
+  border-radius: var(--radius-sm);
+  color: var(--color-accent);
+}
+
+.brief-metric__value {
+  font-size: var(--size-small);
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+}
+
+/* Alternatives list */
+.brief-alternatives {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.brief-alt-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-sm);
+  font-size: var(--size-small);
+}
+
+/* ── Decision Footer ── */
+
+.brief-footer {
+  margin-top: var(--space-md);
+}
+
+.brief-decision-done {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-sm) 0;
+}
+
+.brief-decision-done h3 {
+  font-family: var(--font-display);
+  font-size: var(--size-body);
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.brief-decision-pending {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.brief-decision-buttons {
+  display: flex;
+  gap: var(--space-md);
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 1024px) {
+  .brief-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .brief-main {
+    grid-column: span 2;
+  }
+
+  .brief-actions {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 768px) {
+  .brief-screen {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .brief-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .brief-main,
+  .brief-actions {
+    grid-column: span 1;
+  }
+
+  .brief-decision-buttons {
+    flex-direction: column;
+  }
+
+  .brief-header h1 {
+    font-size: clamp(24px, 6vw, 36px);
+  }
+}

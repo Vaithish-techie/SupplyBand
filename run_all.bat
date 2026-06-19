@@ -35,6 +35,6 @@ echo    Press Ctrl+C in this terminal window to stop all components.
 echo ====================================================================
 echo.
 
-uvicorn backend:app --reload --port 8000
+uvicorn backend:app --reload --port 8001
 
 endlocal

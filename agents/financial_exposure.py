@@ -29,6 +29,9 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [financial_exposure] %(message)s")
 logger = logging.getLogger(__name__)
 
+# Track when this agent process started — skip stale bootstrap messages
+AGENT_START_TIME = datetime.now(timezone.utc)
+
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
@@ -99,18 +102,19 @@ def calculate_financial_exposure(affected_components: list[str], financials: lis
 
     # Build a lookup by component_name (case-insensitive, partial match allowed)
     def find_component(name: str) -> dict | None:
-        name_lower = name.lower()
+        name_lower = name.lower().strip()
         for comp in financials:
-            if comp["component_name"].lower() == name_lower:
+            if comp.get("component_name", "").lower().strip() == name_lower:
                 return comp
         # fallback: partial match
         for comp in financials:
-            if name_lower in comp["component_name"].lower() or comp["component_name"].lower() in name_lower:
+            comp_name_lower = comp.get("component_name", "").lower().strip()
+            if name_lower in comp_name_lower or comp_name_lower in name_lower:
                 return comp
         return None
 
     # Total daily revenue at risk (all affected components whose buffer < scenario_days)
-    total_daily_revenue = sum(c["revenue_contribution_usd_per_day"] for c in financials)
+    total_daily_revenue = sum(float(c.get("revenue_contribution_usd_per_day") or 0) for c in financials)
 
     matched_components = []
     for comp_name in affected_components:
@@ -135,8 +139,8 @@ def calculate_financial_exposure(affected_components: list[str], financials: lis
         }
 
     for comp in matched_components:
-        buffer = comp["inventory_buffer_days"]
-        daily_cost = comp["daily_cost_of_shortage_usd"]
+        buffer = int(comp.get("inventory_buffer_days") or 30)
+        daily_cost = float(comp.get("daily_cost_of_shortage_usd") or 0)
 
         # Week 1 (7 days): shortage only accrues after buffer exhausted
         shortage_days_w1 = max(0, 7 - buffer)
@@ -151,7 +155,7 @@ def calculate_financial_exposure(affected_components: list[str], financials: lis
         week6_risk += daily_cost * shortage_days_w6
 
     # Margin impact: estimated as % of total daily revenue that is at risk by week6
-    affected_daily_revenue = sum(c["revenue_contribution_usd_per_day"] for c in matched_components)
+    affected_daily_revenue = sum(float(c.get("revenue_contribution_usd_per_day") or 0) for c in matched_components)
     margin_impact_pct = round((affected_daily_revenue / total_daily_revenue) * 100, 1) if total_daily_revenue else 0.0
 
     return {
@@ -235,87 +239,74 @@ class CustomFinancialExposureAdapter(LangGraphAdapter):
         is_session_bootstrap: bool,
         room_id: str,
     ) -> None:
-        logger.info(f"Financial Exposure Agent received message: {msg.content[:100]}...")
-        
-        # Parse all messages in history to check state
-        all_msgs = []
-        for m in history:
-            content = m.content
-            if content.startswith("[") and "]: " in content:
-                content = content.split("]: ", 1)[1]
+        # Try msg.parsed first; fall back to parsing raw msg.content
+        parsed_data = getattr(msg, 'parsed', {}) or {}
+        if not parsed_data:
             try:
-                if "{" in content:
-                    content = content[content.find("{"):content.rfind("}")+1]
-                data = json.loads(content)
-                all_msgs.append(data)
+                raw = getattr(msg, 'content', '') or ''
+                if raw.startswith('[') and ']: ' in raw:
+                    raw = raw.split(']: ', 1)[1]
+                if '{' in raw:
+                    raw = raw[raw.find('{'):raw.rfind('}')+1]
+                parsed_data = json.loads(raw) if raw else {}
+                if not isinstance(parsed_data, dict):
+                    parsed_data = {}
             except Exception:
-                pass
-                
-        try:
-            content = msg.content
-            if content.startswith("[") and "]: " in content:
-                content = content.split("]: ", 1)[1]
-            if "{" in content:
-                content = content[content.find("{"):content.rfind("}")+1]
-            current_data = json.loads(content)
-            all_msgs.append(current_data)
-        except Exception:
-            current_data = {}
-            
-        case_id = current_data.get("case_id")
-        if not case_id:
-            for d in reversed(all_msgs):
-                if d.get("case_id"):
-                    case_id = d.get("case_id")
-                    break
-                    
-        if not case_id:
-            import asyncio, random
-            await asyncio.sleep(0.1 + random.random() * 0.4)
-            return
+                parsed_data = {}
 
-        # Check if already responded
-        already_responded = any(d.get("agent") == "financial_exposure" and d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error") for d in all_msgs)
-        if already_responded:
-            import asyncio, random
-            await asyncio.sleep(0.1 + random.random() * 0.4)
-            return
+        print(f"\n[DEBUG FINANCIAL_EXPOSURE] on_message fired. parsed agent={parsed_data.get('agent','?')} status={parsed_data.get('status','?')}\n")
 
-        # Check for supplier_impact completion or failure
-        supplier_impact_post = None
-        for d in all_msgs:
-            if d.get("agent") == "supplier_impact" and d.get("case_id") == case_id:
-                supplier_impact_post = d
-                break
+        # Normalize hyphens to underscores to guarantee a match
+        agent_sender = parsed_data.get('agent', '').replace('-', '_')
+
+        if agent_sender == 'supplier_impact':
+            print(f"\n[DEBUG {self.name.upper()}] WAKING UP! RECEIVED DATA.\n")
+            case_id = parsed_data.get("case_id")
+            if not case_id:
+                return {"status": "skipped"}
                 
-        if not supplier_impact_post:
-            import asyncio, random
-            await asyncio.sleep(0.1 + random.random() * 0.4)
-            return
-            
-        logger.info(f"Supplier impact post found for case {case_id}. Triggering LLM logic.")
-        try:
-            await super().on_message(msg, tools, history, participants_msg, contacts_msg, is_session_bootstrap=is_session_bootstrap, room_id=room_id)
-        except Exception as e:
-            logger.error(f"Terminal LLM failure: {e}")
-            from datetime import datetime, timezone
-            response = {
-                "agent": "financial_exposure",
-                "case_id": case_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
-                "status": "error",
-                "findings": {},
-                "confidence": "LOW",
-                "flags": [f"Terminal LLM failure: {str(e)}"]
-            }
-            if hasattr(tools, 'send_message'):
-                try:
-                    p_str = participants_msg if isinstance(participants_msg, str) else getattr(participants_msg, "content", "[]")
-                    participants_list = json.loads(p_str)
-                    coord_handle = next((p.get("handle") for p in participants_list if "coordinator" in p.get("handle", "").lower()), "@coordinator")
-                except:
-                    coord_handle = "@coordinator"
-                await tools.send_message(content=json.dumps(response), mentions=[coord_handle])
+            try:
+                sup_status = parsed_data.get("status")
+                affected_components = (parsed_data.get("findings") or {}).get("affected_components", [])
+
+                if sup_status in ("insufficient_data", "escalate", "error", "fallback") or not affected_components:
+                    findings = {"week1_risk_usd": 0, "week3_risk_usd": 0, "week6_risk_usd": 0,
+                                "revenue_at_risk_products": [], "margin_impact_pct": 0.0}
+                    status = "insufficient_data"
+                    flags = ["Upstream supplier_impact failure or no components"]
+                else:
+                    financials = load_financials()
+                    findings = calculate_financial_exposure(affected_components, financials)
+                    status = "complete"
+                    flags = []
+
+                envelope = {
+                    "agent": "financial_exposure",
+                    "case_id": case_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "status": status,
+                    "findings": findings,
+                    "confidence": "HIGH" if status == "complete" else "LOW",
+                    "flags": flags
+                }
+                
+                coord_handle = "@vaithish7/coordinator"
+                await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
+                print(f"[{self.name.upper()}] Final payload posted for {case_id}: {status}")
+            except Exception as e:
+                logger.error(f"FATAL ERROR: {e}")
+                error_envelope = {
+                    "agent": "financial_exposure",
+                    "case_id": case_id,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "status": "error",
+                    "findings": {},
+                    "confidence": "LOW",
+                    "flags": [f"Crash: {str(e)[:100]}"]
+                }
+                await tools.send_message(content=json.dumps(error_envelope, indent=2), mentions=["@vaithish7/coordinator"])
+        
+        return {"status": "skipped"}
 
 async def main():
     load_dotenv()

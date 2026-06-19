@@ -1,22 +1,39 @@
 {
   "countries": {
     "Taiwan": {
-      "force_majeure_clause": "applicable for natural disasters",
-      "insurer_notification_deadline_hours": 72,
-      "export_controls": ["EAR99"],
+      "force_majeure_clause": "Fully applicable for natural disasters (e.g. earthquake) and extreme weather. Notification required within 48 hours.",
+      "insurer_notification_deadline_hours": 48,
+      "cyberattack_notification_hours": 72,
+      "export_controls": ["EAR99", "Advanced Semiconductor Restrictions"],
       "tariffs": "none"
     },
     "USA": {
-      "force_majeure_clause": "applicable for labor disputes/strikes",
+      "force_majeure_clause": "Applicable for severe natural disasters, cyberattacks, and prolonged labor strikes.",
       "insurer_notification_deadline_hours": 48,
-      "export_controls": ["EAR99", "ITAR"],
+      "cyberattack_notification_hours": 72,
+      "export_controls": ["EAR99", "ITAR", "AI Chip Export Bans"],
       "tariffs": "minor"
     },
     "China": {
-      "force_majeure_clause": "not applicable for unilateral sanctions",
+      "force_majeure_clause": "Not applicable for unilateral US sanctions or politically driven export controls.",
       "insurer_notification_deadline_hours": 96,
-      "export_controls": ["EAR99", "Entity List"],
-      "tariffs": "major"
+      "cyberattack_notification_hours": 72,
+      "export_controls": ["Entity List", "Military End User Restrictions"],
+      "tariffs": "major (Section 301 tariffs apply to technology/components)"
+    },
+    "Netherlands": {
+      "force_majeure_clause": "Applicable for port strikes, blockades, and coordinated logistics cyberattacks.",
+      "insurer_notification_deadline_hours": 72,
+      "cyberattack_notification_hours": 72,
+      "export_controls": ["EU Dual-Use Regulation"],
+      "tariffs": "none"
+    },
+    "Egypt": {
+      "force_majeure_clause": "Applicable for geopolitical conflict, blockades, and acts of war/piracy in the Red Sea.",
+      "insurer_notification_deadline_hours": 48,
+      "cyberattack_notification_hours": 72,
+      "export_controls": ["Standard"],
+      "tariffs": "minor"
     }
   }
 }
