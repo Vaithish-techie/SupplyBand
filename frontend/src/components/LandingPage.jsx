@@ -40,7 +40,7 @@ export default function LandingPage({ onTrigger, isSubmitting, error }) {
             className="glass-button danger small"
             onClick={async () => {
               try {
-                await axios.post('http://localhost:8000/nuke');
+                await axios.post(`${import.meta.env.VITE_API_BASE ?? '/api'}/nuke`);
                 alert('State cleared.');
               } catch {
                 alert('Failed to clear backend state.');

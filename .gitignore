@@ -4,3 +4,5 @@ venv/
 TEST_RESULTS.md
 __pycache__/
 .agents/
+frontend/.env.local
+frontend/.env.*.local

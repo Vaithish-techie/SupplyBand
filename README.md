@@ -1,23 +1,54 @@
-# SupplyBand
+---
+title: SupplyBand — Supply Chain Disruption Intelligence Center
+emoji: 🚨
+colorFrom: indigo
+colorTo: purple
+sdk: docker
+pinned: false
+app_port: 7860
+---
 
-A multi-agent orchestration tool using Band to resolve supply chain disruptions and trade compliance.
+# SupplyBand · Supply Chain Disruption Intelligence Center
 
-## Agent LLM Configuration
+A multi-agent system that analyses supply chain disruptions in real time using six Band AI agents orchestrated by a coordinator.
 
-The system uses a heterogeneous LLM architecture optimized for reasoning strength vs. task efficiency:
+## Required Secrets (set in Space Settings → Secrets)
 
-*   **Coordinator** (`coordinator.py`): Claude Sonnet via AI/ML API (needs strongest reasoning)
-*   **Event Intelligence** (`event_intelligence.py`): Claude Sonnet via AI/ML API (classification needs nuance)
-*   **Supplier Impact** (`supplier_impact.py`): Llama 3.1 70B via Featherless API (structured lookup task)
-*   **Financial Exposure** (`financial_exposure.py`): Llama 3.1 70B via Featherless API (calculation task)
-*   **Regulatory & Trade** (`regulatory_trade.py`): Claude Sonnet via AI/ML API (needs nuance for legal language)
-*   **Alt Sourcing** (`alt_sourcing.py`): Llama 3.1 70B via Featherless API (ranking/matching task)
+| Secret | Description |
+|---|---|
+| `BAND_COORDINATOR_API_KEY` | Coordinator agent Band API key |
+| `AIML_API_KEY` | AI/ML API key (Claude Sonnet agents) |
+| `FEATHERLESS_API_KEY` | Featherless API key (Llama 3.1 70B agents) |
 
-## Environment Setup
+> If you prefer to mount `agent_config.yaml` directly, see the Dockerfile for the expected path (`/app/agent_config.yaml`).
 
-Create a `.env` file in the root directory and configure the following keys:
+## Architecture
 
-```env
-AIML_API_KEY=your_aiml_api_key
-FEATHERLESS_API_KEY=your_featherless_api_key
+- **Port 7860**: Nginx serves the React SPA and proxies `/api/*` to FastAPI
+- **Port 8000** (internal): FastAPI backend bridge to the Band room
+- All six Band agents run as supervised background processes inside the same container
+
+## Local development
+
+```bash
+# Backend
+pip install -r requirements.txt
+uvicorn backend:app --reload --port 8000
+
+# Frontend (separate terminal)
+cd frontend
+npm install
+npm run dev          # VITE_API_BASE=http://localhost:8000 is set in .env.local
+```
+
+## Docker (local)
+
+```bash
+docker build -t supplyband .
+docker run -p 7860:7860 \
+  -e BAND_COORDINATOR_API_KEY=<your-key> \
+  -e AIML_API_KEY=<your-key> \
+  -e FEATHERLESS_API_KEY=<your-key> \
+  supplyband
+# Open http://localhost:7860
 ```

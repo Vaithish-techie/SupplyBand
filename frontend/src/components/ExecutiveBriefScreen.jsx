@@ -12,7 +12,7 @@ import {
 } from 'recharts';
 import './ExecutiveBriefScreen.css';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE ?? '/api';
 
 /* ── custom recharts tooltip ── */
 const DarkTooltip = ({ active, payload, label, formatter }) => {

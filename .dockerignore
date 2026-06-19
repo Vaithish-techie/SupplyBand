@@ -1,0 +1,29 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# ── Node ──────────────────────────────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+
+# ── Secrets / local config ────────────────────────────────────────────────────
+.env
+agent_config.yaml
+frontend/.env.local
+frontend/.env.*.local
+
+# ── Git / IDE ─────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+.agents/
+*.md
+!README.md
+
+# ── Logs / test artifacts ─────────────────────────────────────────────────────
+*.log
+TEST_RESULTS.md

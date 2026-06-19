@@ -5,7 +5,7 @@ import InvestigationScreen from './components/InvestigationScreen';
 import ExecutiveBriefScreen from './components/ExecutiveBriefScreen';
 import './App.css';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = import.meta.env.VITE_API_BASE ?? '/api';
 
 import LandingPage from './components/LandingPage';
 
