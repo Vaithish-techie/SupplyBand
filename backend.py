@@ -471,3 +471,14 @@ async def approve_action(req: ApproveActionRequest):
         "logged": True,
         "decided_at": ACTIVE_CASES[req.case_id]["decided_at"],
     }
+
+
+@app.post("/nuke")
+async def nuke_cases():
+    """
+    Clears all active cases from memory.
+    This acts as a 'Nuke Button' to clean up the demo state.
+    """
+    ACTIVE_CASES.clear()
+    logger.info("Nuke Button triggered! Cleared all ACTIVE_CASES.")
+    return {"status": "ok", "message": "All cases cleared"}

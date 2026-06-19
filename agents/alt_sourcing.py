@@ -20,7 +20,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
-from band import Agent
+from band import Agent, SessionConfig
 from band.adapters import LangGraphAdapter
 from band.config import load_agent_config
 from langchain_core.tools import tool
@@ -339,68 +339,56 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
         required_agents = {"supplier_impact", "financial_exposure", "regulatory_trade"}
         found = {}
 
-        # Poll room context via REST API for up to 60 seconds (15 attempts * 4s sleep)
-        # IMPORTANT: paginate through ALL pages — room may have 100+ messages across many pages
-        for attempt in range(15):
-            all_msgs = []
-            try:
-                import httpx
-                headers = {"x-api-key": self.api_key}
-                async with httpx.AsyncClient() as client:
-                    page = 1
-                    while page <= 20:  # safety cap
-                        resp = await client.get(
-                            f"https://app.band.ai/api/v1/agent/chats/{room_id}/context",
-                            headers=headers,
-                            params={"page": page, "page_size": 100},
-                            timeout=10
-                        )
-                        if resp.status_code != 200:
-                            break
-                        data = resp.json()
-                        page_msgs = data.get("data", data if isinstance(data, list) else [])
-                        if not page_msgs:
-                            break
-                        for m in page_msgs:
-                            content = m.get("content", "")
-                            if content.startswith("[") and "]: " in content:
-                                content = content.split("]: ", 1)[1]
-                            if "{" in content:
-                                content = content[content.find("{"):content.rfind("}")+1]
-                            try:
-                                parsed_m = json.loads(content)
-                                if isinstance(parsed_m, dict):
-                                    all_msgs.append(parsed_m)
-                            except Exception:
-                                pass
-                        if len(page_msgs) < 100:
-                            break  # last page
-                        page += 1
-                logger.info(f"alt_sourcing polled {len(all_msgs)} messages across {page} page(s) for {case_id}")
-            except Exception as e:
-                logger.warning(f"Error polling room messages: {e}")
+        # Fetch room context via REST API ONLY ONCE per incoming message
+        try:
+            import httpx
+            headers = {"x-api-key": self.api_key}
+            async with httpx.AsyncClient() as client:
+                page = 1
+                while page <= 10:  # safety cap
+                    resp = await client.get(
+                        f"https://app.band.ai/api/v1/agent/chats/{room_id}/context",
+                        headers=headers,
+                        params={"page": page, "page_size": 100},
+                        timeout=10
+                    )
+                    if resp.status_code != 200:
+                        break
+                    data = resp.json()
+                    page_msgs = data.get("data", data if isinstance(data, list) else [])
+                    if not page_msgs:
+                        break
+                    for m in page_msgs:
+                        content = m.get("content", "")
+                        if content.startswith("[") and "]: " in content:
+                            content = content.split("]: ", 1)[1]
+                        if "{" in content:
+                            content = content[content.find("{"):content.rfind("}")+1]
+                        try:
+                            parsed_m = json.loads(content)
+                            if isinstance(parsed_m, dict):
+                                all_msgs.append(parsed_m)
+                        except Exception:
+                            pass
+                    if len(page_msgs) < 100:
+                        break  # last page
+                    page += 1
+            logger.info(f"alt_sourcing checked context: fetched {len(all_msgs)} total messages across {page} page(s) for {case_id}")
+        except Exception as e:
+            logger.warning(f"Error checking room messages: {e}")
 
-            # Check if required agents have posted
-            found = {}
-            for d in all_msgs:
-                if not isinstance(d, dict):
-                    continue
-                agent_name = d.get("agent")
-                if agent_name in required_agents:
-                    if d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error", "fallback"):
-                        found[agent_name] = d
-
-            if len(found) == 3:
-                logger.info(f"All prerequisites found for case {case_id} after {attempt * 4} seconds!")
-                break
-
-            logger.info(f"alt_sourcing waiting (attempt {attempt+1}/15)... Found {list(found.keys())} for {case_id}. Missing: {required_agents - set(found.keys())}")
-            await asyncio.sleep(4)
+        # Check if required agents have posted
+        for d in all_msgs:
+            if not isinstance(d, dict):
+                continue
+            agent_name = d.get("agent")
+            if agent_name in required_agents:
+                if d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error", "fallback"):
+                    found[agent_name] = d
 
         if len(found) < 3:
-            logger.warning(f"alt_sourcing timed out waiting for prerequisites for {case_id}. Found: {list(found.keys())}")
-            if "supplier_impact" not in found:
-                return {"status": "skipped"}
+            logger.info(f"alt_sourcing skipping... Found {list(found.keys())} for {case_id}. Missing: {required_agents - set(found.keys())}")
+            return {"status": "skipped"}
 
         logger.info(f"All prerequisites found for case {case_id}. Triggering alt_sourcing logic.")
 
@@ -506,7 +494,9 @@ async def main():
         api_key=api_key,
     )
 
-    agent = Agent.create(adapter=adapter, agent_id=agent_id, api_key=api_key)
+    session_config = SessionConfig(enable_context_hydration=False)
+    agent = Agent.create(
+        session_config=session_config,adapter=adapter, agent_id=agent_id, api_key=api_key)
 
     logger.info("Alternative Sourcing Agent running...")
     await agent.run()

@@ -7,7 +7,7 @@ import os
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
-from band import Agent
+from band import Agent, SessionConfig
 from band.adapters import LangGraphAdapter
 from band.config import load_agent_config
 import httpx
@@ -263,7 +263,9 @@ async def main():
     )
 
     agent_id, api_key = load_agent_config("coordinator")
-    agent = Agent.create(adapter=adapter, agent_id=agent_id, api_key=api_key)
+    session_config = SessionConfig(enable_context_hydration=False)
+    agent = Agent.create(
+        session_config=session_config,adapter=adapter, agent_id=agent_id, api_key=api_key)
 
     logger.info("Coordinator Agent running...")
     await agent.run()

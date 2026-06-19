@@ -148,20 +148,39 @@ class CustomRegulatoryTradeAdapter(LangGraphAdapter):
                     # Determine regulatory findings based on event type / location
                     event_type = ""
                     location = ""
-                    for d in history:
-                        content = d.content
-                        if content.startswith("[") and "]: " in content:
-                            content = content.split("]: ", 1)[1]
-                        if "{" in content:
-                            content = content[content.find("{"):content.rfind("}")+1]
-                        try:
-                            parsed_d = json.loads(content)
-                            if isinstance(parsed_d, dict) and parsed_d.get("agent") == "event_intelligence" and parsed_d.get("case_id") == case_id:
-                                event_type = (parsed_d.get("findings") or {}).get("event_type", "")
-                                location = (parsed_d.get("findings") or {}).get("location", "")
+                    
+                    import httpx
+                    
+                    
+                    found_ei = False
+                    async with httpx.AsyncClient() as client:
+                        url = f"https://app.band.ai/api/v1/agent/chats/{room_id}/context"
+                        for page in range(1, 10): # Look back up to 10 pages
+                            try:
+                                resp = await client.get(url, headers={"x-api-key": getattr(self, "api_key", "")}, params={"page": page, "page_size": 100})
+                                if resp.status_code == 200:
+                                    msgs = resp.json().get("data", [])
+                                    if not msgs: break
+                                    for m in msgs:
+                                        content = m.get("content", "")
+                                        if isinstance(content, str) and content.startswith("[") and "]: " in content:
+                                            content = content.split("]: ", 1)[1]
+                                        if isinstance(content, str) and "{" in content:
+                                            content = content[content.find("{"):content.rfind("}")+1]
+                                        try:
+                                            parsed_d = json.loads(content) if isinstance(content, str) else content
+                                            if isinstance(parsed_d, dict) and parsed_d.get("agent") == "event_intelligence" and parsed_d.get("case_id") == case_id:
+                                                event_type = (parsed_d.get("findings") or {}).get("event_type", "")
+                                                location = (parsed_d.get("findings") or {}).get("location", "")
+                                                found_ei = True
+                                                break
+                                        except Exception:
+                                            pass
+                                    if found_ei:
+                                        break
+                            except Exception as e:
+                                logger.error(f"Error fetching context: {e}")
                                 break
-                        except Exception:
-                            pass
 
                     force_majeure = True
                     insurer_hours = 72
@@ -207,7 +226,8 @@ class CustomRegulatoryTradeAdapter(LangGraphAdapter):
                     }
 
                 coord_handle = "@vaithish7/coordinator"
-                await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
+                alt_handle = "@sreedarsan0311/alt-sourcing"
+                await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle, alt_handle])
                 print(f"[REGULATORY_TRADE] Final payload posted for {case_id}")
             except Exception as e:
                 logger.error(f"FATAL ERROR: {e}")
@@ -220,7 +240,7 @@ class CustomRegulatoryTradeAdapter(LangGraphAdapter):
                     "confidence": "LOW",
                     "flags": [f"Crash: {str(e)[:100]}"]
                 }
-                await tools.send_message(content=json.dumps(error_envelope, indent=2), mentions=["@vaithish7/coordinator"])
+                await tools.send_message(content=json.dumps(error_envelope, indent=2), mentions=["@vaithish7/coordinator", "@sreedarsan0311/alt-sourcing"])
         
         return {"status": "skipped"}
 
@@ -265,10 +285,10 @@ async def main():
     agent_id, api_key = load_agent_config("regulatory_trade")
     session_config = SessionConfig(enable_context_hydration=False)
     agent = Agent.create(
+        session_config=session_config,
         adapter=adapter,
         agent_id=agent_id,
         api_key=api_key,
-        session_config=session_config,
     )
 
     logger.info("Regulatory Trade Agent running...")

@@ -47,28 +47,14 @@ export default function InvestigationScreen({ caseId, onBack, onViewBrief }) {
         <div className="inv-graph-pane glass-panel">
           <div className="graph-container-header">
             <h3>Agent Processing Cluster</h3>
-            <div className="view-toggle-wrapper">
-              <button 
-                className={`view-toggle-btn ${viewMode === 'graph' ? 'active' : ''}`}
-                onClick={() => setViewMode('graph')}
-              >
-                Network Graph
-              </button>
-              <button 
-                className={`view-toggle-btn ${viewMode === 'pipeline' ? 'active' : ''}`}
-                onClick={() => setViewMode('pipeline')}
-              >
-                Linear Track
-              </button>
-            </div>
+          </div>
+          
+          <div className="pizza-tracker-container">
+            <PipelineStepper agentStates={agentStates} isComplete={isComplete} />
           </div>
           
           <div className="graph-pane-body">
-            {viewMode === 'graph' ? (
-              <AgentGraph agentStates={agentStates} isComplete={isComplete} />
-            ) : (
-              <PipelineStepper agentStates={agentStates} isComplete={isComplete} />
-            )}
+            <AgentGraph agentStates={agentStates} isComplete={isComplete} />
           </div>
           
           {showPayoff && (

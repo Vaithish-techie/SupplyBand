@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Activity, Globe, ShieldAlert, Cpu, ArrowRight } from 'lucide-react';
+import axios from 'axios';
 import './LandingPage.css';
 
 const PRESETS = [
@@ -31,6 +32,20 @@ export default function LandingPage({ onTrigger, isSubmitting, error }) {
           Band of Agents // Disruption Risk Control
         </div>
         <div className="nav-status">
+          <button 
+            className="glass-button secondary nuke-btn" 
+            onClick={async () => {
+              try {
+                await axios.post('http://localhost:8000/nuke');
+                alert('Nuked! All cases cleared from memory.');
+              } catch (e) {
+                alert('Failed to nuke backend state.');
+              }
+            }}
+            style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', backgroundColor: 'rgba(255, 0, 0, 0.1)', borderColor: 'rgba(255, 0, 0, 0.3)', color: '#ff4444', marginRight: '1rem' }}
+          >
+            Nuke State
+          </button>
           Pipeline: <span>Ready for Dispatch</span>
         </div>
       </nav>
@@ -97,6 +112,44 @@ export default function LandingPage({ onTrigger, isSubmitting, error }) {
           ))}
         </div>
       </div>
+
+      <div className="features-section">
+        <div className="features-header">
+          <h2 className="section-title">Why Band of Agents?</h2>
+          <p className="section-subtitle">A synchronized multi-agent pipeline for extreme speed and precision.</p>
+        </div>
+        <div className="features-grid">
+          <div className="feature-card glass-panel">
+            <div className="feature-icon"><Cpu size={32} /></div>
+            <h3>6 Autonomous Agents</h3>
+            <p>Coordinator, Event Intel, Supplier Impact, Financial Exposure, Regulatory & Trade, and Alt Sourcing running in parallel.</p>
+          </div>
+          <div className="feature-card glass-panel">
+            <div className="feature-icon"><Activity size={32} /></div>
+            <h3>Real-Time Band AI Comms</h3>
+            <p>Agents collaborate live in a shared workspace, passing contexts dynamically using Band SDK integration.</p>
+          </div>
+          <div className="feature-card glass-panel">
+            <div className="feature-icon"><ShieldAlert size={32} /></div>
+            <h3>Instant Executive Brief</h3>
+            <p>From raw news to synthesized financial risk, tier-1 exposure, and alternative sourcing in under 30 seconds.</p>
+          </div>
+        </div>
+      </div>
+
+      <footer className="landing-footer">
+        <div className="footer-content">
+          <div className="footer-brand">
+            <div className="nav-brand-dot"></div>
+            Band of Agents // Disruption Risk Control
+          </div>
+          <div className="footer-links">
+            <span>Hackathon 2026</span>
+            <span>&bull;</span>
+            <span>Powered by Band AI</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

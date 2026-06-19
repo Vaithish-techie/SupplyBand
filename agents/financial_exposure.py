@@ -19,7 +19,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.memory import InMemorySaver
-from band import Agent
+from band import Agent, SessionConfig
 from band.adapters import LangGraphAdapter
 from band.config import load_agent_config
 from langchain_core.tools import tool
@@ -291,10 +291,13 @@ class CustomFinancialExposureAdapter(LangGraphAdapter):
                 }
                 
                 coord_handle = "@vaithish7/coordinator"
-                await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle])
+                alt_handle = "@sreedarsan0311/alt-sourcing"
+                await tools.send_message(content=json.dumps(envelope, indent=2), mentions=[coord_handle, alt_handle])
                 print(f"[FINANCIAL_EXPOSURE] Final payload posted for {case_id}: {status}")
+                return {"status": "skipped"}
             except Exception as e:
-                logger.error(f"FATAL ERROR: {e}")
+                import traceback
+                traceback.print_exc()
                 error_envelope = {
                     "agent": "financial_exposure",
                     "case_id": case_id,
@@ -302,9 +305,9 @@ class CustomFinancialExposureAdapter(LangGraphAdapter):
                     "status": "error",
                     "findings": {},
                     "confidence": "LOW",
-                    "flags": [f"Crash: {str(e)[:100]}"]
+                    "flags": [f"Crash: {str(e)}"]
                 }
-                await tools.send_message(content=json.dumps(error_envelope, indent=2), mentions=["@vaithish7/coordinator"])
+                await tools.send_message(content=json.dumps(error_envelope, indent=2), mentions=["@vaithish7/coordinator", "@sreedarsan0311/alt-sourcing"])
         
         return {"status": "skipped"}
 
@@ -317,15 +320,17 @@ async def main():
     llm = get_llm_for_agent("financial_exposure")
     logger.info("Using AI/ML API (primary) with Featherless AI (fallback)")
 
+    agent_id, api_key = load_agent_config("financial_exposure")
+
     adapter = CustomFinancialExposureAdapter(
         llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=FINANCIAL_EXPOSURE_PROMPT,
         additional_tools=[calculate_exposure],
     )
-
-    agent_id, api_key = load_agent_config("financial_exposure")
-    agent = Agent.create(adapter=adapter, agent_id=agent_id, api_key=api_key)
+    session_config = SessionConfig(enable_context_hydration=False)
+    agent = Agent.create(
+        session_config=session_config,adapter=adapter, agent_id=agent_id, api_key=api_key)
 
     logger.info("Financial Exposure Agent running — waiting for supplier_impact post...")
     await agent.run()

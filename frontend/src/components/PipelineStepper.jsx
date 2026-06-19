@@ -36,19 +36,7 @@ export default function PipelineStepper({ agentStates, isComplete }) {
   ];
 
   return (
-    <div className="multi-agent-pipeline">
-      <div className="pipeline-header">
-        <h3 className="pipeline-title">Agent Processing Cluster</h3>
-        <div className="pipeline-status">
-          {isComplete ? (
-            <span className="status-badge success">All Nodes Synchronized</span>
-          ) : (
-            <span className="status-badge computing"><Loader2 className="animate-spin inline mr-1" size={14} /> Neural Network Active</span>
-          )}
-        </div>
-      </div>
-      
-      <div className="pipeline-track">
+    <div className="horizontal-pipeline-track">
         {steps.map((step, idx) => {
           const isLast = idx === steps.length - 1;
           const isCompleteStep = step.state === 'complete';
@@ -87,6 +75,5 @@ export default function PipelineStepper({ agentStates, isComplete }) {
           );
         })}
       </div>
-    </div>
   );
 }
