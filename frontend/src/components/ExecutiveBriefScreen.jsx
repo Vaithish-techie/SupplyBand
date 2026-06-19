@@ -75,20 +75,20 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
 
   const getSeverityColor = (sev) => {
     switch (sev?.toUpperCase()) {
-      case 'CRITICAL': return '#ff5252';
-      case 'HIGH': return '#ff9100';
-      case 'MEDIUM': return '#ffea00';
-      case 'LOW': return '#00e676';
-      default: return '#b0bec5';
+      case 'CRITICAL': return '#EF4444';
+      case 'HIGH': return '#F59E0B';
+      case 'MEDIUM': return '#8B85FF';
+      case 'LOW': return '#10B981';
+      default: return '#8E98B0';
     }
   };
 
   const getSeverityIcon = (sev) => {
     switch (sev?.toUpperCase()) {
-      case 'CRITICAL': return <ShieldAlert size={28} color="#ff5252" />;
-      case 'HIGH': return <AlertTriangle size={28} color="#ff9100" />;
-      case 'MEDIUM': return <Info size={28} color="#ffea00" />;
-      default: return <CheckCircle size={28} color="#00e676" />;
+      case 'CRITICAL': return <ShieldAlert size={28} color="#EF4444" />;
+      case 'HIGH': return <AlertTriangle size={28} color="#F59E0B" />;
+      case 'MEDIUM': return <Info size={28} color="#8B85FF" />;
+      default: return <CheckCircle size={28} color="#10B981" />;
     }
   };
 
@@ -178,17 +178,15 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
         ) : (
           <div className="decision-actions">
             <h3>Compliance Workflow</h3>
-            <div className="action-buttons" style={{ display: 'flex', gap: '15px', marginTop: '15px' }}>
+            <div className="action-buttons">
               <button 
-                className="glass-button" 
-                style={{ backgroundColor: '#10b981', color: '#fff', padding: '12px 24px', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                className="glass-button btn-approve" 
                 onClick={() => handleDecision('approve')}
               >
                 APPROVE RESOLUTION
               </button>
               <button 
-                className="glass-button" 
-                style={{ backgroundColor: '#ef4444', color: '#fff', padding: '12px 24px', fontWeight: 'bold', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                className="glass-button btn-escalate" 
                 onClick={() => handleDecision('escalate')}
               >
                 ESCALATE TO VP

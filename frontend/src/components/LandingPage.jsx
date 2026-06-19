@@ -25,6 +25,16 @@ export default function LandingPage({ onTrigger, isSubmitting, error }) {
 
   return (
     <div className="landing-container animate-fade-in">
+      <nav className="landing-nav">
+        <div className="nav-brand">
+          <div className="nav-brand-dot"></div>
+          Band of Agents // Disruption Risk Control
+        </div>
+        <div className="nav-status">
+          Pipeline: <span>Ready for Dispatch</span>
+        </div>
+      </nav>
+
       <div className="landing-hero">
         <div className="hero-badge">AI-Powered Disruption Intelligence</div>
         <h1 className="hero-title">Anticipate. Analyze. <span>Act.</span></h1>

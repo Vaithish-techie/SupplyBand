@@ -15,19 +15,26 @@ export default function LiveLog({ messages }) {
     if (msg.agent === 'event_intelligence') {
       const f = msg.findings;
       const sev = f.severity ? f.severity.toUpperCase() : 'UNKNOWN';
-      const severityClass = sev === 'HIGH' || sev === 'CRITICAL' ? 'severity-high' : sev === 'MEDIUM' ? 'severity-medium' : 'severity-low';
+      const severityClass = sev === 'CRITICAL' ? 'severity-critical' : sev === 'HIGH' ? 'severity-high' : sev === 'MEDIUM' ? 'severity-medium' : 'severity-low';
       return (
         <div className="custom-findings">
           {f.severity && <span className={`severity-badge ${severityClass}`}>{sev}</span>}
-          <div className="impact-components">
-            <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
-              <li style={{ marginBottom: '4px' }}><strong>Type:</strong> {f.event_type || 'Unknown'}</li>
-              <li style={{ marginBottom: '4px' }}><strong>Location:</strong> {f.location || 'Unknown'}</li>
-              <li style={{ marginBottom: '4px' }}><strong>Duration:</strong> {f.estimated_duration_weeks || 0} weeks</li>
-            </ul>
+          <div className="telemetry-grid">
+            <div className="telemetry-item">
+              <span className="tel-label">EVENT TYPE</span>
+              <span className="tel-value">{f.event_type || 'Unknown'}</span>
+            </div>
+            <div className="telemetry-item">
+              <span className="tel-label">LOCATION</span>
+              <span className="tel-value">{f.location || 'Unknown'}</span>
+            </div>
+            <div className="telemetry-item">
+              <span className="tel-label">EST. DURATION</span>
+              <span className="tel-value">{f.estimated_duration_weeks || 0} Weeks</span>
+            </div>
           </div>
           {f.summary && (
-            <p style={{ marginTop: '12px', fontSize: '0.95rem', color: 'var(--text-muted)' }}>
+            <p className="tel-summary">
               {f.summary}
             </p>
           )}
@@ -38,20 +45,30 @@ export default function LiveLog({ messages }) {
     if (msg.agent === 'supplier_impact') {
       const f = msg.findings;
       const sev = f.severity ? f.severity.toUpperCase() : 'UNKNOWN';
-      const severityClass = sev === 'HIGH' || sev === 'CRITICAL' ? 'severity-high' : sev === 'MEDIUM' ? 'severity-medium' : 'severity-low';
+      const severityClass = sev === 'CRITICAL' ? 'severity-critical' : sev === 'HIGH' ? 'severity-high' : sev === 'MEDIUM' ? 'severity-medium' : 'severity-low';
       return (
         <div className="custom-findings">
           {f.severity && <span className={`severity-badge ${severityClass}`}>{sev}</span>}
-          <div className="impact-stats">
-            <div>Tier 1 Affected: <strong>{f.affected_tier1 || 0}</strong></div>
-            <div>Tier 2 Affected: <strong>{f.affected_tier2 || 0}</strong></div>
+          
+          <div className="telemetry-grid">
+            <div className="telemetry-itemHighlight">
+              <span className="tel-value">{f.affected_tier1 || 0}</span>
+              <span className="tel-label">TIER 1 AFFECTED</span>
+            </div>
+            <div className="telemetry-itemHighlight">
+              <span className="tel-value">{f.affected_tier2 || 0}</span>
+              <span className="tel-label">TIER 2 AFFECTED</span>
+            </div>
           </div>
+
           {f.affected_components && f.affected_components.length > 0 && (
             <div className="impact-components">
-              <strong>Components:</strong>
-              <ul>
-                {f.affected_components.map((c, i) => <li key={i}>{c}</li>)}
-              </ul>
+              <strong>Exposed Components</strong>
+              <div className="component-tag-list">
+                {f.affected_components.map((c, i) => (
+                  <span key={i} className="component-tag">{c}</span>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -66,11 +83,15 @@ export default function LiveLog({ messages }) {
       };
       return (
         <div className="custom-findings">
-          <div className="finance-stat">
-            <strong>Week 6 Risk:</strong> {formatCurrency(f.week6_risk_usd)}
-          </div>
-          <div className="finance-stat">
-            <strong>Margin Impact:</strong> {f.margin_impact_pct || 0}%
+          <div className="telemetry-grid">
+            <div className="telemetry-itemHighlight text-cyan">
+              <span className="tel-value">{formatCurrency(f.week6_risk_usd)}</span>
+              <span className="tel-label">WEEK 6 MAX RISK</span>
+            </div>
+            <div className="telemetry-itemHighlight text-orange">
+              <span className="tel-value">{f.margin_impact_pct || 0}%</span>
+              <span className="tel-label">MARGIN IMPACT</span>
+            </div>
           </div>
         </div>
       );
@@ -80,18 +101,28 @@ export default function LiveLog({ messages }) {
       const f = msg.findings;
       return (
         <div className="custom-findings">
-          <div className="impact-components">
-            <ul style={{ listStyleType: 'none', paddingLeft: 0 }}>
-              <li style={{ marginBottom: '4px' }}><strong>Force Majeure:</strong> {f.force_majeure_applicable ? "Applicable" : "Not Applicable"}</li>
-              <li style={{ marginBottom: '4px' }}><strong>Insurer Deadline:</strong> {f.insurer_notify_deadline_hours || 'N/A'} hrs</li>
-              <li style={{ marginBottom: '4px' }}><strong>Tariffs:</strong> {f.tariff_implications || 'None'}</li>
-            </ul>
+          <div className="telemetry-grid">
+            <div className="telemetry-item">
+              <span className="tel-label">FORCE MAJEURE</span>
+              <span className="tel-value">{f.force_majeure_applicable ? "Applicable" : "Not Applicable"}</span>
+            </div>
+            <div className="telemetry-item">
+              <span className="tel-label">INSURER DEADLINE</span>
+              <span className="tel-value">{f.insurer_notify_deadline_hours || 'N/A'} Hrs</span>
+            </div>
+            <div className="telemetry-item">
+              <span className="tel-label">TARIFF IMPACT</span>
+              <span className="tel-value" style={{ textTransform: 'capitalize' }}>{f.tariff_implications || 'None'}</span>
+            </div>
           </div>
+          
           {f.compliance_actions && f.compliance_actions.length > 0 && (
-            <div className="impact-components" style={{ marginTop: '8px' }}>
-              <strong>Required Actions:</strong>
-              <ul style={{ paddingLeft: '20px', marginTop: '4px', fontSize: '0.9rem' }}>
-                {f.compliance_actions.map((act, i) => <li key={i}>{act}</li>)}
+            <div className="impact-components">
+              <strong>Compliance Workflow Actions</strong>
+              <ul className="compliance-action-list">
+                {f.compliance_actions.map((act, i) => (
+                  <li key={i}>{act}</li>
+                ))}
               </ul>
             </div>
           )}
@@ -103,23 +134,24 @@ export default function LiveLog({ messages }) {
       const f = msg.findings;
       return (
         <div className="custom-findings">
-          <div style={{ marginBottom: '8px' }}>
-            <span style={{ color: 'var(--accent-green)', fontWeight: 'bold' }}>Recommended: </span>
-            {f.recommended || 'None found'}
+          <div className="sourcing-recommendation-card">
+            <span className="rec-badge">STRATEGIC RECOMMENDATION</span>
+            <h4>{f.recommended || 'None found'}</h4>
+            {f.recommendation_reason && <p className="rec-reason">{f.recommendation_reason}</p>}
           </div>
-          <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-            {f.recommendation_reason || ''}
-          </p>
+
           {f.alternatives && f.alternatives.length > 0 && (
-            <div className="impact-components">
-              <strong>Top Alternatives:</strong>
-              <ul style={{ paddingLeft: '20px', marginTop: '4px', fontSize: '0.9rem' }}>
+            <div className="impact-components" style={{ marginTop: '16px' }}>
+              <strong>Ranked Substitutes</strong>
+              <div className="alternatives-table">
                 {f.alternatives.map((alt, i) => (
-                  <li key={i}>
-                    {alt.supplier} (+{alt.cost_delta_pct}% cost, {alt.lead_time_days} days)
-                  </li>
+                  <div key={i} className="alt-row">
+                    <span className="alt-name">{alt.supplier}</span>
+                    <span className="alt-cost">+{alt.cost_delta_pct}% cost</span>
+                    <span className="alt-lead">{alt.lead_time_days}d Lead</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
         </div>
@@ -154,8 +186,8 @@ export default function LiveLog({ messages }) {
               <div className="log-body">
                 {msg.agent === 'human_operator' ? (
                   <div className="custom-findings" style={{ marginTop: 0 }}>
-                    <p style={{ color: 'var(--accent-cyan)', marginBottom: '8px', fontWeight: 'bold' }}>Incoming Alert</p>
-                    <p style={{ color: 'var(--text-main)', lineHeight: '1.5' }}>
+                    <p style={{ color: 'var(--accent-cyan)', marginBottom: '8px', fontWeight: 'bold', fontFamily: 'var(--font-mono)', fontSize: '0.75rem', letterSpacing: '0.05em' }}>INCOMING DISRUPTION INTEL</p>
+                    <p style={{ color: 'var(--text-main)', lineHeight: '1.5', fontSize: '0.9rem' }}>
                       {(msg.raw_content || '').replace(/@\[\[.*?\]\]/g, '').replace(/[{}[\]"]/g, '').trim()}
                     </p>
                   </div>
@@ -167,11 +199,11 @@ export default function LiveLog({ messages }) {
                   <>
                     {msg.flags && msg.flags.length > 0 && (
                       <div className="log-flags">
-                        <strong>Flags:</strong> {msg.flags.join(', ')}
+                        <strong>FLAGS:</strong> {msg.flags.join(', ')}
                       </div>
                     )}
                     {msg.status === 'error' || msg.status === 'insufficient_data' || msg.status === 'escalate' ? (
-                      <div className="log-error-state">Status: {msg.status.toUpperCase()}</div>
+                      <div className="log-error-state">STATUS: {msg.status.toUpperCase()}</div>
                     ) : msg.findings ? (
                       renderFindings(msg)
                     ) : (
