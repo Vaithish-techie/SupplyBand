@@ -43,8 +43,8 @@ echo "Starting Alternative Sourcing last..."
 python agents/alt_sourcing.py &
 sleep 2
 
-echo "Starting FastAPI backend on port 8000..."
-python -m uvicorn backend:app --reload --port 8000 &
+echo "Starting FastAPI backend on port 8001..."
+python -m uvicorn backend:app --reload --port 8001 &
 
 echo ""
 echo "=========================================="

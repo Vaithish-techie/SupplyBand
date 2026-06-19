@@ -3,7 +3,9 @@ FastAPI backend — Supply Chain Disruption Intelligence Center
 Provides the frontend with a simple HTTP interface to trigger events,
 poll the Band room, check case status, and log human approval decisions.
 
-Run with: python -m uvicorn backend:app --reload --port 8000
+Features a full Mock Demo Mode for offline validation and interactive simulations.
+
+Run with: python -m uvicorn backend:app --reload --port 8001
 """
 
 import os
@@ -38,17 +40,14 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# Configuration — loaded from agent_config.yaml (same auth pattern as agents)
+# Configuration & Mock Mode Handling
 # ---------------------------------------------------------------------------
 
 BAND_REST_URL = "https://app.band.ai"
+MOCK_MODE = False
 
-def load_config() -> tuple[str, str | None]:
-    """
-    Load coordinator API key from agent_config.yaml (same source agents use).
-    BAND_COORDINATOR_API_KEY env var overrides the yaml if set.
-    Returns (api_key, room_id_override_or_None)
-    """
+def load_config() -> tuple[str | None, str | None]:
+    global MOCK_MODE
     api_key = os.getenv("BAND_COORDINATOR_API_KEY")
     room_id = os.getenv("BAND_ROOM_ID")  # optional override
 
@@ -56,35 +55,39 @@ def load_config() -> tuple[str, str | None]:
         try:
             base_dir = os.path.dirname(os.path.abspath(__file__))
             config_path = os.path.join(base_dir, "agent_config.yaml")
-            with open(config_path) as f:
-                config = yaml.safe_load(f)
-            api_key = config.get("coordinator", {}).get("api_key")
+            if os.path.exists(config_path):
+                with open(config_path) as f:
+                    config = yaml.safe_load(f)
+                api_key = config.get("coordinator", {}).get("api_key")
+            else:
+                logger.warning("agent_config.yaml not found. Activating MOCK DEMO MODE.")
+                MOCK_MODE = True
         except Exception as e:
-            logger.warning(f"Could not load agent_config.yaml: {e}")
+            logger.warning(f"Could not load agent_config.yaml: {e}. Activating MOCK DEMO MODE.")
+            MOCK_MODE = True
 
-    if not api_key:
-        raise RuntimeError(
-            "No Band API key found. Set BAND_COORDINATOR_API_KEY env var "
-            "or populate agent_config.yaml coordinator.api_key."
-        )
+    if not api_key and not MOCK_MODE:
+        MOCK_MODE = True
+        
     return api_key, room_id
 
 
 BAND_API_KEY, _ROOM_ID_OVERRIDE = load_config()
-_cached_room_id: str | None = _ROOM_ID_OVERRIDE
+_cached_room_id: str | None = _ROOM_ID_OVERRIDE or ("MOCK_ROOM_ID" if MOCK_MODE else None)
 
-# In-memory case store (fine for hackathon demo)
+# In-memory case store
 ACTIVE_CASES: dict[str, dict] = {}
+MOCK_ROOM_MESSAGES: dict[str, list[dict]] = {}
 
 # Names of all 6 expected agent posts for a complete investigation
 EXPECTED_AGENTS = {
-    "coordinator_kickoff",  # coordinator phase=kickoff
+    "coordinator_kickoff",
     "event_intelligence",
     "supplier_impact",
     "financial_exposure",
     "regulatory_trade",
     "alt_sourcing",
-    "coordinator_brief",    # coordinator phase=executive_brief
+    "coordinator_brief",
 }
 
 SPECIALIST_AGENTS = {
@@ -96,7 +99,7 @@ SPECIALIST_AGENTS = {
 }
 
 # ---------------------------------------------------------------------------
-# Band API helpers
+# Band API helpers (Production Mode)
 # ---------------------------------------------------------------------------
 
 def _band_headers() -> dict:
@@ -145,15 +148,10 @@ async def _fetch_participants(client: httpx.AsyncClient, room_id: str) -> list[d
 
 
 async def _fetch_messages(client: httpx.AsyncClient, room_id: str, page_size: int = 100) -> list[dict]:
-    """
-    Fetch recent messages from the Band room via the /context endpoint.
-    The Band API caps page_size at 100 messages per page regardless of the parameter.
-    Fetches up to 3 pages (300 messages) to ensure active investigations are visible
-    even when the room has many historic messages from past sessions.
-    """
+    """Fetch recent messages from the Band room context."""
     all_messages = []
     try:
-        for page in [1, 2, 3]:  # Fetch up to 3 pages = 300 messages total
+        for page in [1, 2, 3]:
             r = await client.get(
                 f"{BAND_REST_URL}/api/v1/agent/chats/{room_id}/context",
                 headers={"x-api-key": BAND_API_KEY},
@@ -164,7 +162,6 @@ async def _fetch_messages(client: httpx.AsyncClient, room_id: str, page_size: in
             data = r.json()
             page_msgs = data.get("data", data if isinstance(data, list) else [])
             all_messages.extend(page_msgs)
-            # Stop if we got 0 messages (empty page = no more data)
             if len(page_msgs) == 0:
                 break
         return all_messages
@@ -177,36 +174,17 @@ async def _fetch_messages(client: httpx.AsyncClient, room_id: str, page_size: in
 _BAND_MENTION_RE = re.compile(r"@\[\[[^\]]+\]\]\s*")
 
 def _parse_agent_message(raw_msg: dict) -> dict | None:
-    """
-    Safely parse the JSON content of a Band context message.
-
-    Band agents (and the coordinator relay) sometimes prepend or append
-    @[[uuid]] mention markup to the raw JSON string. Strip these before
-    attempting the JSON parse so agent envelopes are always found.
-    """
+    """Safely parse the JSON content of a Band message envelope."""
     content = raw_msg.get("content", "")
-    # First try raw parse (no markup)
     try:
         return json.loads(content)
     except Exception:
         pass
-    # Strip Band @[[uuid]] mention markup and retry
     stripped = _BAND_MENTION_RE.sub("", content).strip()
     try:
         return json.loads(stripped)
     except Exception:
         return None
-
-
-def _filter_by_case(messages: list[dict], case_id: str) -> list[dict]:
-    """Return only messages whose parsed JSON has the given case_id."""
-    result = []
-    for m in messages:
-        data = _parse_agent_message(m)
-        if data and data.get("case_id") == case_id:
-            result.append(m)
-    return result
-
 
 # ---------------------------------------------------------------------------
 # Request/Response models
@@ -222,6 +200,339 @@ class ApproveActionRequest(BaseModel):
     decision: str   # "approve" | "escalate"
     notes: str | None = None
 
+# ---------------------------------------------------------------------------
+# Mock Simulation Telemetry Database
+# ---------------------------------------------------------------------------
+
+MOCK_DISRUPTIONS = {
+    "taiwan": {
+        "event_intelligence": {
+            "event_type": "natural_disaster",
+            "severity": "CRITICAL",
+            "location": "Hsinchu, Taiwan",
+            "affected_industries": ["semiconductor", "logistics"],
+            "estimated_duration_weeks": 8,
+            "summary": "TSMC Hsinchu fabs suspended following magnitude 7.4 earthquake."
+        },
+        "supplier_impact": {
+            "affected_tier1": 1,
+            "affected_tier2": 3,
+            "critical_path_suppliers": ["TSMC Fab 18"],
+            "affected_components": ["A100 AI Chips", "H100 AI Chips"],
+            "inventory_buffer_days": 12,
+            "severity": "CRITICAL"
+        },
+        "supplier_impact_flags": ["Sole-source component TSMC Fab 18 offline! Buffer days (12) < 21"],
+        "financial_exposure": {
+            "week1_risk_usd": 15000000,
+            "week3_risk_usd": 105000000,
+            "week6_risk_usd": 630000000,
+            "revenue_at_risk_products": ["Enterprise AI Server Clusters"],
+            "margin_impact_pct": 14.5
+        },
+        "regulatory_trade": {
+            "force_majeure_applicable": True,
+            "insurer_notify_deadline_hours": 72,
+            "export_controls": ["EAR99"],
+            "tariff_implications": "none",
+            "compliance_actions": [
+                "Notify business insurer of TSMC force majeure within 72 hours",
+                "File formal claim for component delay with TSMC supply panel"
+            ]
+        },
+        "alt_sourcing": {
+            "alternatives": [
+                {
+                    "supplier": "Samsung Austin (Texas, USA)",
+                    "components_covered": ["A100 AI Chips"],
+                    "cost_delta_pct": 18.0,
+                    "lead_time_days": 12,
+                    "risk_level": "LOW",
+                    "regulatory_flags": ["US Domestic Fab - Safe Regulatory Profile"]
+                },
+                {
+                    "supplier": "Intel Foundry (Arizona, USA)",
+                    "components_covered": ["A100 AI Chips"],
+                    "cost_delta_pct": 25.0,
+                    "lead_time_days": 20,
+                    "risk_level": "LOW",
+                    "regulatory_flags": ["US Domestic Fab - Safe Regulatory Profile"]
+                }
+            ],
+            "recommended": "Samsung Austin (Texas, USA)",
+            "recommendation_reason": "Bypasses geographical disruption with low lead-time delta."
+        },
+        "coordinator_brief": {
+            "situation_summary": "Magnitude 7.4 earthquake in Hsinchu, Taiwan has halted TSMC Fab 18 production. Supply buffer is 12 days, presenting critical risk to Enterprise AI Servers with $630M at risk by week 6.",
+            "severity": "CRITICAL",
+            "verdict": "ESCALATE_TO_HUMAN",
+            "top_3_actions": [
+                "Initiate Samsung Austin secondary source contract within 48h",
+                "Notify insurers of potential cargo delay within 72h limit",
+                "Reallocate remaining H100 buffer inventory to Tier-1 cloud accounts"
+            ],
+            "financial_exposure": "$630.00M Week 6 risk, 14.5% margin drop",
+            "recommended_supplier": "Samsung Austin (Texas, USA)",
+            "compliance_deadline": "Notify insurer by Jan 22 (72 hours)"
+        }
+    },
+    "rotterdam": {
+        "event_intelligence": {
+            "event_type": "port_strike",
+            "severity": "HIGH",
+            "location": "Rotterdam, Netherlands",
+            "affected_industries": ["logistics", "industrial"],
+            "estimated_duration_weeks": 4,
+            "summary": "Port of Rotterdam dockworkers declare indefinite strike, disrupting European logistics routing."
+        },
+        "supplier_impact": {
+            "affected_tier1": 2,
+            "affected_tier2": 4,
+            "critical_path_suppliers": ["Rotterdam Euro-Gateway"],
+            "affected_components": ["European Logistics Routing"],
+            "inventory_buffer_days": 15,
+            "severity": "HIGH"
+        },
+        "supplier_impact_flags": ["Logistics gateway strike! Remaining supply buffer (15) < 21"],
+        "financial_exposure": {
+            "week1_risk_usd": 5000000,
+            "week3_risk_usd": 25000000,
+            "week6_risk_usd": 120000000,
+            "revenue_at_risk_products": ["Global Trade Logistics Revenue"],
+            "margin_impact_pct": 4.2
+        },
+        "regulatory_trade": {
+            "force_majeure_applicable": True,
+            "insurer_notify_deadline_hours": 48,
+            "export_controls": ["None"],
+            "tariff_implications": "minor",
+            "compliance_actions": [
+                "File Force Majeure notice with Rotterdam logistics union",
+                "Reroute cargo manifests to Antwerp port system within 48h"
+            ]
+        },
+        "alt_sourcing": {
+            "alternatives": [
+                {
+                    "supplier": "Port of Antwerp (Belgium)",
+                    "components_covered": ["European Logistics Routing"],
+                    "cost_delta_pct": 20.0,
+                    "lead_time_days": 4,
+                    "risk_level": "MEDIUM",
+                    "regulatory_flags": ["Subject to EU overflow congestion regulations"]
+                },
+                {
+                    "supplier": "Port of Hamburg (Germany)",
+                    "components_covered": ["European Logistics Routing"],
+                    "cost_delta_pct": 25.0,
+                    "lead_time_days": 5,
+                    "risk_level": "LOW",
+                    "regulatory_flags": []
+                }
+            ],
+            "recommended": "Port of Antwerp (Belgium)",
+            "recommendation_reason": "Lowest lead-time delta bypassing direct strike disruption."
+        },
+        "coordinator_brief": {
+            "situation_summary": "Indefinite dockworker strike at Port of Rotterdam has halted European logistics routing. Supply buffer is 15 days, presenting high risk to European cargo with $120M at risk by week 6.",
+            "severity": "HIGH",
+            "verdict": "ESCALATE_TO_HUMAN",
+            "top_3_actions": [
+                "Reroute incoming shipments to Port of Antwerp within 48h",
+                "Invoke cargo insurance FM notifications before the 48h deadline",
+                "Notify European customers of potential 5-day delivery shifts"
+            ],
+            "financial_exposure": "$120.00M Week 6 risk, 4.2% margin drop",
+            "recommended_supplier": "Port of Antwerp (Belgium)",
+            "compliance_deadline": "Notify insurer by Jan 21 (48 hours)"
+        }
+    },
+    "tariff": {
+        "event_intelligence": {
+            "event_type": "tariff",
+            "severity": "HIGH",
+            "location": "Washington DC, USA",
+            "affected_industries": ["semiconductor", "automotive"],
+            "estimated_duration_weeks": 24,
+            "summary": "New 40% tariff imposed on semiconductor components imported from China, effective immediately."
+        },
+        "supplier_impact": {
+            "affected_tier1": 3,
+            "affected_tier2": 5,
+            "critical_path_suppliers": ["Foxconn Shenzhen"],
+            "affected_components": ["Server Motherboards"],
+            "inventory_buffer_days": 18,
+            "severity": "HIGH"
+        },
+        "supplier_impact_flags": ["Multiple Tier-1 suppliers affected! Supply buffer (18) < 21"],
+        "financial_exposure": {
+            "week1_risk_usd": 8000000,
+            "week3_risk_usd": 54000000,
+            "week6_risk_usd": 340000000,
+            "revenue_at_risk_products": ["Enterprise AI Server Clusters"],
+            "margin_impact_pct": 6.8
+        },
+        "regulatory_trade": {
+            "force_majeure_applicable": False,
+            "insurer_notify_deadline_hours": 120,
+            "export_controls": ["Section 301"],
+            "tariff_implications": "major",
+            "compliance_actions": [
+                "File tariff exclusion request with USTR",
+                "Reclassify Motherboard import tariff codes under US-HTS regulations"
+            ]
+        },
+        "alt_sourcing": {
+            "alternatives": [
+                {
+                    "supplier": "Samsung Austin (Texas, USA)",
+                    "components_covered": ["Server Motherboards"],
+                    "cost_delta_pct": 18.0,
+                    "lead_time_days": 12,
+                    "risk_level": "LOW",
+                    "regulatory_flags": ["US Domestic Fab - Safe Regulatory Profile"]
+                }
+            ],
+            "recommended": "Samsung Austin (Texas, USA)",
+            "recommendation_reason": "Bypasses Section 301 China tariffs with domestic safe profile."
+        },
+        "coordinator_brief": {
+            "situation_summary": "New 40% import tariff on Chinese semiconductor components threatens Motherboard supply. Supply buffer is 18 days, with $340M exposure by week 6.",
+            "severity": "HIGH",
+            "verdict": "AUTO_RESOLVE",
+            "top_3_actions": [
+                "Reroute Motherboard assembly contracts to Samsung Austin within 72h",
+                "File HTS code reclassification paperwork with US Customs",
+                "Submit tariff exclusion applications to USTR before deadline"
+            ],
+            "financial_exposure": "$340.00M Week 6 risk, 6.8% margin drop",
+            "recommended_supplier": "Samsung Austin (Texas, USA)",
+            "compliance_deadline": "File customs review by Jan 24"
+        }
+    }
+}
+
+async def simulate_mock_pipeline(case_id: str, event_text: str):
+    """Simulates agent pipeline step-by-step in mock mode."""
+    logger.info(f"Starting mock agent simulation for {case_id}")
+    
+    # Infer scenario type
+    ev_lower = event_text.lower()
+    if "taiwan" in ev_lower or "earthquake" in ev_lower:
+        scenario = "taiwan"
+    elif "rotterdam" in ev_lower or "strike" in ev_lower:
+        scenario = "rotterdam"
+    elif "tariff" in ev_lower or "china" in ev_lower:
+        scenario = "tariff"
+    else:
+        scenario = "taiwan"  # default fallback
+        
+    data = MOCK_DISRUPTIONS[scenario]
+    
+    # Helper to construct envelope
+    def make_envelope(agent: str, status: str, findings: dict, phase: str = None, flags: list = None, confidence: str = "HIGH") -> dict:
+        env = {
+            "agent": agent,
+            "case_id": case_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "status": status,
+            "findings": findings,
+            "confidence": confidence,
+            "flags": flags or []
+        }
+        if phase:
+            env["phase"] = phase
+        return env
+
+    await asyncio.sleep(2)
+    
+    # 1. Coordinator Kickoff
+    MOCK_ROOM_MESSAGES[case_id].append({
+        "content": json.dumps({
+            "agent": "coordinator",
+            "case_id": case_id,
+            "phase": "kickoff",
+            "event_text": event_text,
+            "instruction": "All specialist agents: analyze this event and post your findings",
+            "agents_required": ["event_intelligence", "supplier_impact", "financial_exposure", "regulatory_trade", "alt_sourcing"]
+        }),
+        "inserted_at": datetime.now(timezone.utc).isoformat()
+    })
+    logger.info(f"Simulated Coordinator Kickoff for {case_id}")
+    await asyncio.sleep(3)
+
+    # 2. Event Intelligence
+    MOCK_ROOM_MESSAGES[case_id].append({
+        "content": json.dumps(make_envelope(
+            agent="event_intelligence",
+            status="complete",
+            findings=data["event_intelligence"]
+        )),
+        "inserted_at": datetime.now(timezone.utc).isoformat()
+    })
+    logger.info(f"Simulated Event Intelligence for {case_id}")
+    await asyncio.sleep(3)
+
+    # 3. Supplier Impact
+    MOCK_ROOM_MESSAGES[case_id].append({
+        "content": json.dumps(make_envelope(
+            agent="supplier_impact",
+            status="complete",
+            findings=data["supplier_impact"],
+            flags=data.get("supplier_impact_flags", [])
+        )),
+        "inserted_at": datetime.now(timezone.utc).isoformat()
+    })
+    logger.info(f"Simulated Supplier Impact for {case_id}")
+    await asyncio.sleep(3)
+
+    # 4. Financial Exposure & Regulatory (Parallel)
+    MOCK_ROOM_MESSAGES[case_id].append({
+        "content": json.dumps(make_envelope(
+            agent="financial_exposure",
+            status="complete",
+            findings=data["financial_exposure"]
+        )),
+        "inserted_at": datetime.now(timezone.utc).isoformat()
+    })
+    MOCK_ROOM_MESSAGES[case_id].append({
+        "content": json.dumps(make_envelope(
+            agent="regulatory_trade",
+            status="complete",
+            findings=data["regulatory_trade"]
+        )),
+        "inserted_at": datetime.now(timezone.utc).isoformat()
+    })
+    logger.info(f"Simulated Finance & Regulatory for {case_id}")
+    await asyncio.sleep(3)
+
+    # 5. Alternative Sourcing
+    MOCK_ROOM_MESSAGES[case_id].append({
+        "content": json.dumps(make_envelope(
+            agent="alt_sourcing",
+            status="complete",
+            findings=data["alt_sourcing"]
+        )),
+        "inserted_at": datetime.now(timezone.utc).isoformat()
+    })
+    logger.info(f"Simulated Alt Sourcing for {case_id}")
+    await asyncio.sleep(3)
+
+    # 6. Coordinator Executive Brief
+    MOCK_ROOM_MESSAGES[case_id].append({
+        "content": json.dumps({
+            "agent": "coordinator",
+            "case_id": case_id,
+            "phase": "executive_brief",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "status": "complete",
+            "findings": data["coordinator_brief"],
+            "confidence": "HIGH",
+            "flags": []
+        }),
+        "inserted_at": datetime.now(timezone.utc).isoformat()
+    })
+    logger.info(f"Simulated Coordinator brief for {case_id}")
 
 # ---------------------------------------------------------------------------
 # Endpoints
@@ -229,7 +540,15 @@ class ApproveActionRequest(BaseModel):
 
 @app.get("/health")
 async def health():
-    """Liveness check — also verifies Band API key resolves a room."""
+    """Liveness check — also verifies Band API key resolves a room if in prod."""
+    if MOCK_MODE:
+        return {
+            "status": "ok",
+            "mode": "MOCK_DEMO",
+            "band_room_id": "MOCK_ROOM_ID",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+        
     try:
         async with httpx.AsyncClient() as client:
             room_id = await _get_room_id(client)
@@ -262,17 +581,40 @@ async def trigger_event(req: TriggerEventRequest):
     """
     Post a raw disruption event into the Band room as the human operator.
     The Coordinator agent picks this up and kicks off the investigation pipeline.
-
-    Returns the case_id so the frontend can start polling /room-messages and /case-status.
     """
     case_id = req.case_id or f"CASE-{int(datetime.now(timezone.utc).timestamp())}"
+
+    if MOCK_MODE:
+        MOCK_ROOM_MESSAGES[case_id] = [
+            {
+                "content": json.dumps({
+                    "agent": "human_operator",
+                    "case_id": case_id,
+                    "event_text": req.event_text,
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }),
+                "inserted_at": datetime.now(timezone.utc).isoformat()
+            }
+        ]
+        ACTIVE_CASES[case_id] = {
+            "status": "investigating",
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "event_text": req.event_text,
+        }
+        # Start mock simulation in the background
+        asyncio.create_task(simulate_mock_pipeline(case_id, req.event_text))
+        return {
+            "case_id": case_id,
+            "status": "investigation_started",
+            "room_id": "MOCK_ROOM_ID",
+            "mentioned_agent": "coordinator",
+            "mode": "MOCK_DEMO"
+        }
 
     async with httpx.AsyncClient() as client:
         room_id = await _get_room_id(client)
         participants = await _fetch_participants(client, room_id)
 
-        # Find the coordinator agent to @mention — we will post using event_intelligence key
-        # to avoid cannot_mention_self on both sides.
         mention = None
         for p in participants:
             handle = p.get("handle", "")
@@ -282,7 +624,6 @@ async def trigger_event(req: TriggerEventRequest):
                 break
 
         if not mention:
-            # Fallback: mention any agent that isn't event_intelligence
             for p in participants:
                 if p.get("type") == "Agent" and "event" not in p.get("handle", "").lower():
                     mention = {"id": p["id"], "handle": p["handle"]}
@@ -301,7 +642,6 @@ async def trigger_event(req: TriggerEventRequest):
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
-        # Load event_intelligence's key to post so the coordinator agent can receive it
         event_intel_key = _get_event_intel_api_key()
         post_headers = {"x-api-key": event_intel_key, "content-type": "application/json"}
 
@@ -337,13 +677,21 @@ async def trigger_event(req: TriggerEventRequest):
 
 @app.get("/room-messages")
 async def get_room_messages(case_id: str | None = Query(default=None)):
-    """
-    Fetch messages from the Band room. If case_id is given, filters to only
-    messages belonging to that investigation. Frontend polls this every ~2s
-    to render the live agent feed.
+    """Fetch messages from the Band room context (or mock storage)."""
+    if MOCK_MODE:
+        enriched = []
+        if case_id and case_id in MOCK_ROOM_MESSAGES:
+            for m in MOCK_ROOM_MESSAGES[case_id]:
+                parsed = _parse_agent_message(m)
+                enriched.append({**m, "parsed": parsed, "inserted_at": m.get("inserted_at")})
+        return {
+            "case_id": case_id,
+            "room_id": "MOCK_ROOM_ID",
+            "message_count": len(enriched),
+            "messages": enriched,
+            "mode": "MOCK_DEMO"
+        }
 
-    Each message's 'parsed' field contains the decoded agent JSON if valid.
-    """
     async with httpx.AsyncClient() as client:
         room_id = await _get_room_id(client)
         messages = await _fetch_messages(client, room_id)
@@ -366,22 +714,17 @@ async def get_room_messages(case_id: str | None = Query(default=None)):
 
 @app.get("/case-status")
 async def case_status(case_id: str = Query(..., description="The case_id to check")):
-    """
-    Returns whether an investigation is complete (all 6 agents have posted)
-    or still in progress, by scanning which agents have posted for this case_id.
+    """Checks the status of the investigation case (all 6 agents posted or pending)."""
+    if MOCK_MODE:
+        messages = []
+        if case_id in MOCK_ROOM_MESSAGES:
+            messages = MOCK_ROOM_MESSAGES[case_id]
+    else:
+        async with httpx.AsyncClient() as client:
+            room_id = await _get_room_id(client)
+            messages = await _fetch_messages(client, room_id)
 
-    Response includes:
-    - agents_posted: list of agent names that have posted
-    - agents_pending: list of agents that haven't posted yet
-    - investigation_complete: bool — all 5 specialists AND coordinator brief done
-    - verdict: the coordinator's final verdict if available
-    - severity: the coordinator's overall severity if available
-    """
-    async with httpx.AsyncClient() as client:
-        room_id = await _get_room_id(client)
-        messages = await _fetch_messages(client, room_id)
-
-    agents_posted: dict[str, dict] = {}   # agent_key -> parsed message
+    agents_posted: dict[str, dict] = {}
 
     for raw in messages:
         data = _parse_agent_message(raw)
@@ -403,7 +746,6 @@ async def case_status(case_id: str = Query(..., description="The case_id to chec
     brief_done = "coordinator_brief" in agents_posted
     investigation_complete = specialists_done and brief_done
 
-    # Extract verdict and severity from executive brief if available
     verdict = None
     severity = None
     if brief_done:
@@ -415,7 +757,6 @@ async def case_status(case_id: str = Query(..., description="The case_id to chec
         (EXPECTED_AGENTS - set(agents_posted.keys())) - {"coordinator_kickoff"}
     )
 
-    # Build per-agent summary
     agent_summaries = {}
     for key, data in agents_posted.items():
         agent_summaries[key] = {
@@ -441,15 +782,8 @@ async def case_status(case_id: str = Query(..., description="The case_id to chec
 
 @app.post("/approve-action")
 async def approve_action(req: ApproveActionRequest):
-    """
-    Record a human investigator's approval or escalation decision for a case.
-    Logs the decision in ACTIVE_CASES for audit trail.
-
-    Works for any case_id — if the case isn't in ACTIVE_CASES (e.g. triggered
-    manually via Band UI), it creates the record automatically.
-    """
+    """Record a human investigator's approval or escalation decision for a case."""
     if req.case_id not in ACTIVE_CASES:
-        # Allow approvals for cases triggered directly via Band UI
         ACTIVE_CASES[req.case_id] = {
             "status": "unknown",
             "created_at": None,
