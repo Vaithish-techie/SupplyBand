@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'http://127.0.0.1:8001';
 
 export function useInvestigation(caseId) {
   const [messages, setMessages] = useState([]);
