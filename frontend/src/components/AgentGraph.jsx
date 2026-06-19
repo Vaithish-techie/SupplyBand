@@ -18,37 +18,37 @@ export default function AgentGraph({ agentStates, isComplete }) {
       {
         id: 'coordinator',
         type: 'coordinator',
-        position: { x: 400, y: 40 },
+        position: { x: 300, y: 20 },
         data: { label: 'Coordinator', state: agentStates['coordinator']?.state || 'pending', isComplete }
       },
       {
         id: 'event_intelligence',
         type: 'agent',
-        position: { x: 400, y: 200 },
+        position: { x: 300, y: 150 },
         data: { label: 'Event Intel', ...agentStates['event_intelligence'] }
       },
       {
         id: 'supplier_impact',
         type: 'agent',
-        position: { x: 400, y: 360 },
+        position: { x: 300, y: 280 },
         data: { label: 'Supplier Impact', ...agentStates['supplier_impact'] }
       },
       {
         id: 'financial_exposure',
         type: 'agent',
-        position: { x: 50, y: 540 },
+        position: { x: 20, y: 410 },
         data: { label: 'Financial Exposure', ...agentStates['financial_exposure'] }
       },
       {
         id: 'alt_sourcing',
         type: 'agent',
-        position: { x: 400, y: 540 },
+        position: { x: 300, y: 410 },
         data: { label: 'Alt Sourcing', ...agentStates['alt_sourcing'] }
       },
       {
         id: 'regulatory_trade',
         type: 'agent',
-        position: { x: 750, y: 540 },
+        position: { x: 580, y: 410 },
         data: { label: 'Regulatory & Trade', ...agentStates['regulatory_trade'] }
       }
     ];
@@ -89,7 +89,7 @@ export default function AgentGraph({ agentStates, isComplete }) {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         fitView
-        fitViewOptions={{ padding: 0.2 }}
+        fitViewOptions={{ padding: 0.05 }}
         nodesDraggable={true}
         nodesConnectable={false}
         zoomOnScroll={true}

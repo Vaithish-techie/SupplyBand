@@ -5,7 +5,7 @@
 
 
 echo "Cleaning up any existing agent processes..."
-pkill -f "/home/vaiunix_111/miniconda3/envs/aml-agents/bin/python agents/" || true
+pkill -f "python agents/" || true
 pkill -f "backend:app" || true
 echo "Waiting 3 seconds to ensure sockets close cleanly..."
 sleep 3
@@ -23,28 +23,28 @@ else
 fi
 
 echo "Starting Coordinator first (it must be online before others post)..."
-/home/vaiunix_111/miniconda3/envs/aml-agents/bin/python agents/coordinator.py &
+python agents/coordinator.py &
 sleep 3
 
 echo "Starting Event Intelligence..."
-/home/vaiunix_111/miniconda3/envs/aml-agents/bin/python agents/event_intelligence.py &
+python agents/event_intelligence.py &
 sleep 2
 
 echo "Starting Supplier Impact..."
-/home/vaiunix_111/miniconda3/envs/aml-agents/bin/python agents/supplier_impact.py &
+python agents/supplier_impact.py &
 sleep 2
 
 echo "Starting Financial Exposure and Regulatory & Trade (in parallel)..."
-/home/vaiunix_111/miniconda3/envs/aml-agents/bin/python agents/financial_exposure.py &
-/home/vaiunix_111/miniconda3/envs/aml-agents/bin/python agents/regulatory_trade.py &
+python agents/financial_exposure.py &
+python agents/regulatory_trade.py &
 sleep 2
 
 echo "Starting Alternative Sourcing last..."
-/home/vaiunix_111/miniconda3/envs/aml-agents/bin/python agents/alt_sourcing.py &
+python agents/alt_sourcing.py &
 sleep 2
 
 echo "Starting FastAPI backend on port 8000..."
-/home/vaiunix_111/miniconda3/envs/aml-agents/bin/python -m uvicorn backend:app --reload --port 8000 &
+python -m uvicorn backend:app --reload --port 8000 &
 
 echo ""
 echo "=========================================="

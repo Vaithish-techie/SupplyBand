@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap');
 
 /* ============================================================
    DESIGN SYSTEM: DEEP SPACE WAR ROOM
@@ -44,8 +44,8 @@
   --text-inv:      #07080C;
 
   /* === Type System === */
-  --font-display:  'Syne', Georgia, sans-serif;
-  --font-body:     'Space Grotesk', system-ui, sans-serif;
+  --font-display:  'Outfit', system-ui, sans-serif;
+  --font-body:     'Inter', system-ui, sans-serif;
   --font-mono:     'JetBrains Mono', 'Courier New', monospace;
 
   /* === Motion === */
@@ -78,17 +78,22 @@ html {
 
 body {
   font-family: var(--font-body);
-  background-color: var(--bg);
+  background: 
+    radial-gradient(circle at 15% 50%, rgba(200, 150, 10, 0.07), transparent 40%),
+    radial-gradient(circle at 85% 30%, rgba(91, 79, 189, 0.05), transparent 50%),
+    radial-gradient(circle at 50% 80%, rgba(192, 57, 43, 0.04), transparent 50%),
+    linear-gradient(135deg, #07080C, #0b0c12, #07080C);
+  background-size: 200% 200%;
+  animation: bg-breathe 25s ease infinite;
+  background-attachment: fixed;
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
-
-  /* Tactical grid overlay */
-  background-image:
-    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-  background-size: 48px 48px;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Atmospheric radial vignette */
@@ -98,7 +103,10 @@ body::after {
   inset: 0;
   background:
     radial-gradient(ellipse 80% 40% at 50% 0%, rgba(200, 150, 10, 0.04) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 60% at 80% 80%, rgba(91, 79, 189, 0.03) 0%, transparent 60%);
+    radial-gradient(ellipse 60% 60% at 80% 80%, rgba(91, 79, 189, 0.03) 0%, transparent 60%),
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
   pointer-events: none;
   z-index: 0;
 }
@@ -112,20 +120,42 @@ body::after {
 }
 
 /* ============================================================
+   GLOBAL STYLES & ANIMATIONS
+   ============================================================ */
+@keyframes bg-breathe {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(12px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.6s var(--ease-out-expo) forwards;
+}
+
+/* ============================================================
    SCROLLBAR
    ============================================================ */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(200, 150, 10, 0.2);
+  background: rgba(200, 150, 10, 0.25);
   border-radius: 10px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(200, 150, 10, 0.5);
+  background: rgba(200, 150, 10, 0.6);
 }
 
 ::selection {
-  background: rgba(200, 150, 10, 0.2);
+  background: rgba(200, 150, 10, 0.3);
   color: var(--gold-bright);
 }
 
@@ -135,15 +165,21 @@ body::after {
 
 /* --- Panel (glass card) --- */
 .glass-panel {
-  background: var(--surface);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  box-shadow: var(--shadow-md);
+  background: linear-gradient(135deg, rgba(20,22,30,0.65) 0%, rgba(10,11,15,0.85) 100%);
+  backdrop-filter: blur(28px) saturate(1.2);
+  -webkit-backdrop-filter: blur(28px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   position: relative;
   overflow: hidden;
-  transition: var(--transition);
+  transition: all 0.4s var(--ease-out-expo);
+}
+
+.glass-panel:hover {
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
 }
 
 .glass-panel::before {
@@ -501,9 +537,8 @@ body::after {
   display: flex;
   flex: 1;
   gap: 20px;
-  min-height: 0;
-  height: calc(100vh - 280px);
-  min-height: 580px;
+  min-height: 750px;
+  height: 85vh;
 }
 
 .inv-graph-pane {
@@ -967,6 +1002,8 @@ body::after {
   flex-direction: column;
   height: 100%;
   padding: 20px;
+  flex: 1;
+  min-height: 0;
 }
 
 .live-log-container h3 {

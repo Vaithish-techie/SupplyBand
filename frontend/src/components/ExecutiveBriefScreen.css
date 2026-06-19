@@ -205,6 +205,20 @@
   gap: 0.8rem;
 }
 
+.metric-highlight {
+  background: var(--gold-dim);
+  color: var(--gold-bright);
+  padding: 0px 4px;
+  border-radius: 2px;
+  border-bottom: 1px dashed var(--gold);
+  font-weight: 600;
+  transition: var(--transition);
+}
+
+.metric-highlight:hover {
+  background: rgba(200, 150, 10, 0.25);
+}
+
 .action-list li {
   display: flex;
   align-items: flex-start;

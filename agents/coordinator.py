@@ -195,7 +195,7 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
 
                 prompt_text = COORDINATOR_PROMPT + f"\n\nYOUR ASSIGNED CASE ID IS: {case_id_param}\n\n=== CHAT HISTORY ===\n" + findings_text
                 
-                llm = get_llm_for_agent("coordinator").bind(response_format={"type": "json_object"})
+                llm = get_llm_for_agent("coordinator")
                 try:
                     result = await llm.ainvoke([
                         SystemMessage(content=prompt_text),

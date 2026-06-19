@@ -428,7 +428,7 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
             }
         logger.info("Running in LLM Mode — direct structured call")
         from langchain_core.messages import SystemMessage, HumanMessage
-        llm = get_llm_for_agent("supplier_impact").bind(response_format={"type": "json_object"})
+        llm = get_llm_for_agent("supplier_impact")
         suppliers_json = json.dumps(suppliers, indent=2)
         system_prompt = SUPPLIER_IMPACT_PROMPT_TEMPLATE.format(suppliers_json=suppliers_json)
         user_content = (
