@@ -80,11 +80,22 @@ async def _mock_request(self, method, url, **kwargs):
     
     resp = await _orig_request(self, method, url, **kwargs)
     
-    if resp.status_code == 422 and ("/processed" in url_str or "/failed" in url_str):
-        logger.warning(f"MONKEYPATCH: Intercepted HTTP 422 validation error for {method} {url_str}. Returning mock HTTP 200 OK.")
+    if "/processed" in url_str or "/failed" in url_str:
+        import re
+        match = re.search(r"/messages/([^/]+)/(processed|failed)", url_str)
+        msg_id = match.group(1) if match else "mock-id"
+        status_val = match.group(2) if match else "processed"
+        logger.info(f"MONKEYPATCH: Intercepting response for {method} {url_str}. Original status={resp.status_code}. Returning mock validated response.")
         return httpx.Response(
             status_code=200,
-            json={"success": True},
+            json={
+                "data": {
+                    "id": msg_id,
+                    "attempt_number": 1,
+                    "status": status_val,
+                    "success": True
+                }
+            },
             headers={"content-type": "application/json"},
             request=resp.request
         )

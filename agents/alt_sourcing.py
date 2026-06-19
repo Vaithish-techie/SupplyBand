@@ -270,6 +270,10 @@ def find_alternatives(affected_components: list, blocked_regulatory_flags: list 
 # ---------------------------------------------------------------------------
 
 class CustomAltSourcingAdapter(LangGraphAdapter):
+    def __init__(self, *args, api_key: str = None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.api_key = api_key
+
     async def on_message(
         self,
         msg,
@@ -331,74 +335,72 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
             logger.info(f"Already responded to {case_id}, skipping.")
             return {"status": "skipped"}
 
-        # Polling loop for upstream dependencies — only wait for supplier_impact now
-        required_agents = {"supplier_impact"}
-        
-        while True:
-            found = set()
+        # Wait for supplier_impact, financial_exposure, and regulatory_trade
+        required_agents = {"supplier_impact", "financial_exposure", "regulatory_trade"}
+        found = {}
+
+        # Poll room context via REST API for up to 60 seconds (15 attempts * 4s sleep)
+        # IMPORTANT: paginate through ALL pages — room may have 100+ messages across many pages
+        for attempt in range(15):
+            all_msgs = []
+            try:
+                import httpx
+                headers = {"x-api-key": self.api_key}
+                async with httpx.AsyncClient() as client:
+                    page = 1
+                    while page <= 20:  # safety cap
+                        resp = await client.get(
+                            f"https://app.band.ai/api/v1/agent/chats/{room_id}/context",
+                            headers=headers,
+                            params={"page": page, "page_size": 100},
+                            timeout=10
+                        )
+                        if resp.status_code != 200:
+                            break
+                        data = resp.json()
+                        page_msgs = data.get("data", data if isinstance(data, list) else [])
+                        if not page_msgs:
+                            break
+                        for m in page_msgs:
+                            content = m.get("content", "")
+                            if content.startswith("[") and "]: " in content:
+                                content = content.split("]: ", 1)[1]
+                            if "{" in content:
+                                content = content[content.find("{"):content.rfind("}")+1]
+                            try:
+                                parsed_m = json.loads(content)
+                                if isinstance(parsed_m, dict):
+                                    all_msgs.append(parsed_m)
+                            except Exception:
+                                pass
+                        if len(page_msgs) < 100:
+                            break  # last page
+                        page += 1
+                logger.info(f"alt_sourcing polled {len(all_msgs)} messages across {page} page(s) for {case_id}")
+            except Exception as e:
+                logger.warning(f"Error polling room messages: {e}")
+
+            # Check if required agents have posted
+            found = {}
             for d in all_msgs:
                 if not isinstance(d, dict):
                     continue
                 agent_name = d.get("agent")
-                if agent_name == "supplier_impact":
+                if agent_name in required_agents:
                     if d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error", "fallback"):
-                        found.add(agent_name)
+                        found[agent_name] = d
 
-            if "supplier_impact" in found:
+            if len(found) == 3:
+                logger.info(f"All prerequisites found for case {case_id} after {attempt * 4} seconds!")
                 break
-                
-            logger.info(f"alt_sourcing polling... Found: {found}. Waiting for: {required_agents - found}")
-            await asyncio.sleep(5)
-            
-            # Fetch latest history with brute-force pagination (up to 5 pages)
-            try:
-                import httpx
-                from band.config import load_agent_config
-                _, api_key = load_agent_config("alt_sourcing")
-                new_msgs = []
-                async with httpx.AsyncClient() as client:
-                    all_messages = []
 
-                    for page_num in range(1, 6):
-                        resp = await client.get(
-                            f"https://app.band.ai/api/v1/agent/chats/{room_id}/context?page={page_num}&page_size=100",
-                            headers={"x-api-key": api_key}
-                        )
-                        if resp.status_code != 200:
-                            continue
+            logger.info(f"alt_sourcing waiting (attempt {attempt+1}/15)... Found {list(found.keys())} for {case_id}. Missing: {required_agents - set(found.keys())}")
+            await asyncio.sleep(4)
 
-                        data = resp.json()
-                        messages = data.get("data", []) if isinstance(data, dict) else data
-
-                        if messages and isinstance(messages, list):
-                            all_messages.extend(messages)
-                            logger.info(f"Fetched page {page_num}: {len(messages)} messages (total so far: {len(all_messages)})")
-
-                    for m in all_messages:
-                        if not isinstance(m, dict):
-                            continue
-                        
-                        # Support both msg.parsed (if present in API) and raw content parsing
-                        parsed_data = m.get("parsed")
-                        if isinstance(parsed_data, dict) and parsed_data:
-                            new_msgs.append(parsed_data)
-                            continue
-
-                        content = m.get("content", "")
-                        if content.startswith("[") and "]: " in content:
-                            content = content.split("]: ", 1)[1]
-                        if "{" in content:
-                            content = content[content.find("{"):content.rfind("}")+1]
-                        try:
-                            parsed = json.loads(content)
-                            if isinstance(parsed, dict):
-                                new_msgs.append(parsed)
-                        except Exception:
-                            pass
-
-                    all_msgs = new_msgs
-            except Exception as e:
-                logger.warning(f"Polling error: {e}")
+        if len(found) < 3:
+            logger.warning(f"alt_sourcing timed out waiting for prerequisites for {case_id}. Found: {list(found.keys())}")
+            if "supplier_impact" not in found:
+                return {"status": "skipped"}
 
         logger.info(f"All prerequisites found for case {case_id}. Triggering alt_sourcing logic.")
 
@@ -406,16 +408,19 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
         blocked_regulatory_flags = []
         upstream_failure = False
 
-        for d in all_msgs:
-            if isinstance(d, dict) and d.get("case_id") == case_id:
-                agent_name = d.get("agent")
-                if agent_name == "supplier_impact":
-                    if d.get("status") != "complete":
-                        upstream_failure = True
-                    affected_components = (d.get("findings") or {}).get("affected_components", [])
-                elif agent_name == "regulatory_trade":
-                    if d.get("status") == "complete":
-                        blocked_regulatory_flags = (d.get("findings") or {}).get("export_controls", [])
+        for agent_name, d in found.items():
+            if agent_name == "supplier_impact":
+                if d.get("status") != "complete":
+                    upstream_failure = True
+                affected_components = (d.get("findings") or {}).get("affected_components", [])
+            elif agent_name == "regulatory_trade":
+                if d.get("status") == "complete":
+                    blocked_regulatory_flags = (d.get("findings") or {}).get("export_controls", [])
+                else:
+                    upstream_failure = True
+            elif agent_name == "financial_exposure":
+                if d.get("status") != "complete":
+                    upstream_failure = True
 
         if upstream_failure or not affected_components:
             envelope = {
@@ -485,32 +490,25 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
 async def main():
     load_dotenv()
 
-    # Apply global httpx patch to capture /processed
-    import httpx
-    original_post = httpx.AsyncClient.post
-    async def debug_post(client_self, url, *args, **kwargs):
-        if "processed" in str(url):
-            logger.warning(f"DEBUG /processed payload to {url}: kwargs={kwargs}")
-        return await original_post(client_self, url, *args, **kwargs)
-    httpx.AsyncClient.post = debug_post
-
     alternatives = load_alternatives()
     logger.info(f"Loaded {len(alternatives)} alternative suppliers from alternatives.json")
 
     llm = get_llm_for_agent("alt_sourcing")
     logger.info("Using AI/ML API (primary) with Featherless AI (fallback)")
 
+    agent_id, api_key = load_agent_config("alt_sourcing")
+
     adapter = CustomAltSourcingAdapter(
         llm=llm,
         checkpointer=InMemorySaver(),
         custom_section=ALT_SOURCING_PROMPT,
         additional_tools=[find_alternatives],
+        api_key=api_key,
     )
 
-    agent_id, api_key = load_agent_config("alt_sourcing")
     agent = Agent.create(adapter=adapter, agent_id=agent_id, api_key=api_key)
 
-    logger.info("Alternative Sourcing Agent running — waiting for supplier_impact + financial_exposure + regulatory_trade posts...")
+    logger.info("Alternative Sourcing Agent running...")
     await agent.run()
 
 
