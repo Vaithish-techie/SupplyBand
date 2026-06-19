@@ -70,31 +70,39 @@ Start your response with { and end with }. Output only the JSON object."""
 
 def check_trigger_and_check_duplicate(msg, history, agent_name, trigger_condition_func):
     """Parse all messages to find the trigger and check for duplicate responses."""
+    import re
     all_msgs = []
-
-    for m in history:
-        content = m.content
+    
+    def parse_msg(m, is_current=False):
+        parsed = getattr(m, 'parsed', None)
+        if isinstance(parsed, dict) and parsed:
+            return parsed
+            
+        content = getattr(m, 'content', '')
+        if not content:
+            return {}
+            
+        orig_content = content
         if content.startswith("[") and "]: " in content:
             content = content.split("]: ", 1)[1]
+            
+        # Strip mentions
+        content = re.sub(r"@\[\[[^\]]+\]\]\s*", "", content)
+        content = re.sub(r"@[^\s]+\s*", "", content)
+        
         try:
             if "{" in content:
                 content = content[content.find("{"):content.rfind("}")+1]
-            data = json.loads(content)
-        except Exception:
-            data = {}
-        all_msgs.append(data)
+            return json.loads(content)
+        except Exception as e:
+            if is_current:
+                logger.warning(f"Failed to parse CURRENT message JSON: {e}. Content: {repr(orig_content)[:300]}")
+            return {}
 
-    # Append the current message
-    try:
-        content = msg.content
-        if content.startswith("[") and "]: " in content:
-            content = content.split("]: ", 1)[1]
-        if "{" in content:
-            content = content[content.find("{"):content.rfind("}")+1]
-        current_data = json.loads(content)
-    except Exception:
-        current_data = {}
-    all_msgs.append(current_data)
+    for m in history:
+        all_msgs.append(parse_msg(m))
+
+    all_msgs.append(parse_msg(msg, is_current=True))
 
     # Find the most recent trigger message
     trigger_msg_data = None
@@ -187,13 +195,15 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
         if kickoff_ts:
             try:
                 kt = datetime.fromisoformat(kickoff_ts.replace("Z", "+00:00"))
-                age_secs = (AGENT_START_TIME - kt).total_seconds()
+                # Make AGENT_START_TIME timezone-aware UTC if it is not
+                agent_start = AGENT_START_TIME.replace(tzinfo=timezone.utc) if AGENT_START_TIME.tzinfo is None else AGENT_START_TIME
+                age_secs = (agent_start - kt).total_seconds()
                 if age_secs > 300:
                     logger.info(f"Skipping stale kickoff {trigger_msg_data.get('case_id')} (age={int(age_secs)}s > 300s)")
                     await asyncio.sleep(0.5 + random.random() * 2.5)
                     return {"status": "skipped"}
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Error checking kickoff age: {e}")
 
         case_id = trigger_msg_data.get("case_id")
         if already_responded:
@@ -203,7 +213,7 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
         logger.info(f"Processing kickoff event for case {case_id}")
         event_text = trigger_msg_data.get("event_text", "")
 
-        # Find supplier_impact handle to mention so it wakes up
+        # Find supplier_impact and coordinator handles to mention
         from utils import get_room_participants
         mentions = []
         try:
@@ -212,13 +222,20 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
             for h in handles:
                 if "supplier-impact" in h.lower() or "supplier_impact" in h.lower():
                     mentions.append(h)
-                    break
+                elif "coordinator" in h.lower():
+                    mentions.append(h)
         except Exception as e:
             logger.error(f"Failed to fetch participants: {e}")
             
-        if not mentions:
-            # Hardcoded real Band handles — fallback when participants API fails
-            mentions = ["@rshricharan29/supplier-impact"]
+        # Ensure we always mention at least supplier-impact and coordinator
+        has_supplier_impact = any("supplier-impact" in m.lower() or "supplier_impact" in m.lower() for m in mentions)
+        has_coordinator = any("coordinator" in m.lower() for m in mentions)
+        
+        if not has_supplier_impact:
+            mentions.append("@rshricharan29/supplier-impact")
+        if not has_coordinator:
+            mentions.append("@vaithish7/coordinator")
+            
         # Always log what we are about to mention
         print(f"[event_intelligence] Mentioning: {mentions}")
 
