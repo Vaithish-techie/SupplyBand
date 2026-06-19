@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
-const API_BASE = 'https://vai7-supply-backend.hf.space';
+const API_BASE = 'http://localhost:8000';
 
 export function useInvestigation(caseId) {
   const [messages, setMessages] = useState([]);

@@ -5,7 +5,7 @@ import InvestigationScreen from './components/InvestigationScreen';
 import ExecutiveBriefScreen from './components/ExecutiveBriefScreen';
 import './App.css';
 
-const API_BASE = 'https://vai7-supply-backend.hf.space';
+const API_BASE = 'http://localhost:8000';
 
 import LandingPage from './components/LandingPage';
 
