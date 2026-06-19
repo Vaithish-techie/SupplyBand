@@ -331,8 +331,8 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
             logger.info(f"Already responded to {case_id}, skipping.")
             return {"status": "skipped"}
 
-        # Polling loop for upstream dependencies
-        required_agents = {"supplier_impact", "financial_exposure", "regulatory_trade"}
+        # Polling loop for upstream dependencies — only wait for supplier_impact now
+        required_agents = {"supplier_impact"}
         
         while True:
             found = set()
@@ -340,11 +340,11 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
                 if not isinstance(d, dict):
                     continue
                 agent_name = d.get("agent")
-                if agent_name == "supplier_impact" or agent_name == "financial_exposure" or agent_name == "regulatory_trade":
+                if agent_name == "supplier_impact":
                     if d.get("case_id") == case_id and d.get("status") in ("complete", "insufficient_data", "escalate", "error", "fallback"):
                         found.add(agent_name)
 
-            if "supplier_impact" in found and "financial_exposure" in found and "regulatory_trade" in found:
+            if "supplier_impact" in found:
                 break
                 
             logger.info(f"alt_sourcing polling... Found: {found}. Waiting for: {required_agents - found}")
@@ -409,12 +409,12 @@ class CustomAltSourcingAdapter(LangGraphAdapter):
         for d in all_msgs:
             if isinstance(d, dict) and d.get("case_id") == case_id:
                 agent_name = d.get("agent")
-                if agent_name in required_agents:
+                if agent_name == "supplier_impact":
                     if d.get("status") != "complete":
                         upstream_failure = True
-                    if agent_name == "supplier_impact":
-                        affected_components = (d.get("findings") or {}).get("affected_components", [])
-                    elif agent_name == "regulatory_trade":
+                    affected_components = (d.get("findings") or {}).get("affected_components", [])
+                elif agent_name == "regulatory_trade":
+                    if d.get("status") == "complete":
                         blocked_regulatory_flags = (d.get("findings") or {}).get("export_controls", [])
 
         if upstream_failure or not affected_components:

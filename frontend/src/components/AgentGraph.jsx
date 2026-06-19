@@ -36,20 +36,20 @@ export default function AgentGraph({ agentStates, isComplete }) {
       {
         id: 'financial_exposure',
         type: 'agent',
-        position: { x: 80, y: 380 },
+        position: { x: 70, y: 380 },
         data: { label: 'Financial Exposure', ...agentStates['financial_exposure'] }
-      },
-      {
-        id: 'regulatory_trade',
-        type: 'agent',
-        position: { x: 420, y: 380 },
-        data: { label: 'Regulatory & Trade', ...agentStates['regulatory_trade'] }
       },
       {
         id: 'alt_sourcing',
         type: 'agent',
-        position: { x: 250, y: 500 },
+        position: { x: 250, y: 380 },
         data: { label: 'Alt Sourcing', ...agentStates['alt_sourcing'] }
+      },
+      {
+        id: 'regulatory_trade',
+        type: 'agent',
+        position: { x: 430, y: 380 },
+        data: { label: 'Regulatory & Trade', ...agentStates['regulatory_trade'] }
       }
     ];
   }, [agentStates, isComplete]);
@@ -63,6 +63,7 @@ export default function AgentGraph({ agentStates, isComplete }) {
         if (agent === 'supplier_impact') return `${state.findings.affected_tier1 || 0} Tier-1 Affected`;
         if (agent === 'financial_exposure') return `$${(state.findings.week6_risk_usd/1e6).toFixed(1)}M Risk`;
         if (agent === 'regulatory_trade') return state.findings.force_majeure_applicable ? 'Force Majeure' : 'Checked';
+        if (agent === 'alt_sourcing') return state.findings.recommended || 'Alternatives Ranked';
       }
       return null;
     };
@@ -104,23 +105,39 @@ export default function AgentGraph({ agentStates, isComplete }) {
         data: { id: 'e-supplier-regulatory', isAnimating: isActive('regulatory_trade'), findingLabel: getLabel('supplier_impact') }
       },
       {
-        id: 'e-financial-alt',
-        source: 'financial_exposure',
+        id: 'e-supplier-alt',
+        source: 'supplier_impact',
         target: 'alt_sourcing',
         type: 'animated',
         animated: isActive('alt_sourcing'),
-        data: { id: 'e-financial-alt', isAnimating: isActive('alt_sourcing'), findingLabel: getLabel('financial_exposure') }
+        data: { id: 'e-supplier-alt', isAnimating: isActive('alt_sourcing'), findingLabel: getLabel('supplier_impact') }
       },
       {
-        id: 'e-regulatory-alt',
-        source: 'regulatory_trade',
-        target: 'alt_sourcing',
+        id: 'e-financial-coord',
+        source: 'financial_exposure',
+        target: 'coordinator',
         type: 'animated',
-        animated: isActive('alt_sourcing'),
-        data: { id: 'e-regulatory-alt', isAnimating: isActive('alt_sourcing'), findingLabel: getLabel('regulatory_trade') }
+        animated: isComplete,
+        data: { id: 'e-financial-coord', isAnimating: isComplete, findingLabel: getLabel('financial_exposure') }
+      },
+      {
+        id: 'e-regulatory-coord',
+        source: 'regulatory_trade',
+        target: 'coordinator',
+        type: 'animated',
+        animated: isComplete,
+        data: { id: 'e-regulatory-coord', isAnimating: isComplete, findingLabel: getLabel('regulatory_trade') }
+      },
+      {
+        id: 'e-alt-coord',
+        source: 'alt_sourcing',
+        target: 'coordinator',
+        type: 'animated',
+        animated: isComplete,
+        data: { id: 'e-alt-coord', isAnimating: isComplete, findingLabel: getLabel('alt_sourcing') }
       }
     ];
-  }, [agentStates]);
+  }, [agentStates, isComplete]);
 
   return (
     <div style={{ width: '100%', height: '100%' }}>

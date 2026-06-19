@@ -19,15 +19,14 @@ export default function PipelineStepper({ agentStates, isComplete }) {
       state: agentStates['supplier_impact']?.state || 'pending'
     },
     {
-      id: 'finance_regulatory',
-      label: 'Finance & Regulatory',
-      state: (agentStates['financial_exposure']?.state === 'complete' && agentStates['regulatory_trade']?.state === 'complete') ? 'complete' :
-             (agentStates['financial_exposure']?.state === 'processing' || agentStates['regulatory_trade']?.state === 'processing') ? 'processing' : 'pending'
-    },
-    {
-      id: 'alt_sourcing',
-      label: 'Alt Sourcing',
-      state: agentStates['alt_sourcing']?.state || 'pending'
+      id: 'specialist_analysis',
+      label: 'Specialist Analysis',
+      state: (agentStates['financial_exposure']?.state === 'complete' && 
+              agentStates['regulatory_trade']?.state === 'complete' && 
+              agentStates['alt_sourcing']?.state === 'complete') ? 'complete' :
+             (['processing', 'delayed', 'complete'].includes(agentStates['financial_exposure']?.state) || 
+              ['processing', 'delayed', 'complete'].includes(agentStates['regulatory_trade']?.state) || 
+              ['processing', 'delayed', 'complete'].includes(agentStates['alt_sourcing']?.state)) ? 'processing' : 'pending'
     },
     {
       id: 'executive_brief',

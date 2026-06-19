@@ -146,14 +146,14 @@ async def _fetch_participants(client: httpx.AsyncClient, room_id: str) -> list[d
 
 async def _fetch_messages(client: httpx.AsyncClient, room_id: str, page_size: int = 100) -> list[dict]:
     """
-    Fetch recent messages from the Band room via the /context endpoint.
+    Fetch all messages from the Band room via the /context endpoint.
     The Band API caps page_size at 100 messages per page regardless of the parameter.
-    Fetches up to 3 pages (300 messages) to ensure active investigations are visible
-    even when the room has many historic messages from past sessions.
+    Paginates through all pages to ensure the latest messages are fetched.
     """
     all_messages = []
+    page = 1
     try:
-        for page in [1, 2, 3]:  # Fetch up to 3 pages = 300 messages total
+        while True:
             r = await client.get(
                 f"{BAND_REST_URL}/api/v1/agent/chats/{room_id}/context",
                 headers={"x-api-key": BAND_API_KEY},
@@ -163,9 +163,13 @@ async def _fetch_messages(client: httpx.AsyncClient, room_id: str, page_size: in
             r.raise_for_status()
             data = r.json()
             page_msgs = data.get("data", data if isinstance(data, list) else [])
+            if not page_msgs:
+                break
             all_messages.extend(page_msgs)
-            # Stop if we got 0 messages (empty page = no more data)
-            if len(page_msgs) == 0:
+            if len(page_msgs) < page_size:
+                break
+            page += 1
+            if page > 20:  # safety cap
                 break
         return all_messages
     except httpx.TimeoutException:

@@ -203,26 +203,22 @@ class CustomEventIntelligenceAdapter(LangGraphAdapter):
         logger.info(f"Processing kickoff event for case {case_id}")
         event_text = trigger_msg_data.get("event_text", "")
 
-        # Find all other handles to mention so downstream agents wake up
+        # Find supplier_impact handle to mention so it wakes up
         from utils import get_room_participants
         mentions = []
         try:
             handles = await get_room_participants(room_id, "event_intelligence", participants_msg)
             print(f"[event_intelligence] All participant handles: {handles}")
             for h in handles:
-                # Only include proper agent handles (username/agent-slug format)
-                # Bare usernames like @rshricharan29 (no slash) are NOT valid agent mentions
-                if "/" in h and "event" not in h.lower():
+                if "supplier-impact" in h.lower() or "supplier_impact" in h.lower():
                     mentions.append(h)
+                    break
         except Exception as e:
             logger.error(f"Failed to fetch participants: {e}")
             
         if not mentions:
             # Hardcoded real Band handles — fallback when participants API fails
-            mentions = [
-                "@vaithish7/coordinator",
-                "@rshricharan29/supplier-impact",
-            ]
+            mentions = ["@rshricharan29/supplier-impact"]
         # Always log what we are about to mention
         print(f"[event_intelligence] Mentioning: {mentions}")
 

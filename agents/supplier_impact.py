@@ -189,13 +189,24 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
             findings = current_data.get("findings", current_data)
             print(f"[SUPPLIER IMPACT] Waking up! Received data: agent={current_data.get('agent')}, case_id={case_id}")
             logger.info(f"Direct trigger: event_intelligence for case {case_id}. Processing now.")
-
-            downstream_handles = [
-                "@vaithish7/coordinator",
-                "@sreedarsan0311/financial-exposure",
-                "@belugaok3/regulatory-agent",
-                "@sreedarsan0311/alt-sourcing",
-            ]
+            # Resolve downstream handles dynamically
+            downstream_handles = []
+            try:
+                from utils import get_room_participants
+                handles = await get_room_participants(room_id, "supplier_impact", participants_msg)
+                for h in handles:
+                    if "/" in h and ("financial" in h.lower() or "regulatory" in h.lower() or "alt-sourcing" in h.lower() or "alt_sourcing" in h.lower() or "coordinator" in h.lower()):
+                        downstream_handles.append(h)
+            except Exception as e:
+                logger.error(f"Failed to fetch participants: {e}")
+            
+            if not downstream_handles:
+                downstream_handles = [
+                    "@vaithish7/coordinator",
+                    "@sreedarsan0311/financial-exposure",
+                    "@belugaok3/regulatory-agent",
+                    "@sreedarsan0311/alt-sourcing",
+                ]
 
             try:
                 res = await self.process_supplier_impact(
@@ -251,7 +262,7 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
             # Check if we already responded to this case
             already_responded = False
             for sender, data in all_msgs:
-                if data.get("agent") == "supplier_impact" and data.get("case_id") == case_id and data.get("status") in ("complete", "escalate", "insufficient_data"):
+                if data.get("agent") == "supplier_impact" and data.get("case_id") == case_id and data.get("status") in ("complete", "insufficient_data", "escalate", "error", "fallback"):
                     already_responded = True
                     break
 
@@ -270,16 +281,24 @@ class CustomSupplierImpactAdapter(LangGraphAdapter):
                         upstream_failed = True
                         break
 
-            from utils import get_room_participants
-            downstream_handles = ["@event_intelligence"]
+            # Resolve downstream handles dynamically for fallback path
+            downstream_handles = []
             try:
+                from utils import get_room_participants
                 handles = await get_room_participants(room_id, "supplier_impact", participants_msg)
                 for h in handles:
-                    if "event-intelligence" in h.lower() or "event_intelligence" in h.lower():
-                        downstream_handles = [h]
-                        break
+                    if "/" in h and ("financial" in h.lower() or "regulatory" in h.lower() or "alt-sourcing" in h.lower() or "alt_sourcing" in h.lower() or "coordinator" in h.lower()):
+                        downstream_handles.append(h)
             except Exception as e:
                 logger.error(f"Failed to fetch participants: {e}")
+            
+            if not downstream_handles:
+                downstream_handles = [
+                    "@vaithish7/coordinator",
+                    "@sreedarsan0311/financial-exposure",
+                    "@belugaok3/regulatory-agent",
+                    "@sreedarsan0311/alt-sourcing",
+                ]
 
             if upstream_failed:
                 logger.warning(f"Upstream agent event_intelligence failed/errored for case {case_id}. Cascading insufficient_data.")

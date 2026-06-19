@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { ShieldAlert, AlertTriangle, Info, CheckCircle, ArrowRight, Activity, DollarSign, Scale, Truck } from 'lucide-react';
+import LiveLog from './LiveLog';
 import './ExecutiveBriefScreen.css';
 
 const API_BASE = 'http://localhost:8000';
 
 export default function ExecutiveBriefScreen({ caseId, onBack }) {
+  const [messages, setMessages] = useState([]);
   const [brief, setBrief] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,7 +20,17 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
       try {
         const response = await axios.get(`${API_BASE}/room-messages?case_id=${caseId}`);
         if (isMounted) {
-          const fetchedMsgs = response.data.messages || [];
+          const fetchedMsgs = (response.data.messages || []).map(m => {
+            const parsed = m.parsed || {};
+            return {
+              ...m,
+              ...parsed,
+              raw_content: m.content,
+              timestamp: parsed.timestamp || m.inserted_at || new Date().toISOString()
+            };
+          });
+          setMessages(fetchedMsgs);
+          
           const briefMsg = fetchedMsgs.find(m => m.parsed?.agent === 'coordinator' && m.parsed?.phase === 'executive_brief');
           const altMsg = fetchedMsgs.find(m => m.parsed?.agent === 'alt_sourcing');
           
@@ -104,7 +116,7 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
   };
 
   return (
-    <div className="brief-screen animate-fade-in">
+    <div className="brief-screen animate-fade-in" style={{ maxWidth: '1600px' }}>
       <header className="brief-header">
         <div className="header-top">
           <div className="case-badge">CASE: {caseId}</div>
@@ -116,84 +128,95 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
         </p>
       </header>
 
-      <div className="brief-grid">
-        <div className="glass-panel brief-main">
-          <div className="section-header">
-            {getSeverityIcon(brief.severity)}
-            <h2>Situation Overview</h2>
-            <span className="severity-badge" style={{ backgroundColor: getSeverityColor(brief.severity) + '33', color: getSeverityColor(brief.severity), border: `1px solid ${getSeverityColor(brief.severity)}` }}>
-              {brief.severity} SEVERITY
-            </span>
-          </div>
-          <p className="summary-text" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{brief.situation_summary}</p>
-        </div>
+      {/* Two-column layout: Left contains brief summaries, Right contains LiveLog chat history */}
+      <div className="brief-content-layout" style={{ display: 'flex', gap: '2.5rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        {/* Left Column: Brief Details */}
+        <div className="brief-details-pane" style={{ flex: '1.8', minWidth: '350px', display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+          <div className="brief-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+            <div className="glass-panel brief-main" style={{ gridColumn: 'span 2' }}>
+              <div className="section-header">
+                {getSeverityIcon(brief.severity)}
+                <h2>Situation Overview</h2>
+                <span className="severity-badge" style={{ backgroundColor: getSeverityColor(brief.severity) + '33', color: getSeverityColor(brief.severity), border: `1px solid ${getSeverityColor(brief.severity)}` }}>
+                  {brief.severity} SEVERITY
+                </span>
+              </div>
+              <p className="summary-text" style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{brief.situation_summary}</p>
+            </div>
 
-        <div className="glass-panel brief-actions">
-          <h2>Top Recommended Actions</h2>
-          <ul className="action-list">
-            {brief.top_3_actions?.map((action, idx) => (
-              <li key={idx}>
-                <ArrowRight size={18} className="action-icon" />
-                <span>{action}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+            <div className="glass-panel brief-actions">
+              <h2>Top Recommended Actions</h2>
+              <ul className="action-list">
+                {brief.top_3_actions?.map((action, idx) => (
+                  <li key={idx}>
+                    <ArrowRight size={18} className="action-icon" />
+                    <span>{action}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-        <div className="glass-panel brief-card">
-          <div className="card-icon"><DollarSign size={24} /></div>
-          <h3>Financial Exposure</h3>
-          <p>{formatFinancials(brief.financial_exposure)}</p>
-        </div>
+            <div className="glass-panel brief-card">
+              <div className="card-icon"><DollarSign size={24} /></div>
+              <h3>Financial Exposure</h3>
+              <p>{formatFinancials(brief.financial_exposure)}</p>
+            </div>
 
-        <div className="glass-panel brief-card">
-          <div className="card-icon"><Scale size={24} /></div>
-          <h3>Regulatory & Compliance</h3>
-          <p>{brief.compliance_deadline || 'No immediate compliance actions required.'}</p>
-        </div>
+            <div className="glass-panel brief-card">
+              <div className="card-icon"><Scale size={24} /></div>
+              <h3>Regulatory & Compliance</h3>
+              <p>{brief.compliance_deadline || 'No immediate compliance actions required.'}</p>
+            </div>
 
-        <div className="glass-panel brief-card">
-          <div className="card-icon"><Truck size={24} /></div>
-          <h3>Sourcing Recommendation</h3>
-          {alternatives && alternatives.length > 0 ? (
-            <ul style={{ paddingLeft: '20px', marginTop: '10px', fontSize: '0.95rem', color: 'var(--text-main)' }}>
-              {alternatives.map((alt, idx) => (
-                <li key={idx} style={{ marginBottom: '8px' }}>
-                  <strong>{alt.supplier}</strong> (Lead time: {alt.lead_time_days} days)
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>{brief.recommended_supplier || 'Current suppliers adequate.'}</p>
-          )}
-        </div>
-      </div>
-
-      <div className="brief-footer glass-panel">
-        {decision ? (
-          <div className="decision-feedback animate-fade-in">
-            <CheckCircle size={24} color="#00e676" />
-            <h3>Action Logged: {decision.toUpperCase()}</h3>
-          </div>
-        ) : (
-          <div className="decision-actions">
-            <h3>Compliance Workflow</h3>
-            <div className="action-buttons">
-              <button 
-                className="glass-button btn-approve" 
-                onClick={() => handleDecision('approve')}
-              >
-                APPROVE RESOLUTION
-              </button>
-              <button 
-                className="glass-button btn-escalate" 
-                onClick={() => handleDecision('escalate')}
-              >
-                ESCALATE TO VP
-              </button>
+            <div className="glass-panel brief-card">
+              <div className="card-icon"><Truck size={24} /></div>
+              <h3>Sourcing Recommendation</h3>
+              {alternatives && alternatives.length > 0 ? (
+                <ul style={{ paddingLeft: '20px', marginTop: '10px', fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                  {alternatives.map((alt, idx) => (
+                    <li key={idx} style={{ marginBottom: '8px' }}>
+                      <strong>{alt.supplier}</strong> (Lead time: {alt.lead_time_days} days)
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p>{brief.recommended_supplier || 'Current suppliers adequate.'}</p>
+              )}
             </div>
           </div>
-        )}
+
+          <div className="brief-footer glass-panel">
+            {decision ? (
+              <div className="decision-feedback animate-fade-in">
+                <CheckCircle size={24} color="#00e676" />
+                <h3>Action Logged: {decision.toUpperCase()}</h3>
+              </div>
+            ) : (
+              <div className="decision-actions">
+                <h3>Compliance Workflow</h3>
+                <div className="action-buttons">
+                  <button 
+                    className="glass-button btn-approve" 
+                    onClick={() => handleDecision('approve')}
+                  >
+                    APPROVE RESOLUTION
+                  </button>
+                  <button 
+                    className="glass-button btn-escalate" 
+                    onClick={() => handleDecision('escalate')}
+                  >
+                    ESCALATE TO VP
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Live Chat Log */}
+        <div className="brief-log-pane glass-panel" style={{ flex: '1.2', minWidth: '320px', height: '80vh', maxHeight: '900px', position: 'sticky', top: '2rem', display: 'flex', flexDirection: 'column' }}>
+          <LiveLog messages={messages} />
+        </div>
       </div>
     </div>
   );

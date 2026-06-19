@@ -119,7 +119,7 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
                 "agents_required": ["event_intelligence", "supplier_impact", "financial_exposure", "regulatory_trade", "alt_sourcing"]
             }
             
-            # Find specialist agents to mention using API or fallback
+            # Find only the event_intelligence agent to mention
             mentions = []
             from utils import get_room_participants
             try:
@@ -128,22 +128,17 @@ class CustomCoordinatorAdapter(LangGraphAdapter):
                 print(f"[COORDINATOR] Participant handles (normalized): {handles}")
                 
                 for h in handles:
-                    if "/" in h and "coordinator" not in h.lower():
+                    if "event-intelligence" in h.lower() or "event_intelligence" in h.lower():
                         mentions.append(h)
+                        break
             except Exception as e:
                 logger.error(f"Failed to fetch participants: {e}")
                 print(f"[COORDINATOR] ERROR fetching participants: {e}")
             
-            # If no mentions found, use hardcoded real handles
+            # If no mentions found, use hardcoded real handle fallback
             if not mentions:
                 print("[COORDINATOR] No mentions resolved — using hardcoded fallback handles")
-                mentions = [
-                    "@rshricharan29/event-intelligence",
-                    "@rshricharan29/supplier-impact",
-                    "@sreedarsan0311/financial-exposure",
-                    "@belugaok3/regulatory-agent",
-                    "@sreedarsan0311/alt-sourcing",
-                ]
+                mentions = ["@rshricharan29/event-intelligence"]
 
             print(f"[COORDINATOR] Posting kickoff with mentions: {mentions}")
             try:

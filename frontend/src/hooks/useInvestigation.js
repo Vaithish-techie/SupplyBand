@@ -100,9 +100,7 @@ function deriveAgentStates(messages, startTimes) {
   const isSupplierImpactDone = posts['supplier_impact']?.status === 'complete';
   states['financial_exposure'] = getProcessingState('financial_exposure', isSupplierImpactDone);
   states['regulatory_trade'] = getProcessingState('regulatory_trade', isSupplierImpactDone);
-
-  const isAltSourcingReady = isSupplierImpactDone && posts['financial_exposure'] && posts['regulatory_trade'];
-  states['alt_sourcing'] = getProcessingState('alt_sourcing', isAltSourcingReady);
+  states['alt_sourcing'] = getProcessingState('alt_sourcing', isSupplierImpactDone);
 
   return states;
 }
