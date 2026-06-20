@@ -53,25 +53,38 @@ export default function LandingPage({ onTrigger, isSubmitting, error }) {
         </div>
       </nav>
 
-      {/* HERO */}
+      {/* HERO & ABOUT */}
       <section className="landing-hero">
         <div className="hero-badge">AI-Powered Disruption Intelligence</div>
 
-        <h1 className="hero-title">
-          <span className="title-line">Anticipate.</span>
-          <span className="title-line">Analyze.</span>
-          <span className="title-accent">Act.</span>
+        <h1 className="hero-title" style={{ fontSize: 'clamp(3rem, 5vw, 4.5rem)', lineHeight: '1.1' }}>
+          <span className="title-line">Supply Chain</span>
+          <span className="title-accent">Intelligence Center</span>
         </h1>
 
-        <p className="hero-subtitle">
-          Deploy autonomous specialist agents to assess supply chain disruptions,
-          calculate financial exposure, and recommend alternative sourcing — in real time.
+        <p className="hero-subtitle" style={{ fontSize: '1.15rem', maxWidth: '700px' }}>
+          An autonomous multi-agent system designed to assess supply chain disruptions, calculate financial exposure, and recommend alternative sourcing — in real time.
         </p>
 
-        <div className="hero-meta">
+        <div className="hero-meta" style={{ marginBottom: '2rem' }}>
           <span className="hero-meta-item">6 Specialist Agents</span>
-          <span className="hero-meta-item">Band AI Comms</span>
-          <span className="hero-meta-item">Executive Brief in &lt;30s</span>
+          <span className="hero-meta-item">Band AI Framework</span>
+          <span className="hero-meta-item">Live Resolution</span>
+        </div>
+
+        <div className="about-grid">
+          <div className="about-card glass-panel">
+            <h3 className="about-title">The Problem</h3>
+            <p className="about-text">
+              Global supply chain disruptions are chaotic. When a port strikes or an earthquake hits, it takes human teams days to manually cross-reference supplier data, calculate financial exposure, and check legal contracts. By the time a strategy is formed, millions of dollars are lost and alternatives are bought out by competitors.
+            </p>
+          </div>
+          <div className="about-card glass-panel">
+            <h3 className="about-title" style={{ color: 'var(--gold)' }}>The Solution</h3>
+            <p className="about-text">
+              We deploy a synchronized squad of 6 autonomous AI agents. Upon receiving raw disruption news, they instantly parallelize the work: identifying affected Tier-1/Tier-2 suppliers, calculating margin impact, checking Force Majeure clauses, and ranking alternative suppliers. You get an Executive Brief in under 30 seconds.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -79,7 +92,7 @@ export default function LandingPage({ onTrigger, isSubmitting, error }) {
       <div className="landing-input-section glass-panel">
         <div className="input-header">
           <Activity className="input-icon" size={20} />
-          <h2>Analyze Disruption Event</h2>
+          <h2>Analyze Live Disruption Event</h2>
         </div>
 
         <textarea
@@ -107,7 +120,10 @@ export default function LandingPage({ onTrigger, isSubmitting, error }) {
 
       {/* PRESETS */}
       <div className="presets-container">
-        <h3 className="presets-title">02 · Quick Scenarios</h3>
+        <h3 className="presets-title">Test Scenarios</h3>
+        <p className="presets-description">
+          Not sure what to type? Click one of the simulated disruption events below to watch the autonomous agent cluster analyze the impact in real-time.
+        </p>
         <div className="presets-grid">
           {PRESETS.map((preset, idx) => (
             <div

@@ -46,6 +46,7 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
   const [financialData, setFinancialData] = useState([]);
   const [altChartData, setAltChartData] = useState([]);
   const [complianceData, setComplianceData] = useState(null);
+  const [highlightMetrics, setHighlightMetrics] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -216,13 +217,34 @@ export default function ExecutiveBriefScreen({ caseId, onBack }) {
 
       {/* ── SITUATION + ACTIONS ── */}
       <div className="brief-section glass-panel">
-        <div className="section-header">
-          <Activity size={22} color={severityColor} />
-          <h2>Situation Overview &amp; Recommended Actions</h2>
+        <div className="section-header" style={{ justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <Activity size={22} color={severityColor} />
+            <h2>Situation Overview &amp; Recommended Actions</h2>
+          </div>
+          <button 
+            className={`glass-button small ${highlightMetrics ? 'primary' : ''}`}
+            onClick={() => setHighlightMetrics(!highlightMetrics)}
+          >
+            {highlightMetrics ? 'Hide Metrics' : 'Highlight Key Metrics'}
+          </button>
         </div>
         <div style={{ display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1.6', minWidth: '360px' }}>
-            <p className="summary-text">{brief.situation_summary}</p>
+          <div style={{ flex: '1.6', minWidth: '360px', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {brief.situation_summary.split('\n').filter(p => p.trim()).map((p, idx) => {
+              if (!highlightMetrics) {
+                return <p key={idx} className="summary-text" style={{ margin: 0 }}>{p.trim()}</p>;
+              }
+              const regex = /(\$\d+(?:,\d+)*(?:\.\d+)?(?:M|B| million| billion)?|\b\d+(?:\.\d+)?%|\b\d+\s+days?)/g;
+              const parts = p.split(regex);
+              return (
+                <p key={idx} className="summary-text" style={{ margin: 0 }}>
+                  {parts.map((part, i) => 
+                    part.match(regex) ? <span key={i} className="metric-highlight">{part}</span> : part
+                  )}
+                </p>
+              );
+            })}
           </div>
           <div style={{
             flex: '1', minWidth: '280px',
