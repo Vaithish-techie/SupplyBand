@@ -1,0 +1,24 @@
+name: Sync to Hugging Face Spaces
+
+on:
+  push:
+    branches:
+      - main
+  # Allow manual triggering from GitHub Actions UI
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git push --force https://shri29s:$HF_TOKEN@huggingface.co/spaces/shri29s/SupplyBand main:main
